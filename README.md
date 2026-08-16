@@ -31,32 +31,33 @@
 - 🔑 **Gestión Criptográfica de Sensores**: Creación y rotación de API Keys (`betty_live_...`), temas MQTT asignados y copiado rápido de credenciales.
 - 🌓 **Tema Dual (Dark & Light Mode)**: Paleta OKLCH optimizada para telemetría cibernética con `next-themes`.
 - 🌍 **Internacionalización (i18n)**: Soporte completo de idiomas (Español e Inglés) gestionado con `next-intl`.
-- 🔔 **Notificaciones Fluidas con Sileo**: Toasts basados en física de resortes y morphing SVG (*reemplazando a Sonner*), integrados con el tema OKLCH (`src/lib/toast.ts`).
+- 🔔 **Notificaciones Fluidas con Sileo**: Toasts basados en física de resortes y morphing SVG (_reemplazando a Sonner_), integrados con el tema OKLCH (`src/lib/toast.ts`).
 - ⚡ **React 19 & Next.js 16 Clean Architecture**: Adhesión total a las buenas prácticas de React 19 (sin efectos en cascada, suscripciones seguras con `useSyncExternalStore`, claves deterministas y soporte para React Compiler).
 
 ---
 
 ## 🛠️ Stack Tecnológico
 
-| Capa | Tecnología | Descripción |
-|:---|:---|:---|
-| **Framework** | Next.js 16.3.1 (App Router + Turbopack) | Server Components, enrutamiento dinámico y generación estática |
-| **Biblioteca UI** | React 19.2.8 | Primitivas reactivas modernas y renderizado concurrente |
-| **Estilos** | Tailwind CSS v4 + `@tailwindcss/postcss` | Motor de estilos de última generación con variables OKLCH |
-| **Componentes Base** | `@base-ui/react` + Shadcn UI | Componentes accesibles, desacoplados y estilizados |
-| **Data Fetching** | SWR 2.5 + Axios / Fetch nativo | Revalidación inteligente de caché en cliente |
-| **Realtime** | Socket.IO Client 4.8 | Suscripciones de telemetría WebSocket |
-| **Visualización** | Recharts 3.8 + Leaflet / React-Leaflet 5.0 | Gráficos SVG interactivos y mapas geoespaciales |
-| **Formularios** | React Hook Form 7.85 + Zod 4 | Validación tipada y optimizada con `useWatch` |
-| **Gestión de Estado** | Zustand 5.0 | Estado global ligero para autenticación y sesión |
-| **Notificaciones** | Sileo 0.1.5 *(reemplazó a Sonner)* | Notificaciones fluidas con morphing SVG y spring physics |
-| **Iconografía** | Lucide React | Catálogo de iconos vectoriales |
+| Capa                  | Tecnología                                 | Descripción                                                    |
+| :-------------------- | :----------------------------------------- | :------------------------------------------------------------- |
+| **Framework**         | Next.js 16.3.1 (App Router + Turbopack)    | Server Components, enrutamiento dinámico y generación estática |
+| **Biblioteca UI**     | React 19.2.8                               | Primitivas reactivas modernas y renderizado concurrente        |
+| **Estilos**           | Tailwind CSS v4 + `@tailwindcss/postcss`   | Motor de estilos de última generación con variables OKLCH      |
+| **Componentes Base**  | `@base-ui/react` + Shadcn UI               | Componentes accesibles, desacoplados y estilizados             |
+| **Data Fetching**     | SWR 2.5 + Axios / Fetch nativo             | Revalidación inteligente de caché en cliente                   |
+| **Realtime**          | Socket.IO Client 4.8                       | Suscripciones de telemetría WebSocket                          |
+| **Visualización**     | Recharts 3.8 + Leaflet / React-Leaflet 5.0 | Gráficos SVG interactivos y mapas geoespaciales                |
+| **Formularios**       | React Hook Form 7.85 + Zod 4               | Validación tipada y optimizada con `useWatch`                  |
+| **Gestión de Estado** | Zustand 5.0                                | Estado global ligero para autenticación y sesión               |
+| **Notificaciones**    | Sileo 0.1.5                                | Notificaciones fluidas con morphing SVG y spring physics       |
+| **Iconografía**       | Lucide React                               | Catálogo de iconos vectoriales                                 |
 
 ---
 
 ## 🚀 Inicio Rápido
 
 ### 1. Requisitos Previos
+
 - **Node.js**: `v20.x` o `v22.x` LTS
 - **Package Manager**: `pnpm` (versión 10+)
 - **Betty API**: Ejecutándose localmente en `http://localhost:3000` (o configurada en `.env.local`)
