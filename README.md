@@ -31,6 +31,7 @@
 - 🔑 **Gestión Criptográfica de Sensores**: Creación y rotación de API Keys (`betty_live_...`), temas MQTT asignados y copiado rápido de credenciales.
 - 🌓 **Tema Dual (Dark & Light Mode)**: Paleta OKLCH optimizada para telemetría cibernética con `next-themes`.
 - 🌍 **Internacionalización (i18n)**: Soporte completo de idiomas (Español e Inglés) gestionado con `next-intl`.
+- 🔔 **Notificaciones Fluidas con Sileo**: Toasts basados en física de resortes y morphing SVG (*reemplazando a Sonner*), integrados con el tema OKLCH (`src/lib/toast.ts`).
 - ⚡ **React 19 & Next.js 16 Clean Architecture**: Adhesión total a las buenas prácticas de React 19 (sin efectos en cascada, suscripciones seguras con `useSyncExternalStore`, claves deterministas y soporte para React Compiler).
 
 ---
@@ -48,7 +49,7 @@
 | **Visualización** | Recharts 3.8 + Leaflet / React-Leaflet 5.0 | Gráficos SVG interactivos y mapas geoespaciales |
 | **Formularios** | React Hook Form 7.85 + Zod 4 | Validación tipada y optimizada con `useWatch` |
 | **Gestión de Estado** | Zustand 5.0 | Estado global ligero para autenticación y sesión |
-| **Notificaciones** | Sonner 2.0 | Toasts modernos y accesibles |
+| **Notificaciones** | Sileo 0.1.5 *(reemplazó a Sonner)* | Notificaciones fluidas con morphing SVG y spring physics |
 | **Iconografía** | Lucide React | Catálogo de iconos vectoriales |
 
 ---
@@ -127,13 +128,13 @@ betty-client/
 │   │   │   └── widgets/        # Widgets: LineChart, Gauge, Metric, BarChart, Table, Map
 │   │   ├── landing/            # Secciones Hero, Características, Funcionamiento y Footer
 │   │   ├── layout/             # Header con estado WebSocket, Sidebar interactivo, LocaleSwitcher
-│   │   ├── providers/          # SWRProvider, SocketProvider, ThemeProvider
+│   │   ├── providers/          # SWRProvider, SocketProvider, ThemeProvider, Toaster (Sileo)
 │   │   ├── sensors/            # Listas, gráficos históricos y modales de sensores
 │   │   ├── teams/              # Tarjetas de equipos y diálogos de invitación
-│   │   └── ui/                 # Componentes Base UI / Shadcn (Botones, Diálogos, Cards, etc.)
+│   │   └── ui/                 # Componentes Base UI / Shadcn / Toaster
 │   ├── hooks/                  # Hooks personalizados (useIsMobile con useSyncExternalStore)
 │   ├── i18n/                   # Configuración y enrutamiento de internacionalización
-│   ├── lib/                    # Clientes API (Axios/Fetchers), Socket.IO singleton y utilidades
+│   ├── lib/                    # Clientes API, Socket.IO singleton y toast wrapper unificado (`toast.ts`)
 │   ├── messages/               # Diccionarios de traducción (es.json, en.json)
 │   ├── stores/                 # Stores de Zustand (auth-store con persistencia)
 │   └── types/                  # Definiciones de TypeScript unificadas

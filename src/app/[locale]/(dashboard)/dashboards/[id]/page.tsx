@@ -25,7 +25,7 @@ import {
   Globe,
   Lock,
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 export default function DashboardDetailPage() {
   const t = useTranslations('dashboards');

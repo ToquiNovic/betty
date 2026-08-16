@@ -5,7 +5,7 @@ import { ThemeProvider } from './theme-provider';
 import { SWRProvider } from './swr-provider';
 import { SocketProvider } from './socket-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { Toaster } from '@/components/ui/sonner';
+import { Toaster } from '@/components/ui/toaster';
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
@@ -19,7 +19,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
         <SocketProvider>
           <TooltipProvider delay={200}>
             {children}
-            <Toaster position="top-right" richColors closeButton />
+            <Toaster position="top-right" />
           </TooltipProvider>
         </SocketProvider>
       </SWRProvider>

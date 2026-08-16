@@ -30,7 +30,7 @@ import {
   Copy,
   Check,
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 interface SensorSettingsFormProps {
   sensor: NonNullable<ReturnType<typeof useSensor>['sensor']>;

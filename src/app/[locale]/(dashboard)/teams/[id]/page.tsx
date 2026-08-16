@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Users, Radio, Settings, ArrowLeft, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 interface TeamSettingsFormProps {
   team: NonNullable<ReturnType<typeof useTeam>['team']>;

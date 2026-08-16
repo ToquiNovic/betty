@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { TeamRoleBadge } from './role-badge';
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
 import { Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 

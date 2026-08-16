@@ -19,7 +19,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { teamApi } from '@/lib/api/teams';
 import { UserPlus, Copy, Check, Link as LinkIcon, Mail, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 const emailSchema = z.object({
   email: z.string().email({ message: 'Ingresa un email válido' }),

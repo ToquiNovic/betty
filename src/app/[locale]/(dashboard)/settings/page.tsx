@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useTheme } from 'next-themes';
 import { User, Shield, Sun, Moon, Laptop, Languages, Loader2, Check } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 interface ProfileSettingsFormProps {
   user: NonNullable<ReturnType<typeof useAuthStore.getState>['user']>;

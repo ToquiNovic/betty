@@ -55,6 +55,14 @@
     "step2Desc": "Send JSON payloads to the dedicated MQTT topic betty/sensor/:id/data.",
     "step3Title": "3. Visualize & Collaborate",
     "step3Desc": "Build live dashboards with charts, maps and gauges, and share them with teammates or publicly.",
+    "liveDemoTag": "Live Telemetry",
+    "physicalSensor": "Physical Sensor (ESP32 / BME280)",
+    "digitalTwin": "Digital Twin (3D Simulation)",
+    "codeSnippetTitle": "Connect Any Device in Seconds",
+    "codeSnippetSubtitle": "Publish telemetry over standard MQTT with any client or programming language.",
+    "readyCtaTitle": "Ready to Deploy Your Telemetry Infrastructure?",
+    "readyCtaSubtitle": "Sign up for free, register your devices, and monitor in real-time with zero scale friction.",
+    "openDocs": "API Reference (Scalar)",
     "footerText": "Betty PaaS — Open Platform for Digital Twins and IoT."
   },
   "nav": {

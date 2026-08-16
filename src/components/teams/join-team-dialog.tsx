@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { teamApi } from '@/lib/api/teams';
 import { KeyRound, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { useRouter } from '@/i18n/routing';
 
 const joinTeamSchema = z.object({

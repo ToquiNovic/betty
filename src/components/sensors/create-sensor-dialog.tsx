@@ -29,7 +29,7 @@ import { sensorApi } from '@/lib/api/sensors';
 import { useTeams } from '@/lib/api/teams';
 import { ApiKeyDisplayDialog } from './api-key-display';
 import { Plus, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { CreateSensorResponse } from '@/types';
 
 const createSensorSchema = z.object({

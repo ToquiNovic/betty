@@ -55,6 +55,14 @@
     "step2Desc": "Envía lecturas en formato JSON al broker MQTT en el topic dedicado betty/sensor/:id/data.",
     "step3Title": "3. Visualiza y Colabora",
     "step3Desc": "Crea tableros interactivos con gráficas, mapas y medidores, compártelos con tu equipo o el mundo.",
+    "liveDemoTag": "Telemetría en Vivo",
+    "physicalSensor": "Sensor Físico (ESP32 / BME280)",
+    "digitalTwin": "Gemelo Digital (Simulación 3D)",
+    "codeSnippetTitle": "Conecta tus Dispositivos en Segundos",
+    "codeSnippetSubtitle": "Publica datos mediante MQTT estándar con cualquier cliente o lenguaje.",
+    "readyCtaTitle": "¿Listo para desplegar tu infraestructura de telemetría?",
+    "readyCtaSubtitle": "Regístrate gratis, configura tus dispositivos y monitorea en tiempo real sin límites de escala.",
+    "openDocs": "API Reference (Scalar)",
     "footerText": "Betty PaaS — Plataforma Abierta de Gemelos Digitales e IoT."
   },
   "nav": {

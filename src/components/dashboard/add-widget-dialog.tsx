@@ -28,7 +28,7 @@ import { useSensors } from '@/lib/api/sensors';
 import { dashboardApi } from '@/lib/api/dashboards';
 import { WidgetType } from '@/types';
 import { Plus, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 const addWidgetSchema = z.object({
   sensorId: z.string().min(1, { message: 'Selecciona un sensor' }),

@@ -20,7 +20,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { dashboardApi } from '@/lib/api/dashboards';
 import { Plus, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { useRouter } from '@/i18n/routing';
 
 const createDashboardSchema = z.object({

@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "sileo/styles.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -81,6 +82,13 @@
   --sidebar-accent-foreground: oklch(0.20 0.04 260);
   --sidebar-border: oklch(0.90 0.015 250);
   --sidebar-ring: oklch(0.55 0.16 255);
+  --sileo-state-success: oklch(0.65 0.19 155);
+  --sileo-state-error: oklch(0.62 0.22 25);
+  --sileo-state-warning: oklch(0.75 0.18 75);
+  --sileo-state-info: oklch(0.65 0.18 230);
+  --sileo-state-loading: oklch(0.55 0 0);
+  --sileo-state-action: oklch(0.55 0.22 260);
+  --sileo-roundness: 16px;
 }
 
 .dark {
@@ -115,6 +123,13 @@
   --sidebar-accent-foreground: oklch(0.96 0.005 240);
   --sidebar-border: oklch(0.25 0.02 260);
   --sidebar-ring: oklch(0.65 0.18 225);
+  --sileo-state-success: oklch(0.76 0.20 155);
+  --sileo-state-error: oklch(0.68 0.22 25);
+  --sileo-state-warning: oklch(0.80 0.18 75);
+  --sileo-state-info: oklch(0.75 0.18 215);
+  --sileo-state-loading: oklch(0.70 0 0);
+  --sileo-state-action: oklch(0.68 0.20 260);
+  --sileo-roundness: 16px;
 }
 
 @layer base {
