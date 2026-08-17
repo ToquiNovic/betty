@@ -21,10 +21,13 @@ export default function middleware(request: NextRequest) {
 
   const currentLocale = hasLocale ? segments[0] : routing.defaultLocale;
 
-  // Check if target is a protected route
-  const isProtected = PROTECTED_ROUTES.some(
-    (route) => pathWithoutLocale === route || pathWithoutLocale.startsWith(route + '/')
-  );
+  // Check if target is a protected route (/projects is public gallery, /projects/:id requires login)
+  const isProjectDetail = pathWithoutLocale.startsWith('/projects/') && pathWithoutLocale !== '/projects';
+  const isProtected =
+    isProjectDetail ||
+    PROTECTED_ROUTES.some(
+      (route) => pathWithoutLocale === route || pathWithoutLocale.startsWith(route + '/')
+    );
 
   // Check if target is an auth page (login/register)
   const isAuthRoute = AUTH_ROUTES.some(

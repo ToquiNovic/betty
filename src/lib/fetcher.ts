@@ -153,8 +153,56 @@ export async function apiPatch<T, B = unknown>(endpoint: string, body?: B): Prom
   });
 }
 
+export async function apiPut<T, B = unknown>(endpoint: string, body?: B): Promise<T> {
+  return fetcher<T>(endpoint, {
+    method: 'PUT',
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+}
+
 export async function apiDelete<T>(endpoint: string): Promise<T> {
   return fetcher<T>(endpoint, {
     method: 'DELETE',
   });
 }
+
+export async function apiUpload<T>(
+  endpoint: string,
+  formData: FormData,
+  method: 'POST' | 'PATCH' | 'PUT' = 'POST',
+): Promise<T> {
+  const url = endpoint.startsWith('http') ? endpoint : `${API_BASE}${endpoint}`;
+  const { accessToken } = useAuthStore.getState();
+
+  const headers: Record<string, string> = {};
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`;
+  }
+
+  const response = await fetch(url, {
+    method,
+    headers,
+    body: formData,
+  });
+
+  const contentType = response.headers.get('content-type');
+  const isJson = contentType && contentType.includes('application/json');
+  const data = isJson ? await response.json() : await response.text();
+
+  if (!response.ok) {
+    const message =
+      typeof data === 'object' && data !== null && 'message' in data
+        ? Array.isArray(data.message)
+          ? data.message.join(', ')
+          : String(data.message)
+        : `Upload failed with status ${response.status}`;
+    throw new ApiError(response.status, message, data);
+  }
+
+  if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
+    return data.data as T;
+  }
+
+  return data as T;
+}
+

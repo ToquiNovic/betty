@@ -62,7 +62,7 @@
     "codeSnippetSubtitle": "Publica datos mediante MQTT estándar con cualquier cliente o lenguaje.",
     "readyCtaTitle": "¿Listo para desplegar tu infraestructura de telemetría?",
     "readyCtaSubtitle": "Regístrate gratis, configura tus dispositivos y monitorea en tiempo real sin límites de escala.",
-    "openDocs": "API Reference (Scalar)",
+    "openDocs": "Documentación Developers",
     "footerText": "Betty PaaS — Plataforma Abierta de Gemelos Digitales e IoT."
   },
   "nav": {
@@ -70,6 +70,7 @@
     "sensors": "Sensores",
     "dashboards": "Dashboards",
     "teams": "Equipos",
+    "projects": "Proyectos",
     "admin": "Administración",
     "settings": "Configuración",
     "publicDashboards": "Explorar Públicos",
@@ -256,5 +257,22 @@
     "languageSection": "Idioma",
     "langEs": "Español",
     "langEn": "Inglés"
+  },
+  "projects": {
+    "title": "Proyectos Replicables",
+    "subtitle": "Explora proyectos IoT guiados con pasos, materiales, modelos 3D y firmware instalable.",
+    "newProject": "Nuevo Proyecto",
+    "manageProjects": "Gestión de Proyectos",
+    "stepsTab": "Pasos",
+    "materialsTab": "Materiales",
+    "model3dTab": "Modelo 3D",
+    "firmwareTab": "Firmware USB",
+    "difficulty": "Dificultad",
+    "boardType": "Placa",
+    "estimatedTime": "Tiempo Estimado",
+    "flashFirmware": "Flashear Firmware",
+    "downloadBin": "Descargar .BIN",
+    "noProjects": "No se encontraron proyectos",
+    "createFirst": "Crear Primer Proyecto"
   }
 }

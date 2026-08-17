@@ -62,7 +62,7 @@
     "codeSnippetSubtitle": "Publish telemetry over standard MQTT with any client or programming language.",
     "readyCtaTitle": "Ready to Deploy Your Telemetry Infrastructure?",
     "readyCtaSubtitle": "Sign up for free, register your devices, and monitor in real-time with zero scale friction.",
-    "openDocs": "API Reference (Scalar)",
+    "openDocs": "Developer Documentation",
     "footerText": "Betty PaaS — Open Platform for Digital Twins and IoT."
   },
   "nav": {
@@ -70,6 +70,7 @@
     "sensors": "Sensors",
     "dashboards": "Dashboards",
     "teams": "Teams",
+    "projects": "Projects",
     "admin": "Administration",
     "settings": "Settings",
     "publicDashboards": "Explore Public",
@@ -256,5 +257,22 @@
     "languageSection": "Language",
     "langEs": "Spanish",
     "langEn": "English"
+  },
+  "projects": {
+    "title": "Replicable Projects",
+    "subtitle": "Explore open source DIY IoT projects with step-by-step assembly guides, parts lists, 3D models, and browser USB firmware flashing.",
+    "newProject": "New Project",
+    "manageProjects": "Manage Projects",
+    "stepsTab": "Steps",
+    "materialsTab": "Materials",
+    "model3dTab": "3D Model",
+    "firmwareTab": "USB Firmware",
+    "difficulty": "Difficulty",
+    "boardType": "Board",
+    "estimatedTime": "Estimated Time",
+    "flashFirmware": "Flash Firmware",
+    "downloadBin": "Download .BIN",
+    "noProjects": "No projects found",
+    "createFirst": "Create First Project"
   }
 }

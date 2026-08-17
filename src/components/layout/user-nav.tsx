@@ -3,7 +3,7 @@
 import React from 'react';
 import { useAuthStore } from '@/stores/auth-store';
 import { useTranslations } from 'next-intl';
-import { useRouter } from '@/i18n/routing';
+import { useRouter, Link } from '@/i18n/routing';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -105,17 +105,12 @@ export function UserNav() {
           </DropdownMenuItem>
           <DropdownMenuItem
             render={
-              <a
-                href="http://localhost:3000/api/docs"
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center w-full"
-              />
+              <Link href="/docs" className="flex items-center w-full" />
             }
             className="cursor-pointer text-xs py-2 rounded-md"
           >
             <FileCode className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
-            <span>API Docs (Scalar)</span>
+            <span>Documentación Developers</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator className="my-1" />

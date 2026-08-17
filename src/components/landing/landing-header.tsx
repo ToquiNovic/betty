@@ -58,15 +58,13 @@ export function LandingHeader() {
             <Globe className="h-3.5 w-3.5 text-cyan-500" />
             <span>{t('publicDashboards')}</span>
           </Link>
-          <a
-            href="http://localhost:3000/api/docs"
-            target="_blank"
-            rel="noreferrer"
+          <Link
+            href="/docs"
             className="flex items-center gap-1.5 hover:text-foreground transition-colors hover:bg-muted/40 px-3 py-1.5 rounded-md"
           >
             <FileCode className="h-3.5 w-3.5" />
-            <span>Scalar API</span>
-          </a>
+            <span>Documentación</span>
+          </Link>
         </nav>
 
         {/* Actions & Utilities */}

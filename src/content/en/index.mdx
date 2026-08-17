@@ -1,0 +1,133 @@
+---
+title: Betty PaaS — Developer Documentation
+description: Open source PaaS platform for Internet of Things (IoT), Digital Twins, and Metaverses.
+template: splash
+hero:
+  tagline: Connect physical hardware, 3D simulations, store ultra-fast time series, and build real-time dashboards with Betty PaaS.
+  image:
+    file: ../../../assets/hero-icon.svg
+  actions:
+    - text: Quickstart Guide (5 min)
+      link: /en/getting-started/quickstart/
+      icon: right-arrow
+      variant: primary
+    - text: MQTT Ingestion
+      link: /en/protocols/mqtt/
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard, Tabs, TabItem, Badge } from '@astrojs/starlight/components';
+
+<div className="flex items-center gap-3 my-6">
+  <span className="badge-pulse">Live Real-Time IoT Platform</span>
+  <Badge text="MQTT 5.0" variant="tip" size="medium" />
+  <Badge text="TimescaleDB" variant="note" size="medium" />
+  <Badge text="WebSockets" variant="success" size="medium" />
+  <Badge text="Web Serial USB" variant="caution" size="medium" />
+</div>
+
+## ⚡ Connect Your Devices in Seconds
+
+Publish standard telemetry from any programming language or microcontroller in minutes:
+
+<Tabs>
+  <TabItem label="cURL / CLI" icon="terminal">
+```bash
+mosquitto_pub \
+  -h localhost -p 1883 \
+  -u "4c40ea57-43e0-4ee2-a8d5-77aae4fc387b" \
+  -P "betty_live_xxxxxxxxxxxxxxxxxxxxxxxx" \
+  -t "betty/sensor/4c40ea57-43e0-4ee2-a8d5-77aae4fc387b/data" \
+  -m '{"temperature": 24.5, "humidity": 60.2, "origin_type": "sensor"}'
+```
+  </TabItem>
+  <TabItem label="ESP32 (C++)" icon="laptop">
+```cpp
+#include <PubSubClient.h>
+#include <ArduinoJson.h>
+
+StaticJsonDocument<128> doc;
+doc["temperature"] = 24.5;
+doc["humidity"] = 60.2;
+doc["origin_type"] = "sensor";
+
+char buffer[128];
+serializeJson(doc, buffer);
+client.publish("betty/sensor/UUID/data", buffer);
+```
+  </TabItem>
+  <TabItem label="Python" icon="document">
+```python
+import paho.mqtt.client as mqtt, json
+
+client = mqtt.Client()
+client.username_pw_set("SENSOR_UUID", "betty_live_...")
+client.connect("localhost", 1883)
+
+client.publish("betty/sensor/SENSOR_UUID/data", json.dumps({
+    "temperature": 24.5, "humidity": 60.2, "origin_type": "sensor"
+}))
+```
+  </TabItem>
+  <TabItem label="TypeScript / Node.js" icon="code">
+```typescript
+import mqtt from 'mqtt';
+
+const client = mqtt.connect('mqtt://localhost:1883', {
+  username: 'SENSOR_UUID',
+  password: 'betty_live_...',
+});
+
+client.publish('betty/sensor/SENSOR_UUID/data', JSON.stringify({
+  temperature: 24.5, humidity: 60.2, origin_type: 'sensor'
+}));
+```
+  </TabItem>
+</Tabs>
+
+---
+
+## 🌟 Platform Pillars
+
+<CardGrid stagger>
+  <Card title="High-Throughput MQTT Ingestion" icon="rocket">
+    Powered by **EMQX 5.8** with per-sensor cryptographic HTTP authentication (`betty_live_...`) supporting thousands of messages per second.
+  </Card>
+  <Card title="Hardware + Metaverse Support" icon="laptop">
+    Classify telemetry as `sensor` (physical hardware) or `metaverso` (virtual 3D simulation) within a unified pipeline.
+  </Card>
+  <Card title="Hyper-Scalable Time Series" icon="document">
+    Backed by **PostgreSQL 16 + TimescaleDB** (time-partitioned hypertables) and multi-threaded in-memory caching via **Dragonfly**.
+  </Card>
+  <Card title="Web Serial USB Firmware Flashing" icon="setting">
+    Install compiled binary firmware (.bin) directly from the browser over USB with `esptool-js` and explore 3D CAD models (.glb, .stl).
+  </Card>
+</CardGrid>
+
+---
+
+## 🧭 Navigation Paths
+
+<CardGrid>
+  <LinkCard
+    title="🚀 System Architecture"
+    description="Learn how NestJS, TimescaleDB, Dragonfly, and EMQX communicate."
+    href="/en/getting-started/architecture/"
+  />
+  <LinkCard
+    title="📡 MQTT Ingestion"
+    description="Explore JSON payloads, topic structure, and QoS levels."
+    href="/en/protocols/mqtt/"
+  />
+  <LinkCard
+    title="🛠️ Connect an ESP32"
+    description="Ready-to-use C++ code for Arduino IDE and PlatformIO."
+    href="/en/hardware/esp32/"
+  />
+  <LinkCard
+    title="🌐 Digital Twins with Three.js"
+    description="Bind 3D models to live WebSocket telemetry."
+    href="/en/metaverses/threejs-integration/"
+  />
+</CardGrid>

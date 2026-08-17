@@ -50,18 +50,14 @@ export function CtaSection() {
 
           <Button
             render={
-              <a
-                href="http://localhost:3000/api/docs"
-                target="_blank"
-                rel="noreferrer"
-              />
+              <Link href="/docs" />
             }
             variant="ghost"
             size="lg"
             className="h-12 px-6 text-sm font-medium text-muted-foreground hover:text-foreground gap-2"
           >
             <FileCode className="h-4 w-4" />
-            <span>Scalar API</span>
+            <span>Documentación</span>
           </Button>
         </div>
 

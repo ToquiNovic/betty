@@ -65,16 +65,13 @@ export function LandingFooter() {
             </h4>
             <ul className="space-y-2 text-xs text-muted-foreground">
               <li>
-                <a
-                  href="http://localhost:3000/api/docs"
-                  target="_blank"
-                  rel="noreferrer"
+                <Link
+                  href="/docs"
                   className="hover:text-foreground transition-colors flex items-center gap-1"
                 >
                   <FileCode className="h-3 w-3 text-primary" />
-                  <span>Scalar OpenAPI Docs</span>
-                  <ExternalLink className="h-2.5 w-2.5 ml-0.5 opacity-60" />
-                </a>
+                  <span>Documentación Developers</span>
+                </Link>
               </li>
               <li>
                 <a

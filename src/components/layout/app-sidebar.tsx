@@ -33,6 +33,7 @@ import {
   ExternalLink,
   Database,
   Zap,
+  Box,
 } from 'lucide-react';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -75,6 +76,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       isActive: pathname.startsWith('/teams'),
       badge: null,
     },
+    {
+      title: 'Proyectos',
+      url: '/projects',
+      icon: Box,
+      isActive: pathname.startsWith('/projects'),
+      badge: 'IoT DIY',
+      badgeColor: 'bg-primary/10 text-primary border-primary/30',
+    },
   ];
 
   const adminNav = [
@@ -82,7 +91,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: t('admin'),
       url: '/admin',
       icon: ShieldAlert,
-      isActive: pathname.startsWith('/admin'),
+      isActive: pathname === '/admin',
+      badge: 'Users',
+    },
+    {
+      title: 'Gestión Proyectos',
+      url: '/admin/projects',
+      icon: Box,
+      isActive: pathname.startsWith('/admin/projects'),
       badge: 'Admin',
     },
   ];
@@ -227,17 +243,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   render={
-                    <a
-                      href="http://localhost:3000/api/docs"
-                      target="_blank"
-                      rel="noreferrer"
-                    />
+                    <Link href="/docs" />
                   }
-                  tooltip="API Docs (Scalar)"
+                  tooltip="Documentación para Desarrolladores"
                   className="h-9 rounded-lg px-2.5 transition-all text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60"
                 >
                   <FileCode className="h-4 w-4 shrink-0 text-primary/80" />
-                  <span className="truncate">API Reference</span>
+                  <span className="truncate">Docs Desarrolladores</span>
                   <ExternalLink className="ml-auto h-3 w-3 text-muted-foreground/50" />
                 </SidebarMenuButton>
               </SidebarMenuItem>
