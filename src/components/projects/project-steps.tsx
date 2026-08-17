@@ -1,9 +1,10 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { ProjectStep } from '@/types/project';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Layers, Video } from 'lucide-react';
+import React from "react";
+import Image from "next/image";
+import { ProjectStep } from "@/types/project";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Layers, Video } from "lucide-react";
 
 interface ProjectStepsProps {
   steps: ProjectStep[];
@@ -14,7 +15,9 @@ export function ProjectStepsList({ steps }: ProjectStepsProps) {
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center border rounded-lg bg-muted/20 text-muted-foreground">
         <Layers className="h-10 w-10 mb-2 opacity-40" />
-        <p className="text-sm font-medium">Este proyecto aún no tiene pasos definidos.</p>
+        <p className="text-sm font-medium">
+          Este proyecto aún no tiene pasos definidos.
+        </p>
       </div>
     );
   }
@@ -24,7 +27,10 @@ export function ProjectStepsList({ steps }: ProjectStepsProps) {
   return (
     <div className="space-y-6">
       {sortedSteps.map((step, idx) => (
-        <Card key={step.id} className="border shadow-sm overflow-hidden bg-card">
+        <Card
+          key={step.id}
+          className="border shadow-sm overflow-hidden bg-card"
+        >
           <CardHeader className="p-4 sm:p-5 pb-3 border-b bg-muted/20 flex flex-row items-center gap-3">
             <div className="flex items-center justify-center h-7 w-7 rounded-full bg-primary text-primary-foreground font-bold text-xs shrink-0">
               {idx + 1}
@@ -37,11 +43,13 @@ export function ProjectStepsList({ steps }: ProjectStepsProps) {
           <CardContent className="p-4 sm:p-5 space-y-4">
             {/* Step Image */}
             {step.imageUrl && (
-              <div className="relative rounded-lg overflow-hidden border max-h-[400px] w-full bg-muted/40 flex items-center justify-center">
-                <img
+              <div className="relative rounded-lg overflow-hidden border h-64 sm:h-80 w-full bg-muted/40 flex items-center justify-center">
+                <Image
                   src={step.imageUrl}
                   alt={step.title}
-                  className="w-full max-h-[400px] object-contain"
+                  fill
+                  className="object-contain"
+                  unoptimized
                 />
               </div>
             )}

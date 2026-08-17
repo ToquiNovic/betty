@@ -1,8 +1,15 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { ProjectMaterial } from '@/types/project';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import React from "react";
+import Image from "next/image";
+import { ProjectMaterial } from "@/types/project";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -10,9 +17,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Wrench, ExternalLink, DollarSign } from 'lucide-react';
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Wrench, ExternalLink, DollarSign } from "lucide-react";
 
 interface ProjectMaterialsProps {
   materials: ProjectMaterial[];
@@ -23,7 +30,9 @@ export function ProjectMaterialsTable({ materials }: ProjectMaterialsProps) {
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center border rounded-lg bg-muted/20 text-muted-foreground">
         <Wrench className="h-10 w-10 mb-2 opacity-40" />
-        <p className="text-sm font-medium">No se han listado materiales para este proyecto.</p>
+        <p className="text-sm font-medium">
+          No se han listado materiales para este proyecto.
+        </p>
       </div>
     );
   }
@@ -31,13 +40,16 @@ export function ProjectMaterialsTable({ materials }: ProjectMaterialsProps) {
   // Calculate total cost if available
   const totalCost = materials.reduce((acc, m) => {
     if (m.estimatedCost) {
-      const num = typeof m.estimatedCost === 'string' ? parseFloat(m.estimatedCost) : m.estimatedCost;
+      const num =
+        typeof m.estimatedCost === "string"
+          ? parseFloat(m.estimatedCost)
+          : m.estimatedCost;
       return acc + (isNaN(num) ? 0 : num * (m.quantity || 1));
     }
     return acc;
   }, 0);
 
-  const currency = materials[0]?.currency || 'USD';
+  const currency = materials[0]?.currency || "USD";
 
   return (
     <div className="space-y-4">
@@ -49,14 +61,18 @@ export function ProjectMaterialsTable({ materials }: ProjectMaterialsProps) {
               Lista de Componentes y Materiales
             </CardTitle>
             <CardDescription className="text-xs">
-              {materials.length} componente{materials.length !== 1 ? 's' : ''} requerido{materials.length !== 1 ? 's' : ''} para ensamblar el proyecto
+              {materials.length} componente{materials.length !== 1 ? "s" : ""}{" "}
+              requerido{materials.length !== 1 ? "s" : ""} para ensamblar el
+              proyecto
             </CardDescription>
           </div>
 
           {totalCost > 0 && (
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary font-semibold text-xs border border-primary/20 self-start sm:self-auto">
               <DollarSign className="h-3.5 w-3.5" />
-              <span>Costo estimado total: ~{totalCost.toFixed(2)} {currency}</span>
+              <span>
+                Costo estimado total: ~{totalCost.toFixed(2)} {currency}
+              </span>
             </div>
           )}
         </CardHeader>
@@ -65,16 +81,24 @@ export function ProjectMaterialsTable({ materials }: ProjectMaterialsProps) {
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/40 hover:bg-muted/40">
-                <TableHead className="w-[45%] text-xs font-semibold">Material / Componente</TableHead>
-                <TableHead className="text-xs font-semibold text-center">Cantidad</TableHead>
-                <TableHead className="text-xs font-semibold text-right">Costo Est.</TableHead>
-                <TableHead className="w-[120px] text-xs font-semibold text-right">Comprar</TableHead>
+                <TableHead className="w-[45%] text-xs font-semibold">
+                  Material / Componente
+                </TableHead>
+                <TableHead className="text-xs font-semibold text-center">
+                  Cantidad
+                </TableHead>
+                <TableHead className="text-xs font-semibold text-right">
+                  Costo Est.
+                </TableHead>
+                <TableHead className="w-30 text-xs font-semibold text-right">
+                  Comprar
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {materials.map((mat) => {
                 const costNum = mat.estimatedCost
-                  ? typeof mat.estimatedCost === 'string'
+                  ? typeof mat.estimatedCost === "string"
                     ? parseFloat(mat.estimatedCost)
                     : mat.estimatedCost
                   : null;
@@ -84,14 +108,20 @@ export function ProjectMaterialsTable({ materials }: ProjectMaterialsProps) {
                     <TableCell className="font-medium text-xs sm:text-sm py-3">
                       <div className="flex items-center gap-2.5">
                         {mat.imageUrl && (
-                          <img
-                            src={mat.imageUrl}
-                            alt={mat.name}
-                            className="h-8 w-8 object-cover rounded border shrink-0 bg-muted"
-                          />
+                          <div className="relative h-8 w-8 rounded border overflow-hidden shrink-0 bg-muted">
+                            <Image
+                              src={mat.imageUrl}
+                              alt={mat.name}
+                              fill
+                              className="object-cover"
+                              unoptimized
+                            />
+                          </div>
                         )}
                         <div>
-                          <div className="font-semibold text-foreground">{mat.name}</div>
+                          <div className="font-semibold text-foreground">
+                            {mat.name}
+                          </div>
                           {mat.description && (
                             <div className="text-xs text-muted-foreground line-clamp-1">
                               {mat.description}
@@ -102,13 +132,17 @@ export function ProjectMaterialsTable({ materials }: ProjectMaterialsProps) {
                     </TableCell>
 
                     <TableCell className="text-center text-xs font-mono text-muted-foreground">
-                      <span className="font-bold text-foreground">{mat.quantity}</span> {mat.unit}
+                      <span className="font-bold text-foreground">
+                        {mat.quantity}
+                      </span>{" "}
+                      {mat.unit}
                     </TableCell>
 
                     <TableCell className="text-right text-xs font-mono">
                       {costNum !== null && !isNaN(costNum) ? (
                         <span className="text-foreground font-medium">
-                          {(costNum * (mat.quantity || 1)).toFixed(2)} {mat.currency || currency}
+                          {(costNum * (mat.quantity || 1)).toFixed(2)}{" "}
+                          {mat.currency || currency}
                         </span>
                       ) : (
                         <span className="text-muted-foreground">-</span>
@@ -133,7 +167,9 @@ export function ProjectMaterialsTable({ materials }: ProjectMaterialsProps) {
                           <ExternalLink className="h-3 w-3" />
                         </Button>
                       ) : (
-                        <span className="text-[11px] text-muted-foreground">-</span>
+                        <span className="text-[11px] text-muted-foreground">
+                          -
+                        </span>
                       )}
                     </TableCell>
                   </TableRow>

@@ -1,12 +1,20 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Project } from '@/types/project';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { DifficultyBadge } from './difficulty-badge';
-import { Link } from '@/i18n/routing';
+import React from "react";
+import { Project } from "@/types/project";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { DifficultyBadge } from "./difficulty-badge";
+import { Link } from "@/i18n/routing";
+import Image from "next/image";
 import {
   ArrowRight,
   Cpu,
@@ -15,7 +23,7 @@ import {
   Layers,
   Sparkles,
   Wrench,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface ProjectCardProps {
   project: Project;
@@ -23,7 +31,7 @@ interface ProjectCardProps {
 
 export function ProjectCard({ project }: ProjectCardProps) {
   const timeFormatted = project.estimatedTime
-    ? `${project.estimatedTime.value} ${project.estimatedTime.unit === 'hours' ? 'horas' : 'min'}`
+    ? `${project.estimatedTime.value} ${project.estimatedTime.unit === "hours" ? "horas" : "min"}`
     : null;
 
   return (
@@ -31,13 +39,16 @@ export function ProjectCard({ project }: ProjectCardProps) {
       {/* Cover Image */}
       <div className="relative aspect-video w-full overflow-hidden bg-muted/60">
         {project.coverImageUrl ? (
-          <img
+          <Image
             src={project.coverImageUrl}
             alt={project.title}
-            className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            unoptimized
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 via-muted to-muted text-muted-foreground/60">
+          <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-primary/10 via-muted to-muted text-muted-foreground/60">
             <Cpu className="h-12 w-12 stroke-1 group-hover:scale-110 transition-transform text-primary/40" />
           </div>
         )}
@@ -45,7 +56,10 @@ export function ProjectCard({ project }: ProjectCardProps) {
         {/* Badges on Cover */}
         <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1.5 z-10">
           <DifficultyBadge difficulty={project.difficulty} />
-          <Badge variant="secondary" className="backdrop-blur-md bg-background/80 font-mono text-[11px] gap-1">
+          <Badge
+            variant="secondary"
+            className="backdrop-blur-md bg-background/80 font-mono text-[11px] gap-1"
+          >
             <Cpu className="h-3 w-3 text-primary" />
             <span>{project.boardType}</span>
           </Badge>
@@ -82,7 +96,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
           <CardTitle className="text-base font-bold tracking-tight line-clamp-1 group-hover:text-primary transition-colors">
             {project.title}
           </CardTitle>
-          <CardDescription className="text-xs line-clamp-2 min-h-[32px] text-muted-foreground">
+          <CardDescription className="text-xs line-clamp-2 min-h-8 text-muted-foreground">
             {project.description}
           </CardDescription>
         </CardHeader>
@@ -117,7 +131,10 @@ export function ProjectCard({ project }: ProjectCardProps) {
                 </div>
               )}
               {project.materialsCount !== undefined && (
-                <div className="flex items-center gap-1" title="Materiales requeridos">
+                <div
+                  className="flex items-center gap-1"
+                  title="Materiales requeridos"
+                >
                   <Wrench className="h-3 w-3" />
                   <span>{project.materialsCount} mat.</span>
                 </div>
@@ -137,7 +154,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
       {/* Card Footer */}
       <CardFooter className="p-4 pt-0 border-t bg-muted/10 flex justify-between items-center py-2.5">
         <span className="text-[11px] text-muted-foreground">
-          {project.creatorName ? `Por ${project.creatorName}` : 'Oficial Betty'}
+          {project.creatorName ? `Por ${project.creatorName}` : "Oficial Betty"}
         </span>
 
         <Button
