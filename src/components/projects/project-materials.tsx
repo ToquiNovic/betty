@@ -12,7 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Wrench, ExternalLink, ShoppingCart, DollarSign } from 'lucide-react';
+import { Wrench, ExternalLink, DollarSign } from 'lucide-react';
 
 interface ProjectMaterialsProps {
   materials: ProjectMaterial[];

@@ -3,8 +3,7 @@
 import React from 'react';
 import { ProjectStep } from '@/types/project';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Layers, Video, Image as ImageIcon } from 'lucide-react';
+import { Layers, Video } from 'lucide-react';
 
 interface ProjectStepsProps {
   steps: ProjectStep[];

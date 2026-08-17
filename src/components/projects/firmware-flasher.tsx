@@ -26,7 +26,7 @@ interface FirmwareFlasherProps {
 
 export function FirmwareFlasher({ firmwares, boardType }: FirmwareFlasherProps) {
   const [selectedFwId, setSelectedFwId] = useState<string>(firmwares[0]?.id || '');
-  const [isSupported, setIsSupported] = useState<boolean>(true);
+  const [isSupported, setIsSupported] = useState<boolean>(() => typeof window !== 'undefined' && 'serial' in navigator);
   const [isFlashing, setIsFlashing] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
   const [statusMessage, setStatusMessage] = useState<string>('');
@@ -34,13 +34,6 @@ export function FirmwareFlasher({ firmwares, boardType }: FirmwareFlasherProps) 
   const [logs, setLogs] = useState<string[]>([]);
   const logEndRef = useRef<HTMLDivElement>(null);
   const transportRef = useRef<Transport | null>(null);
-
-  useEffect(() => {
-    // Check Web Serial API support
-    if (typeof window !== 'undefined') {
-      setIsSupported('serial' in navigator);
-    }
-  }, []);
 
   useEffect(() => {
     if (logEndRef.current) {
@@ -64,12 +57,12 @@ export function FirmwareFlasher({ firmwares, boardType }: FirmwareFlasherProps) 
     setStatusMessage('Solicitando puerto serial...');
     addLog(`Iniciando flashing de: ${selectedFirmware.name} (v${selectedFirmware.version})`);
 
-    let device: any = null;
+    let device: unknown = null;
     let transport: Transport | null = null;
 
     try {
       // 1. Request serial port from user
-      device = await (navigator as any).serial.requestPort();
+      device = await (navigator as unknown as { serial: { requestPort: () => Promise<unknown> } }).serial.requestPort();
       addLog('Puerto serial seleccionado por el usuario.');
 
       // 2. Setup Transport
@@ -146,9 +139,10 @@ export function FirmwareFlasher({ firmwares, boardType }: FirmwareFlasherProps) 
       setProgress(100);
       setStatusMessage('¡Firmware instalado con éxito!');
       setFlashSuccess(true);
-    } catch (err: any) {
-      addLog(`ERROR: ${err?.message || err}`);
-      setStatusMessage(`Error: ${err?.message || 'Fallo durante el flasheo'}`);
+    } catch (err: unknown) {
+      const error = err as Error;
+      addLog(`ERROR: ${error?.message || String(err)}`);
+      setStatusMessage(`Error: ${error?.message || 'Fallo durante el flasheo'}`);
     } finally {
       setIsFlashing(false);
       if (transportRef.current) {

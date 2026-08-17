@@ -5,7 +5,7 @@ import { ProjectFilters, ProjectDifficulty } from '@/types/project';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, X, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { Search, X, Sparkles } from 'lucide-react';
 
 interface ProjectFiltersProps {
   filters: ProjectFilters;
@@ -78,7 +78,7 @@ export function ProjectFiltersBar({ filters, onChange, availableTags = [] }: Pro
         </div>
 
         {/* Difficulty Select */}
-        <div className="w-full sm:w-[150px]">
+        <div className="w-full sm:w-37.5">
           <Select
             value={filters.difficulty || 'all'}
             onValueChange={handleDifficultyChange}
@@ -96,7 +96,7 @@ export function ProjectFiltersBar({ filters, onChange, availableTags = [] }: Pro
         </div>
 
         {/* Board Select */}
-        <div className="w-full sm:w-[150px]">
+        <div className="w-full sm:w-37.5">
           <Select
             value={filters.boardType || 'all'}
             onValueChange={handleBoardChange}

@@ -10,7 +10,7 @@ const ModelViewerDynamic = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex flex-col items-center justify-center h-[480px] w-full rounded-xl border bg-muted/20 text-muted-foreground gap-3">
+      <div className="flex flex-col items-center justify-center h-120 w-full rounded-xl border bg-muted/20 text-muted-foreground gap-3">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         <span className="text-xs font-semibold">Inicializando visor 3D...</span>
       </div>

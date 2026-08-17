@@ -2,7 +2,6 @@ import useSWR from 'swr';
 import {
   apiDelete,
   apiPatch,
-  apiPost,
   apiPut,
   apiUpload,
   fetcher,
