@@ -1,0 +1,19 @@
+services:
+  betty-client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://betty-api.laboratorio3d.online/api}
+        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-https://betty-api.laboratorio3d.online}
+        NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
+    container_name: betty_client_prod
+    restart: always
+    ports:
+      - "${PORT:-5173}:5173"
+    environment:
+      - NODE_ENV=production
+      - PORT=${PORT:-5173}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://betty-api.laboratorio3d.online/api}
+      - NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL:-https://betty-api.laboratorio3d.online}
+      - NEXT_PUBLIC_GOOGLE_CLIENT_ID=${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
