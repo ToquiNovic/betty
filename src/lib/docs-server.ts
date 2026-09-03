@@ -1,23 +1,40 @@
 import fs from 'fs';
 import path from 'path';
 import { DOCS_MANIFEST, DocContent, DocHeading } from './docs-manifest';
+import { DOCS_BUNDLE } from './docs-bundle';
 
 /**
  * Reads and parses a markdown document on the server.
+ * Uses in-memory bundle first for 100% reliability in Docker/Serverless/Standalone,
+ * and falls back to filesystem in development.
  */
 export function getDocContent(slugArray: string[], locale: string = 'es'): DocContent | null {
   const slug = slugArray.join('/');
   
-  // Try locale-specific path
-  let filePath = path.join(process.cwd(), 'src', 'content', locale === 'en' ? 'en' : '', `${slug}.md`);
-  if (!fs.existsSync(filePath)) {
-    filePath = path.join(process.cwd(), 'src', 'content', `${slug}.md`);
-  }
-  if (!fs.existsSync(filePath)) {
-    return null;
+  let raw: string | null = null;
+
+  // 1. Try in-memory bundle for locale-specific document
+  const bundleKeyLocale = locale === 'en' ? `en/${slug}` : slug;
+  if (DOCS_BUNDLE[bundleKeyLocale]) {
+    raw = DOCS_BUNDLE[bundleKeyLocale];
+  } else if (DOCS_BUNDLE[slug]) {
+    raw = DOCS_BUNDLE[slug];
   }
 
-  const raw = fs.readFileSync(filePath, 'utf-8');
+  // 2. Fallback to filesystem
+  if (!raw && typeof process !== 'undefined') {
+    let filePath = path.join(process.cwd(), 'src', 'content', locale === 'en' ? 'en' : '', `${slug}.md`);
+    if (!fs.existsSync(filePath)) {
+      filePath = path.join(process.cwd(), 'src', 'content', `${slug}.md`);
+    }
+    if (fs.existsSync(filePath)) {
+      raw = fs.readFileSync(filePath, 'utf-8');
+    }
+  }
+
+  if (!raw) {
+    return null;
+  }
 
   // Parse Frontmatter
   let title = '';

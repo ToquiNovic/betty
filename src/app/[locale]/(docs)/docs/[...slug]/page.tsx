@@ -11,13 +11,31 @@ import { ChevronRight, ArrowLeft, ArrowRight, BookOpen } from "lucide-react";
 
 interface DocPageProps {
   params: Promise<{
+    locale: string;
     slug: string[];
   }>;
 }
 
+export async function generateStaticParams() {
+  const locales = ['es', 'en'];
+  const params: { locale: string; slug: string[] }[] = [];
+
+  for (const locale of locales) {
+    for (const cat of DOCS_MANIFEST) {
+      for (const item of cat.items) {
+        params.push({
+          locale,
+          slug: item.slug.split('/'),
+        });
+      }
+    }
+  }
+
+  return params;
+}
+
 export async function generateMetadata({ params }: DocPageProps) {
-  const { slug } = await params;
-  const locale = await getLocale();
+  const { slug, locale } = await params;
   const doc = getDocContent(slug, locale);
 
   if (!doc) {
@@ -33,8 +51,7 @@ export async function generateMetadata({ params }: DocPageProps) {
 }
 
 export default async function DocDetailPage({ params }: DocPageProps) {
-  const { slug } = await params;
-  const locale = await getLocale();
+  const { slug, locale } = await params;
   const doc = getDocContent(slug, locale);
 
   if (!doc) {

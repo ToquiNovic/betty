@@ -3,7 +3,8 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, Binary, Sigma } from 'lucide-react';
+import { Sparkles, Sigma } from 'lucide-react';
+import katex from 'katex';
 
 export type EasingType = 'CUBIC' | 'SMOOTHERSTEP' | 'SINE' | 'QUAD' | 'LINEAR';
 
@@ -26,8 +27,8 @@ export const EASING_FORMULAS: Record<EasingType, FormulaDetails> = {
     name: 'Cubic Ease-In-Out (Recomendada)',
     badge: 'Cúbica Simétrica',
     badgeColor: 'bg-sky-500/10 text-sky-500 border-sky-500/30',
-    posLatex: 'f(t) = \\begin{cases} 4t^3 & t < 0.5 \\\\[4pt] 1 - \\dfrac{(-2t+2)^3}{2} & t \\ge 0.5 \\end{cases}',
-    velLatex: 'v(t) = \\begin{cases} 12t^2 & t < 0.5 \\\\[4pt] 6(-2t+2)^2 & t \\ge 0.5 \\end{cases}',
+    posLatex: 'f(t) = \\begin{cases} 4t^3 & t < 0.5 \\\\[6pt] 1 - \\dfrac{(-2t+2)^3}{2} & t \\ge 0.5 \\end{cases}',
+    velLatex: 'v(t) = \\begin{cases} 12t^2 & t < 0.5 \\\\[6pt] 6(-2t+2)^2 & t \\ge 0.5 \\end{cases}',
     physicsDescription:
       'Arranque ultra progresivo con aceleración nula inicial (a = 0). Vence la inercia estática de la madera sin sacudidas mecánicas ni estrés torsional en los servos.',
     continuity: 'C¹ Continua en velocidad',
@@ -74,6 +75,22 @@ export const EASING_FORMULAS: Record<EasingType, FormulaDetails> = {
   },
 };
 
+function MathView({ latex, className = '' }: { latex: string; className?: string }) {
+  const html = React.useMemo(() => {
+    try {
+      return katex.renderToString(latex, {
+        throwOnError: false,
+        displayMode: true,
+      });
+    } catch (e) {
+      console.error('KaTeX rendering error:', e);
+      return `<span class="text-rose-400 font-mono">${latex}</span>`;
+    }
+  }, [latex]);
+
+  return <div className={className} dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
 export function MathematicalModelCard({ easingType }: MathematicalModelCardProps) {
   const details = EASING_FORMULAS[easingType] || EASING_FORMULAS.CUBIC;
 
@@ -111,10 +128,10 @@ export function MathematicalModelCard({ easingType }: MathematicalModelCardProps
           <div className="p-3 rounded-lg border border-border/60 bg-muted/30 space-y-1.5">
             <div className="flex items-center justify-between text-[11px] font-semibold text-muted-foreground uppercase font-mono">
               <span>Posición Normalizada f(t)</span>
-              <span className="text-[10px] lowercase text-sky-500">trayectoria</span>
+              <span className="text-[10px] lowercase text-sky-500 font-bold">trayectoria</span>
             </div>
-            <div className="font-mono text-xs sm:text-sm font-bold text-sky-400 bg-background/80 p-2.5 rounded-md border border-border/40 overflow-x-auto">
-              {details.posLatex}
+            <div className="text-sky-400 bg-background/80 p-3 rounded-md border border-border/40 overflow-x-auto min-h-[70px] flex items-center justify-center">
+              <MathView latex={details.posLatex} className="text-sm sm:text-base" />
             </div>
           </div>
 
@@ -122,10 +139,10 @@ export function MathematicalModelCard({ easingType }: MathematicalModelCardProps
           <div className="p-3 rounded-lg border border-border/60 bg-muted/30 space-y-1.5">
             <div className="flex items-center justify-between text-[11px] font-semibold text-muted-foreground uppercase font-mono">
               <span>Velocidad Instantánea v(t) = df / dt</span>
-              <span className="text-[10px] lowercase text-purple-500">derivada</span>
+              <span className="text-[10px] lowercase text-purple-500 font-bold">derivada</span>
             </div>
-            <div className="font-mono text-xs sm:text-sm font-bold text-purple-400 bg-background/80 p-2.5 rounded-md border border-border/40 overflow-x-auto">
-              {details.velLatex}
+            <div className="text-purple-400 bg-background/80 p-3 rounded-md border border-border/40 overflow-x-auto min-h-[70px] flex items-center justify-center">
+              <MathView latex={details.velLatex} className="text-sm sm:text-base" />
             </div>
           </div>
         </div>
