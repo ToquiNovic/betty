@@ -47,12 +47,12 @@ export default function AuthCallbackPage() {
             expiresIn: '1d',
           });
 
-          toast.success('Signed in successfully with Google!');
+          toast.success('¡Sesión iniciada con éxito!');
           router.replace('/overview');
         }
       } catch (err: unknown) {
         if (isMounted) {
-          const msg = err instanceof Error ? err.message : 'Failed to authenticate';
+          const msg = err instanceof Error ? err.message : 'Error al autenticar';
           setAsyncError(msg);
           toast.error(msg);
         }
@@ -76,14 +76,14 @@ export default function AuthCallbackPage() {
               onClick={() => router.replace('/login')}
               className="text-xs text-primary underline"
             >
-              Return to login
+              Volver al inicio de sesión
             </button>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center space-y-3">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <p className="text-sm font-medium text-muted-foreground">
-              Completing authentication with Google...
+              Completando autenticación y preparando tu sesión...
             </p>
           </div>
         )}

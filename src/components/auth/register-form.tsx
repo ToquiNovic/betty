@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { GoogleAuthButton } from './google-auth-button';
+import { Ua3dAuthButton } from './ua3d-auth-button';
 import { toast } from '@/lib/toast';
 import { Loader2 } from 'lucide-react';
 
@@ -75,7 +76,10 @@ export function RegisterForm() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <GoogleAuthButton />
+        <div className="space-y-2.5">
+          <Ua3dAuthButton />
+          <GoogleAuthButton />
+        </div>
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">

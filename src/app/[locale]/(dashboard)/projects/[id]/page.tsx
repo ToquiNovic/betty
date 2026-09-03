@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from '@/i18n/routing';
+import { PlanoInclinadoVisualizer } from '@/components/projects/plano-inclinado/plano-inclinado-visualizer';
 import {
   ArrowLeft,
   Cpu,
@@ -27,6 +28,7 @@ import {
   Sparkles,
   Share2,
   Calendar,
+  Activity,
 } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { formatDistanceToNow } from 'date-fns';
@@ -182,9 +184,9 @@ export default function ProjectDetailPage() {
             <div className="flex items-center justify-between text-xs text-muted-foreground pt-3 border-t">
               <span>{project.creatorName ? `Creado por ${project.creatorName}` : 'Oficial Betty PaaS'}</span>
               {dateFormatted && (
-                <span className="flex items-center gap-1 text-[11px]">
+                <span className="flex items-center gap-1 text-[11px]" suppressHydrationWarning>
                   <Calendar className="h-3 w-3" />
-                  <span>Publicado {dateFormatted}</span>
+                  <span suppressHydrationWarning>Publicado {dateFormatted}</span>
                 </span>
               )}
             </div>
@@ -193,55 +195,78 @@ export default function ProjectDetailPage() {
       </Card>
 
       {/* Main Tabs Container */}
-      <Tabs defaultValue="steps" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 max-w-xl">
-          <TabsTrigger value="steps" className="gap-1.5 text-xs">
-            <Layers className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Pasos</span> ({project.steps?.length || 0})
-          </TabsTrigger>
+      {(() => {
+        const hasDigitalTwin =
+          project.hasDigitalTwin ||
+          project.id === 'plano-inclinado' ||
+          project.slug === 'plano-inclinado-esp32';
 
-          <TabsTrigger value="materials" className="gap-1.5 text-xs">
-            <Wrench className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Materiales</span> ({project.materials?.length || 0})
-          </TabsTrigger>
+        return (
+          <Tabs defaultValue={hasDigitalTwin ? 'digital-twin' : 'steps'} className="space-y-6">
+            <TabsList className={`grid w-full ${hasDigitalTwin ? 'grid-cols-5 max-w-2xl' : 'grid-cols-4 max-w-xl'}`}>
+              {hasDigitalTwin && (
+                <TabsTrigger value="digital-twin" className="gap-1.5 text-xs font-semibold text-sky-500 data-[state=active]:bg-sky-500/10 data-[state=active]:text-sky-400">
+                  <Activity className="h-3.5 w-3.5 animate-pulse text-sky-500" />
+                  <span>Gemelo Digital</span>
+                </TabsTrigger>
+              )}
 
-          <TabsTrigger value="model3d" className="gap-1.5 text-xs">
-            <Box className="h-3.5 w-3.5" />
-            <span>Modelo 3D</span>
-          </TabsTrigger>
+              <TabsTrigger value="steps" className="gap-1.5 text-xs">
+                <Layers className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Pasos</span> ({project.steps?.length || 0})
+              </TabsTrigger>
 
-          <TabsTrigger value="firmware" className="gap-1.5 text-xs">
-            <Zap className="h-3.5 w-3.5 text-emerald-500" />
-            <span className="font-semibold text-foreground">Firmware</span>
-          </TabsTrigger>
-        </TabsList>
+              <TabsTrigger value="materials" className="gap-1.5 text-xs">
+                <Wrench className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Materiales</span> ({project.materials?.length || 0})
+              </TabsTrigger>
 
-        {/* 1. Steps Tab */}
-        <TabsContent value="steps" className="space-y-4">
-          <ProjectStepsList steps={project.steps || []} />
-        </TabsContent>
+              <TabsTrigger value="model3d" className="gap-1.5 text-xs">
+                <Box className="h-3.5 w-3.5" />
+                <span>Modelo 3D</span>
+              </TabsTrigger>
 
-        {/* 2. Materials Tab */}
-        <TabsContent value="materials" className="space-y-4">
-          <ProjectMaterialsTable materials={project.materials || []} />
-        </TabsContent>
+              <TabsTrigger value="firmware" className="gap-1.5 text-xs">
+                <Zap className="h-3.5 w-3.5 text-emerald-500" />
+                <span className="font-semibold text-foreground">Firmware</span>
+              </TabsTrigger>
+            </TabsList>
 
-        {/* 3. 3D Model Tab */}
-        <TabsContent value="model3d" className="space-y-4">
-          <ProjectModelViewer
-            modelUrl={project.model3dUrl}
-            format={project.model3dFormat}
-          />
-        </TabsContent>
+            {/* 0. Digital Twin Tab (If Available) */}
+            {hasDigitalTwin && (
+              <TabsContent value="digital-twin" className="space-y-4">
+                <PlanoInclinadoVisualizer />
+              </TabsContent>
+            )}
 
-        {/* 4. Firmware Flashing Tab */}
-        <TabsContent value="firmware" className="space-y-4">
-          <FirmwareFlasher
-            firmwares={project.firmware || []}
-            boardType={project.boardType}
-          />
-        </TabsContent>
-      </Tabs>
+            {/* 1. Steps Tab */}
+            <TabsContent value="steps" className="space-y-4">
+              <ProjectStepsList steps={project.steps || []} />
+            </TabsContent>
+
+            {/* 2. Materials Tab */}
+            <TabsContent value="materials" className="space-y-4">
+              <ProjectMaterialsTable materials={project.materials || []} />
+            </TabsContent>
+
+            {/* 3. 3D Model Tab */}
+            <TabsContent value="model3d" className="space-y-4">
+              <ProjectModelViewer
+                modelUrl={project.model3dUrl}
+                format={project.model3dFormat}
+              />
+            </TabsContent>
+
+            {/* 4. Firmware Flashing Tab */}
+            <TabsContent value="firmware" className="space-y-4">
+              <FirmwareFlasher
+                firmwares={project.firmware || []}
+                boardType={project.boardType}
+              />
+            </TabsContent>
+          </Tabs>
+        );
+      })()}
     </div>
   );
 }

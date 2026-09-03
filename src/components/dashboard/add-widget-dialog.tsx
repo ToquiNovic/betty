@@ -32,7 +32,7 @@ import { toast } from '@/lib/toast';
 
 const addWidgetSchema = z.object({
   sensorId: z.string().min(1, { message: 'Selecciona un sensor' }),
-  widgetType: z.enum(['line_chart', 'gauge', 'table', 'map', 'metric', 'bar_chart']),
+  widgetType: z.enum(['line_chart', 'gauge', 'table', 'map', 'metric', 'bar_chart', 'metaverse_region']),
   title: z.string().min(2, { message: 'El título es obligatorio' }),
   metricKey: z.string().optional(),
   unit: z.string().optional(),
@@ -174,6 +174,7 @@ export function AddWidgetDialog({ dashboardId, onSuccess, trigger }: AddWidgetDi
                 <SelectItem value="metric">{t('typeMetric')}</SelectItem>
                 <SelectItem value="table">{t('typeTable')}</SelectItem>
                 <SelectItem value="map">{t('typeMap')}</SelectItem>
+                <SelectItem value="metaverse_region">🏝️ Región Metaverso (OpenSim 3D)</SelectItem>
               </SelectContent>
             </Select>
           </div>

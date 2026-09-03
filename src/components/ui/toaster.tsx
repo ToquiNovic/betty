@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Toaster as SileoToaster } from 'sileo';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/components/providers/theme-provider';
 
 export type ToasterProps = React.ComponentProps<typeof SileoToaster>;
 

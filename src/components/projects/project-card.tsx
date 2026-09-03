@@ -23,6 +23,7 @@ import {
   Layers,
   Sparkles,
   Wrench,
+  Activity,
 } from "lucide-react";
 
 interface ProjectCardProps {
@@ -48,8 +49,12 @@ export function ProjectCard({ project }: ProjectCardProps) {
             unoptimized
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-primary/10 via-muted to-muted text-muted-foreground/60">
-            <Cpu className="h-12 w-12 stroke-1 group-hover:scale-110 transition-transform text-primary/40" />
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 via-muted to-muted text-muted-foreground/60">
+            {project.hasDigitalTwin || project.id === "plano-inclinado" ? (
+              <Activity className="h-14 w-14 stroke-1 group-hover:scale-110 transition-transform text-sky-500/60 animate-pulse" />
+            ) : (
+              <Cpu className="h-12 w-12 stroke-1 group-hover:scale-110 transition-transform text-primary/40" />
+            )}
           </div>
         )}
 
@@ -65,8 +70,18 @@ export function ProjectCard({ project }: ProjectCardProps) {
           </Badge>
         </div>
 
-        {/* 3D Model / Firmware badges */}
+        {/* 3D Model / Digital Twin / Firmware badges */}
         <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1.5 z-10">
+          {(project.hasDigitalTwin || project.id === "plano-inclinado") && (
+            <Badge
+              variant="outline"
+              className="backdrop-blur-md bg-background/90 text-[10px] font-semibold gap-1 text-sky-500 border-sky-500/30"
+              title="Incluye Gemelo Digital interactivo"
+            >
+              <Activity className="h-3 w-3 animate-pulse" />
+              <span>Gemelo Digital</span>
+            </Badge>
+          )}
           {project.has3DModel && (
             <Badge
               variant="outline"

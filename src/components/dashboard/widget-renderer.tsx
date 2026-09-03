@@ -8,6 +8,7 @@ import { BarChartWidget } from './widgets/bar-chart-widget';
 import { GaugeWidget } from './widgets/gauge-widget';
 import { TableWidget } from './widgets/table-widget';
 import { MapWidget } from './widgets/map-widget';
+import { MetaverseRegionWidget } from './widgets/metaverse-region-widget';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 
@@ -38,6 +39,8 @@ export function WidgetRenderer({
         return <TableWidget widget={widget} latestReading={latestReading} />;
       case 'map':
         return <MapWidget widget={widget} latestReading={latestReading} />;
+      case 'metaverse_region':
+        return <MetaverseRegionWidget widget={widget} latestReading={latestReading} />;
       default:
         return <MetricWidget widget={widget} latestReading={latestReading} />;
     }

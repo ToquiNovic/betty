@@ -66,6 +66,7 @@ export interface Project {
   materialsCount?: number;
   hasFirmware?: boolean;
   has3DModel?: boolean;
+  hasDigitalTwin?: boolean;
   creatorName?: string | null;
   creatorAvatar?: string | null;
   steps?: ProjectStep[];

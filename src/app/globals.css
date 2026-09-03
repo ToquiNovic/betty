@@ -89,6 +89,7 @@
   --sileo-state-loading: oklch(0.55 0 0);
   --sileo-state-action: oklch(0.55 0.22 260);
   --sileo-roundness: 16px;
+  --expo-in: cubic-bezier(0.95, 0.05, 0.795, 0.035);
 }
 
 .dark {
@@ -153,5 +154,40 @@
   }
   .telemetry-glow {
     box-shadow: 0 0 20px -5px var(--color-primary);
+  }
+}
+
+/* =========================================================================
+ * Custom Theme Toggle View Transition (https://theme-toggle.rdsx.dev/)
+ * ========================================================================= */
+
+::view-transition-group(root) {
+  animation-timing-function: var(--expo-in);
+}
+
+::view-transition-new(root) {
+  mask: url('https://media.tenor.com/h5b-nbmzlT8AAAAj/pepeeee.gif') center / 0 no-repeat;
+  animation: scale 1.5s;
+  animation-fill-mode: both;
+}
+
+::view-transition-old(root),
+.dark::view-transition-old(root) {
+  animation: scale 1.5s;
+  animation-fill-mode: both;
+}
+
+@keyframes scale {
+  0% {
+    mask-size: 0;
+  }
+  10% {
+    mask-size: 50vmax;
+  }
+  90% {
+    mask-size: 50vmax;
+  }
+  100% {
+    mask-size: 2000vmax;
   }
 }

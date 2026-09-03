@@ -14,6 +14,8 @@ import {
   ProjectFirmware,
 } from '@/types/project';
 
+import { DEFAULT_PROJECTS } from '@/lib/data/default-projects';
+
 /**
  * Hook for public project listing
  */
@@ -33,28 +35,56 @@ export function useProjects(filters?: ProjectFilters) {
 
   const { data, error, isLoading, mutate } = useSWR<Project[]>(endpoint, fetcher);
 
+  // Merge API projects with default built-in community projects
+  const apiProjects = data || [];
+  const existingIds = new Set(apiProjects.map((p) => p.id));
+  const fallbackProjects = DEFAULT_PROJECTS.filter((p) => !existingIds.has(p.id));
+
+  let combined = [...apiProjects, ...fallbackProjects];
+
+  // Apply client-side filters on combined list if needed
+  if (filters) {
+    if (filters.difficulty && filters.difficulty !== 'all') {
+      combined = combined.filter((p) => p.difficulty === filters.difficulty);
+    }
+    if (filters.boardType) {
+      combined = combined.filter((p) => p.boardType.toLowerCase() === filters.boardType?.toLowerCase());
+    }
+    if (filters.tag) {
+      combined = combined.filter((p) => p.tags?.includes(filters.tag!));
+    }
+    if (filters.search) {
+      const q = filters.search.toLowerCase();
+      combined = combined.filter(
+        (p) => p.title.toLowerCase().includes(q) || p.description.toLowerCase().includes(q)
+      );
+    }
+  }
+
   return {
-    projects: data || [],
-    isLoading,
-    isError: !!error,
+    projects: combined,
+    isLoading: isLoading && apiProjects.length === 0 && combined.length === 0,
+    isError: !!error && combined.length === 0,
     error,
     mutate,
   };
 }
 
 /**
- * Hook for single project detail (authenticated)
+ * Hook for single project detail
  */
 export function useProject(id: string | null) {
+  const defaultProj = DEFAULT_PROJECTS.find((p) => p.id === id || p.slug === id) || null;
+
   const { data, error, isLoading, mutate } = useSWR<Project>(
     id ? `/projects/${id}` : null,
-    fetcher,
+    fetcher
   );
 
   return {
-    project: data || null,
-    isLoading,
-    isError: !!error,
+    project: data || defaultProj,
+    isLoading: isLoading && !defaultProj,
+    isError: !!error && !defaultProj,
     error,
     mutate,
   };

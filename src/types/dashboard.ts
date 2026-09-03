@@ -1,6 +1,6 @@
 import { SensorData } from './sensor';
 
-export type WidgetType = 'line_chart' | 'gauge' | 'table' | 'map' | 'metric' | 'bar_chart';
+export type WidgetType = 'line_chart' | 'gauge' | 'table' | 'map' | 'metric' | 'bar_chart' | 'metaverse_region';
 
 export interface WidgetPosition {
   x: number;
