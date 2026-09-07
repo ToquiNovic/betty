@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from '@/i18n/routing';
 import { useAuthStore } from '@/stores/auth-store';
@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { toast } from '@/lib/toast';
 
-export default function AuthCallbackPage() {
+function CallbackContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { login } = useAuthStore();
@@ -89,5 +89,26 @@ export default function AuthCallbackPage() {
         )}
       </CardContent>
     </Card>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <Card className="shadow-lg border">
+          <CardContent className="pt-8 pb-8 text-center space-y-4">
+            <div className="flex flex-col items-center justify-center space-y-3">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-sm font-medium text-muted-foreground">
+                Cargando sesión...
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      }
+    >
+      <CallbackContent />
+    </Suspense>
   );
 }
