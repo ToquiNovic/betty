@@ -28,7 +28,7 @@ export const DEFAULT_PROJECTS: Project[] = [
     hasFirmware: true,
     has3DModel: false,
     hasDigitalTwin: true,
-    creatorName: 'Betty PaaS IoT Lab',
+    creatorName: 'Betty IoT Lab',
     creatorAvatar: null,
     steps: [
       {
@@ -162,11 +162,11 @@ export const DEFAULT_PROJECTS: Project[] = [
         projectId: 'plano-inclinado',
         name: 'Plano Inclinado Easing Serial Controller',
         chipFamily: 'ESP32',
-        version: '1.2.0',
+        version: '1.3.0',
         firmwareUrl: '/firmware/plano_inclinado_esp32.bin',
         flashOffset: '0x10000',
-        flashInstructions: 'Conecta el ESP32 a 115200 baudios y flashea el offset estándar 0x10000.',
-        fileSizeBytes: 245760,
+        flashInstructions: 'Flashea este binario oficial del ESP32 con soporte dinámico para credenciales WiFi y Betty IoT Platform almacenadas en Flash NVS.',
+        fileSizeBytes: 888432,
         createdAt: FIXED_DATE,
       },
     ],

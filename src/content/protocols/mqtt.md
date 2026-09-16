@@ -3,7 +3,7 @@ title: Ingesta MQTT (EMQX)
 description: Protocolo de mensajería para sensores IoT y transmisiones de telemetría.
 ---
 
-El protocolo MQTT es el estándar principal para enviar telemetría de dispositivos hacia Betty PaaS.
+El protocolo MQTT es el estándar principal para enviar telemetría de dispositivos hacia Betty.
 
 ---
 

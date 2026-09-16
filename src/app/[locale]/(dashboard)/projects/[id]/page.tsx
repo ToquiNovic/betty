@@ -182,7 +182,7 @@ export default function ProjectDetailPage() {
 
             {/* Author info footer */}
             <div className="flex items-center justify-between text-xs text-muted-foreground pt-3 border-t">
-              <span>{project.creatorName ? `Creado por ${project.creatorName}` : 'Oficial Betty PaaS'}</span>
+              <span>{project.creatorName ? `Creado por ${project.creatorName}` : 'Oficial Betty IoT'}</span>
               {dateFormatted && (
                 <span className="flex items-center gap-1 text-[11px]" suppressHydrationWarning>
                   <Calendar className="h-3 w-3" />

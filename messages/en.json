@@ -1,7 +1,7 @@
 {
   "common": {
-    "appName": "Betty",
-    "appTagline": "PaaS Platform for IoT, Digital Twins, and Metaverses",
+    "appName": "Betty Platform",
+    "appTagline": "IoT Application Enablement Platform for Digital Twins and Metaverses",
     "save": "Save",
     "saving": "Saving...",
     "cancel": "Cancel",
@@ -29,12 +29,12 @@
     "all": "All"
   },
   "landing": {
-    "badge": "Next-Gen PaaS Platform",
+    "badge": "Next-Gen IoT Application Enablement Platform",
     "heroTitle": "Intelligent Infrastructure for IoT and Digital Twins",
     "heroSubtitle": "High-throughput ingestion with MQTT (EMQX), scalable time-series storage with TimescaleDB, real-time dashboards, and native simulation support.",
     "ctaStart": "Get Started",
     "ctaExplore": "Explore Public Dashboards",
-    "featuresTitle": "Why Choose Betty?",
+    "featuresTitle": "Why Choose Betty Platform?",
     "featuresSubtitle": "Engineered for researchers, enterprise, and developers requiring extreme performance and live analytics.",
     "featureMqttTitle": "High-Throughput MQTT Broker",
     "featureMqttDesc": "Powered by EMQX with cryptographic HTTP authentication per sensor (betty_live_... prefix).",
@@ -63,7 +63,7 @@
     "readyCtaTitle": "Ready to Deploy Your Telemetry Infrastructure?",
     "readyCtaSubtitle": "Sign up for free, register your devices, and monitor in real-time with zero scale friction.",
     "openDocs": "Developer Documentation",
-    "footerText": "Betty PaaS — Open Platform for Digital Twins and IoT."
+    "footerText": "Betty Platform — IoT Application Enablement Platform for Digital Twins and IoT."
   },
   "nav": {
     "overview": "Overview",
@@ -71,6 +71,7 @@
     "dashboards": "Dashboards",
     "teams": "Teams",
     "projects": "Projects",
+    "digitalTwin": "Digital Twin",
     "admin": "Administration",
     "settings": "Settings",
     "publicDashboards": "Explore Public",
@@ -100,7 +101,7 @@
     "orContinueWith": "Or sign in with local credentials",
     "googleAuth": "Continue with Google",
     "ua3dAuth": "Sign In with UA3D Grid Platform",
-    "ssoTitle": "Unified Access: UA3D & Betty PaaS",
+    "ssoTitle": "Unified Access: UA3D & Betty Platform",
     "ssoSubtitle": "Sign in with your centralized Keycloak account",
     "ssoDescription": "A single shared account for OpenSim Metaverse, Admin Console, and Digital Twins.",
     "ssoBadge": "Centralized SSO",
@@ -233,7 +234,7 @@
   },
   "admin": {
     "title": "Admin Console",
-    "subtitle": "Global platform management of users and RBAC roles",
+    "subtitle": "Global management of users and RBAC roles in Betty Platform",
     "totalUsers": "Total Users",
     "adminUsers": "Administrators",
     "standardUsers": "Standard Users",

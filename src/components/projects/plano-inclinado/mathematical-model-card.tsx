@@ -3,13 +3,15 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, Sigma } from 'lucide-react';
+import { Sparkles, Sigma, Atom } from 'lucide-react';
 import katex from 'katex';
 
 export type EasingType = 'CUBIC' | 'SMOOTHERSTEP' | 'SINE' | 'QUAD' | 'LINEAR';
 
 interface MathematicalModelCardProps {
   easingType: EasingType;
+  plankAngle?: number;
+  slipAngle?: number;
 }
 
 interface FormulaDetails {
@@ -88,72 +90,100 @@ function MathView({ latex, className = '' }: { latex: string; className?: string
     }
   }, [latex]);
 
-  return <div className={className} dangerouslySetInnerHTML={{ __html: html }} />;
+  return (
+    <div
+      className={`overflow-x-auto my-1 py-1 text-foreground font-sans ${className}`}
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  );
 }
 
-export function MathematicalModelCard({ easingType }: MathematicalModelCardProps) {
-  const details = EASING_FORMULAS[easingType] || EASING_FORMULAS.CUBIC;
+export function MathematicalModelCard({
+  easingType,
+  plankAngle = 0,
+  slipAngle = 0,
+}: MathematicalModelCardProps) {
+  const current = EASING_FORMULAS[easingType] || EASING_FORMULAS.CUBIC;
+
+  // Cálculos físicos en vivo
+  const rad = (plankAngle * Math.PI) / 180;
+  const currentTan = Math.tan(rad).toFixed(4);
+
+  const physicsLatex = `F_\\parallel = m g \\sin(\\theta_{\\text{tabla}}), \\quad N = m g \\cos(\\theta_{\\text{tabla}}), \\quad \\mu_s = \\tan(\\theta_c)`;
+  
+  const evaluationLatex = slipAngle > 0
+    ? `\\theta_c = ${slipAngle.toFixed(1)}^\\circ \\implies \\mu_s = \\tan(${slipAngle.toFixed(1)}^\\circ) = ${Math.tan((slipAngle * Math.PI) / 180).toFixed(4)}`
+    : `\\theta_{\\text{tabla}} = ${plankAngle.toFixed(1)}^\\circ \\implies \\tan(\\theta) = ${currentTan}`;
 
   return (
     <Card className="border border-border/80 bg-card/80 backdrop-blur-xs shadow-sm overflow-hidden">
-      <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between space-y-0">
+      <CardHeader className="p-4 pb-2 border-b border-border/60 flex flex-row items-center justify-between space-y-0">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
-            <Sigma className="h-4 w-4" />
+          <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-400">
+            <Atom className="h-4 w-4" />
           </div>
           <div>
             <CardTitle className="text-sm font-bold tracking-tight text-foreground">
-              Modelo Matemático Dinámico de la Curva Activa
+              Modelo Físico-Matemático: Cinemática & Fricción Estática
             </CardTitle>
-            <p className="text-[11px] text-muted-foreground">
-              Ecuaciones analíticas de trayectoria y cinemática en tiempo normalizado t ∈ [0, 1]
+            <p className="text-[11px] text-muted-foreground font-mono">
+              Ecuaciones analíticas de aceleración, velocidad y descomposición de fuerzas
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5">
-          <Badge variant="outline" className={`font-mono text-[10px] border ${details.badgeColor}`}>
-            {details.badge}
-          </Badge>
-          <Badge variant="secondary" className="font-mono text-[10px]">
-            {details.continuity}
-          </Badge>
-        </div>
+        <Badge variant="outline" className={`text-[11px] font-mono ${current.badgeColor}`}>
+          <Sparkles className="h-3 w-3 mr-1" />
+          {current.badge}
+        </Badge>
       </CardHeader>
 
-      <CardContent className="p-4 pt-2 space-y-3">
-        {/* Math Formulas Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {/* Position Formula */}
-          <div className="p-3 rounded-lg border border-border/60 bg-muted/30 space-y-1.5">
-            <div className="flex items-center justify-between text-[11px] font-semibold text-muted-foreground uppercase font-mono">
-              <span>Posición Normalizada f(t)</span>
-              <span className="text-[10px] lowercase text-sky-500 font-bold">trayectoria</span>
-            </div>
-            <div className="text-sky-400 bg-background/80 p-3 rounded-md border border-border/40 overflow-x-auto min-h-[70px] flex items-center justify-center">
-              <MathView latex={details.posLatex} className="text-sm sm:text-base" />
-            </div>
+      <CardContent className="p-4 pt-3 space-y-4 text-xs">
+        {/* Bloque 1: Física del Plano Inclinado & Coeficiente de Fricción */}
+        <div className="p-3.5 rounded-xl border border-purple-500/30 bg-purple-500/5 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-purple-400 text-xs flex items-center gap-1.5">
+              <Sigma className="h-3.5 w-3.5" />
+              Leyes de Newton & Coeficiente de Fricción Estática (μs):
+            </span>
+            <span className="text-[10px] font-mono text-muted-foreground">
+              {slipAngle > 0 ? 'Estado: Deslizamiento Registrado' : 'Estado: Reposo Estático'}
+            </span>
           </div>
 
-          {/* Velocity Formula */}
-          <div className="p-3 rounded-lg border border-border/60 bg-muted/30 space-y-1.5">
-            <div className="flex items-center justify-between text-[11px] font-semibold text-muted-foreground uppercase font-mono">
-              <span>Velocidad Instantánea v(t) = df / dt</span>
-              <span className="text-[10px] lowercase text-purple-500 font-bold">derivada</span>
+          <MathView latex={physicsLatex} />
+          <MathView latex={evaluationLatex} className="text-amber-400" />
+
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            En el instante crítico de deslizamiento inminente, la fuerza de rozamiento estática máxima iguala a la componente gravitatoria tangencial (F∥ = fs,max = μs · N). Dividiendo entre la fuerza normal se elimina la masa, obteniendo la relación fundamental μs = tan(θc).
+          </p>
+        </div>
+
+        {/* Bloque 2: Cinemática de Easing Seleccionada */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* Ecuación de Posición */}
+          <div className="p-3 rounded-lg border border-border/70 bg-background/60 space-y-1">
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground font-semibold">
+              <span>Posición Normalizada f(t)</span>
+              <span className="font-mono text-sky-400 text-[10px]">t ∈ [0, 1]</span>
             </div>
-            <div className="text-purple-400 bg-background/80 p-3 rounded-md border border-border/40 overflow-x-auto min-h-[70px] flex items-center justify-center">
-              <MathView latex={details.velLatex} className="text-sm sm:text-base" />
+            <MathView latex={current.posLatex} />
+          </div>
+
+          {/* Ecuación de Velocidad */}
+          <div className="p-3 rounded-lg border border-border/70 bg-background/60 space-y-1">
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground font-semibold">
+              <span>Velocidad Derivada v(t) = f&apos;(t)</span>
+              <span className="font-mono text-purple-400 text-[10px]">{current.continuity}</span>
             </div>
+            <MathView latex={current.velLatex} />
           </div>
         </div>
 
-        {/* Physics note */}
-        <div className="flex items-start gap-2.5 p-3 rounded-lg bg-primary/5 border border-primary/20 text-xs text-muted-foreground leading-relaxed">
-          <Sparkles className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-          <div>
-            <strong className="text-foreground font-semibold">Análisis Dinámico: </strong>
-            <span>{details.physicsDescription}</span>
-          </div>
+        {/* Descripción Física de la Curva */}
+        <div className="p-2.5 rounded-lg border border-sky-500/20 bg-sky-500/5 text-[11px] text-muted-foreground leading-relaxed">
+          <strong className="text-sky-400 font-semibold">{current.name}: </strong>
+          {current.physicsDescription}
         </div>
       </CardContent>
     </Card>

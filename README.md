@@ -1,7 +1,7 @@
-# ⚡ Betty Client — Frontend PaaS para IoT, Gemelos Digitales y Metaversos
+# ⚡ Betty Platform Client — Frontend IoT Application Enablement Platform (AEP) para IoT, Gemelos Digitales y Metaversos
 
 <p align="center">
-  <strong>Frontend moderno de alto rendimiento para visualización de telemetría en tiempo real, gestión de dispositivos, tableros interactivos y gemelos digitales.</strong>
+  <strong>Betty Platform: Frontend moderno de alto rendimiento para visualización de telemetría en tiempo real, gestión de dispositivos, tableros interactivos y gemelos digitales.</strong>
 </p>
 
 <p align="center">

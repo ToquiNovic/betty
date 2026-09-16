@@ -1,6 +1,6 @@
 ---
 title: Integración 3D en Tiempo Real con Three.js
-description: Cómo conectar un modelo 3D GLTF/GLB a la telemetría en vivo de Betty PaaS.
+description: Cómo conectar un modelo 3D GLTF/GLB a la telemetría en vivo de Betty.
 ---
 
 Esta guía muestra cómo vincular un visor 3D interactivo en la web para que responda dinámicamente a las lecturas de los sensores.

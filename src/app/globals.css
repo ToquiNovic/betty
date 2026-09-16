@@ -7,6 +7,10 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --color-betty-navy: #003092;
+  --color-betty-cyan: #00D1FD;
+  --color-betty-purple: #8610E6;
+  --color-betty-orange: #F4760D;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
@@ -57,80 +61,80 @@
   --card-foreground: oklch(0.18 0.02 260);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.02 260);
-  --primary: oklch(0.42 0.19 255);
+  --primary: oklch(0.36 0.17 262); /* Betty Deep Cobalt Blue #003092 */
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.94 0.015 250);
+  --secondary: oklch(0.95 0.015 250);
   --secondary-foreground: oklch(0.24 0.04 260);
-  --muted: oklch(0.94 0.01 250);
-  --muted-foreground: oklch(0.48 0.02 250);
-  --accent: oklch(0.93 0.03 220);
-  --accent-foreground: oklch(0.25 0.06 250);
+  --muted: oklch(0.95 0.01 250);
+  --muted-foreground: oklch(0.46 0.03 260);
+  --accent: oklch(0.93 0.04 220); /* Betty Electric Cyan tint */
+  --accent-foreground: oklch(0.20 0.08 262);
   --destructive: oklch(0.58 0.23 25);
   --border: oklch(0.89 0.015 250);
   --input: oklch(0.89 0.015 250);
-  --ring: oklch(0.55 0.16 255);
-  --chart-1: oklch(0.58 0.19 230);
-  --chart-2: oklch(0.62 0.18 160);
-  --chart-3: oklch(0.52 0.22 285);
-  --chart-4: oklch(0.68 0.17 65);
-  --chart-5: oklch(0.60 0.22 15);
+  --ring: oklch(0.48 0.18 255);
+  --chart-1: oklch(0.40 0.18 262); /* Betty Deep Cobalt */
+  --chart-2: oklch(0.68 0.16 220); /* Betty Electric Cyan */
+  --chart-3: oklch(0.52 0.25 300); /* Betty Purple */
+  --chart-4: oklch(0.68 0.19 50);  /* Betty Tangerine */
+  --chart-5: oklch(0.62 0.18 160); /* Emerald / Mint */
   --radius: 0.625rem;
   --sidebar: oklch(0.975 0.008 250);
   --sidebar-foreground: oklch(0.18 0.02 260);
-  --sidebar-primary: oklch(0.42 0.19 255);
+  --sidebar-primary: oklch(0.36 0.17 262);
   --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.93 0.02 250);
+  --sidebar-accent: oklch(0.93 0.025 250);
   --sidebar-accent-foreground: oklch(0.20 0.04 260);
   --sidebar-border: oklch(0.90 0.015 250);
-  --sidebar-ring: oklch(0.55 0.16 255);
+  --sidebar-ring: oklch(0.48 0.18 255);
   --sileo-state-success: oklch(0.65 0.19 155);
   --sileo-state-error: oklch(0.62 0.22 25);
-  --sileo-state-warning: oklch(0.75 0.18 75);
-  --sileo-state-info: oklch(0.65 0.18 230);
+  --sileo-state-warning: oklch(0.70 0.19 50);
+  --sileo-state-info: oklch(0.68 0.16 220);
   --sileo-state-loading: oklch(0.55 0 0);
-  --sileo-state-action: oklch(0.55 0.22 260);
+  --sileo-state-action: oklch(0.52 0.25 300);
   --sileo-roundness: 16px;
   --expo-in: cubic-bezier(0.95, 0.05, 0.795, 0.035);
 }
 
 .dark {
-  --background: oklch(0.13 0.02 260);
+  --background: oklch(0.12 0.03 262); /* Deep Midnight Navy from logo contour */
   --foreground: oklch(0.97 0.005 240);
-  --card: oklch(0.18 0.025 260);
+  --card: oklch(0.16 0.035 262);
   --card-foreground: oklch(0.97 0.005 240);
-  --popover: oklch(0.18 0.025 260);
+  --popover: oklch(0.16 0.035 262);
   --popover-foreground: oklch(0.97 0.005 240);
-  --primary: oklch(0.72 0.18 225);
-  --primary-foreground: oklch(0.12 0.03 260);
-  --secondary: oklch(0.24 0.025 260);
-  --secondary-foreground: oklch(0.96 0.005 240);
-  --muted: oklch(0.22 0.02 260);
-  --muted-foreground: oklch(0.68 0.02 250);
-  --accent: oklch(0.25 0.04 235);
-  --accent-foreground: oklch(0.96 0.01 230);
+  --primary: oklch(0.78 0.16 220); /* Betty Electric Cyan #00D1FD */
+  --primary-foreground: oklch(0.10 0.04 262); /* High contrast Midnight Navy */
+  --secondary: oklch(0.22 0.035 262);
+  --secondary-foreground: oklch(0.96 0.01 240);
+  --muted: oklch(0.20 0.025 262);
+  --muted-foreground: oklch(0.68 0.03 250);
+  --accent: oklch(0.25 0.05 260);
+  --accent-foreground: oklch(0.96 0.01 220);
   --destructive: oklch(0.65 0.20 22);
-  --border: oklch(0.27 0.02 260);
-  --input: oklch(0.27 0.02 260);
-  --ring: oklch(0.65 0.18 225);
-  --chart-1: oklch(0.75 0.18 215);
-  --chart-2: oklch(0.76 0.20 155);
-  --chart-3: oklch(0.72 0.22 285);
-  --chart-4: oklch(0.80 0.17 75);
-  --chart-5: oklch(0.72 0.22 15);
-  --sidebar: oklch(0.15 0.02 260);
+  --border: oklch(0.25 0.03 260);
+  --input: oklch(0.25 0.03 260);
+  --ring: oklch(0.72 0.16 220);
+  --chart-1: oklch(0.78 0.16 220); /* Betty Electric Cyan */
+  --chart-2: oklch(0.68 0.24 300); /* Betty Purple */
+  --chart-3: oklch(0.72 0.19 50);  /* Betty Tangerine */
+  --chart-4: oklch(0.65 0.18 260); /* Betty Cobalt Blue */
+  --chart-5: oklch(0.76 0.18 160); /* Mint / Teal */
+  --sidebar: oklch(0.13 0.03 262);
   --sidebar-foreground: oklch(0.96 0.005 240);
-  --sidebar-primary: oklch(0.72 0.18 225);
-  --sidebar-primary-foreground: oklch(0.12 0.03 260);
-  --sidebar-accent: oklch(0.22 0.025 260);
+  --sidebar-primary: oklch(0.78 0.16 220);
+  --sidebar-primary-foreground: oklch(0.10 0.04 262);
+  --sidebar-accent: oklch(0.20 0.035 262);
   --sidebar-accent-foreground: oklch(0.96 0.005 240);
-  --sidebar-border: oklch(0.25 0.02 260);
-  --sidebar-ring: oklch(0.65 0.18 225);
+  --sidebar-border: oklch(0.24 0.03 260);
+  --sidebar-ring: oklch(0.72 0.16 220);
   --sileo-state-success: oklch(0.76 0.20 155);
   --sileo-state-error: oklch(0.68 0.22 25);
-  --sileo-state-warning: oklch(0.80 0.18 75);
-  --sileo-state-info: oklch(0.75 0.18 215);
+  --sileo-state-warning: oklch(0.75 0.19 50);
+  --sileo-state-info: oklch(0.78 0.16 220);
   --sileo-state-loading: oklch(0.70 0 0);
-  --sileo-state-action: oklch(0.68 0.20 260);
+  --sileo-state-action: oklch(0.68 0.24 300);
   --sileo-roundness: 16px;
 }
 

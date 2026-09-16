@@ -6,8 +6,9 @@ import { Link } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { LocaleSwitcher } from '@/components/layout/locale-switcher';
-import { Activity, ArrowRight, LayoutDashboard, Globe, FileCode } from 'lucide-react';
+import { ArrowRight, LayoutDashboard, Globe, FileCode } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
+import { BettyLogo } from '@/components/common/betty-logo';
 
 export function LandingHeader() {
   const t = useTranslations('nav');
@@ -18,23 +19,8 @@ export function LandingHeader() {
     <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur-xl transition-all">
       <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Brand */}
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-indigo-600 to-cyan-500 text-white shadow-md shadow-primary/20 transition-transform group-hover:scale-105">
-            <Activity className="h-5 w-5 animate-pulse" />
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-1.5">
-              <span className="font-bold tracking-tight text-lg leading-tight text-foreground">
-                {common('appName')}
-              </span>
-              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 leading-none">
-                PaaS
-              </span>
-            </div>
-            <span className="text-[10px] text-muted-foreground font-mono leading-none">
-              IoT & Digital Twins
-            </span>
-          </div>
+        <Link href="/" className="group inline-flex items-center">
+          <BettyLogo size="md" showBadge subtitle="IoT & Digital Twins" priority />
         </Link>
 
         {/* Navigation Links */}

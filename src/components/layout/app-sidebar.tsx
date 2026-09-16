@@ -20,6 +20,7 @@ import {
   SidebarRail,
 } from '@/components/ui/sidebar';
 import { UserNav } from './user-nav';
+import { BettyLogo } from '@/components/common/betty-logo';
 import {
   Activity,
   LayoutDashboard,
@@ -84,6 +85,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       badge: 'IoT DIY',
       badgeColor: 'bg-primary/10 text-primary border-primary/30',
     },
+    {
+      title: t('digitalTwin'),
+      url: '/digital-twin',
+      icon: Activity,
+      isActive: pathname.startsWith('/digital-twin'),
+      badge: 'Plano 2D',
+      badgeColor: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30',
+    },
   ];
 
   const adminNav = [
@@ -125,22 +134,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" render={<Link href="/overview" />} className="hover:bg-transparent">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-indigo-600 to-cyan-500 text-white shadow-md shadow-primary/20 ring-1 ring-white/20 shrink-0">
-                <Activity className="h-5 w-5 animate-pulse" />
-              </div>
-              <div className="flex flex-col truncate">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-extrabold tracking-tight text-sm text-foreground">
-                    {common('appName')}
-                  </span>
-                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-primary/10 text-primary border border-primary/20">
-                    IoT PaaS
-                  </span>
-                </div>
-                <span className="text-[10px] text-muted-foreground font-mono truncate">
-                  Digital Twins & Realtime
-                </span>
-              </div>
+              <BettyLogo size="sm" showBadge subtitle="Digital Twins & Realtime" collapseOnSidebar priority />
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

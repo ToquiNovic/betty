@@ -1,9 +1,9 @@
 ---
-title: Introduction to Betty PaaS
+title: Introduction to Betty
 description: Architectural overview of Betty open source platform for IoT and Digital Twins.
 ---
 
-**Betty PaaS** is an open-source platform-as-a-service engineered for high-throughput telemetry ingestion, time-series storage, real-time visual dashboards, and native digital twin metaverse synchronization.
+**Betty** is an open-source IoT Application Enablement Platform (AEP) engineered for high-throughput telemetry ingestion, time-series storage, real-time visual dashboards, and native digital twin metaverse synchronization.
 
 ---
 

@@ -23,8 +23,8 @@ export const DOCS_MANIFEST: DocCategory[] = [
     items: [
       {
         slug: 'getting-started/introduction',
-        title: 'Introducción a Betty PaaS',
-        titleEn: 'Introduction to Betty PaaS',
+        title: 'Introducción a Betty',
+        titleEn: 'Introduction to Betty',
         description: 'Visión general de Betty, la plataforma abierta de IoT y Gemelos Digitales.',
         descriptionEn: 'Architectural overview of Betty open source platform for IoT and Digital Twins.',
       },
@@ -84,7 +84,7 @@ export const DOCS_MANIFEST: DocCategory[] = [
         title: 'Guía de Conexión ESP32 (C++/Arduino)',
         titleEn: 'ESP32 Hardware Guide (C++/Arduino)',
         description: 'Código completo y configuración para conectar placas ESP32 a Betty.',
-        descriptionEn: 'Complete firmware template for connecting ESP32 to Betty PaaS.',
+        descriptionEn: 'Complete firmware template for connecting ESP32 to Betty.',
       },
       {
         slug: 'hardware/esp8266',
@@ -127,7 +127,7 @@ export const DOCS_MANIFEST: DocCategory[] = [
         title: 'Motores 3D (Unity / Unreal Engine)',
         titleEn: '3D Engines (Unity / Unreal Engine)',
         description: 'Cómo conectar entornos de simulación a la ingesta de Betty.',
-        descriptionEn: 'Connecting game engines and metaverse simulations to Betty PaaS.',
+        descriptionEn: 'Connecting game engines and metaverse simulations to Betty.',
       },
     ],
   },

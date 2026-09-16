@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: DocPageProps) {
 
   if (!doc) {
     return {
-      title: "Documentación | Betty PaaS",
+      title: "Documentación | Betty",
     };
   }
 

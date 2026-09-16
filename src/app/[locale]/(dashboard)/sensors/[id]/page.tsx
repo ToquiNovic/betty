@@ -29,8 +29,10 @@ import {
   Settings,
   Copy,
   Check,
+  Cpu,
 } from 'lucide-react';
 import { toast } from '@/lib/toast';
+import { PlanoInclinadoVisualizer } from '@/components/projects/plano-inclinado/plano-inclinado-visualizer';
 
 interface SensorSettingsFormProps {
   sensor: NonNullable<ReturnType<typeof useSensor>['sensor']>;
@@ -294,10 +296,14 @@ export default function SensorDetailPage() {
 
       {/* Interactive Tabs */}
       <Tabs defaultValue="chart" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 max-w-md">
+        <TabsList className="grid w-full grid-cols-4 max-w-xl">
           <TabsTrigger value="chart" className="gap-2 text-xs">
             <Activity className="h-3.5 w-3.5" />
             <span>{t('chartTab')}</span>
+          </TabsTrigger>
+          <TabsTrigger value="digital-twin" className="gap-2 text-xs font-semibold text-purple-600 dark:text-purple-400">
+            <Cpu className="h-3.5 w-3.5" />
+            <span>Gemelo Digital</span>
           </TabsTrigger>
           <TabsTrigger value="table" className="gap-2 text-xs">
             <Table className="h-3.5 w-3.5" />
@@ -312,6 +318,11 @@ export default function SensorDetailPage() {
         {/* Chart View */}
         <TabsContent value="chart" className="space-y-4">
           <SensorDataChart data={allReadings} sensorName={sensor.name} />
+        </TabsContent>
+
+        {/* Digital Twin View */}
+        <TabsContent value="digital-twin" className="space-y-4">
+          <PlanoInclinadoVisualizer sensorId={sensor.id} />
         </TabsContent>
 
         {/* Table View */}

@@ -2,13 +2,33 @@
 
 import React, { useEffect, useRef } from 'react';
 
-interface DigitalTwinCanvasProps {
-  currentAngle: number;
-  targetAngle: number;
+export interface DigitalTwinCanvasProps {
+  plankAngle?: number;
+  currentAngle?: number; // compatibilidad
+  servoAngle?: number;
+  targetAngle?: number;
+  sensorCubePresent?: boolean;
+  slipAngle?: number;
+  isConnected?: boolean;
+  connectionSource?: 'usb' | 'cloud' | 'none';
 }
 
-export function DigitalTwinCanvas({ currentAngle, targetAngle }: DigitalTwinCanvasProps) {
+export function DigitalTwinCanvas({
+  plankAngle,
+  currentAngle,
+  servoAngle,
+  targetAngle = 0,
+  sensorCubePresent = true,
+  slipAngle = 0,
+  isConnected = false,
+  connectionSource = 'none',
+}: DigitalTwinCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const cubeSlideOffsetRef = useRef<number>(0);
+
+  // Fallback para ángulos si no se especifican ambos
+  const actualPlankAngle = plankAngle ?? currentAngle ?? 0;
+  const actualServoAngle = servoAngle ?? currentAngle ?? actualPlankAngle;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -22,32 +42,31 @@ export function DigitalTwinCanvas({ currentAngle, targetAngle }: DigitalTwinCanv
       const width = canvas.width;
       const height = canvas.height;
 
-      // Clear Canvas
+      // 1. Limpiar Canvas y dibujar fondo
       ctx.clearRect(0, 0, width, height);
 
-      // Background gradient
       const bgGrad = ctx.createRadialGradient(
         width / 2,
         height / 2,
         10,
         width / 2,
         height / 2,
-        Math.max(width, height) / 1.2
+        Math.max(width, height) / 1.1
       );
-      bgGrad.addColorStop(0, '#151c27');
+      bgGrad.addColorStop(0, '#151d28');
       bgGrad.addColorStop(1, '#090d14');
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, width, height);
 
-      // Wooden Table Base (Bottom)
-      const tableY = 270;
+      // 2. Base de la mesa de madera
+      const tableY = 275;
       ctx.fillStyle = '#1c1510';
       ctx.fillRect(0, tableY, width, height - tableY);
-      ctx.fillStyle = '#3a2b21';
+      ctx.fillStyle = '#2d221a';
       ctx.fillRect(0, tableY - 4, width, 4);
 
-      // Grid subtle markings on table
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+      // Líneas sutiles de la mesa
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
       ctx.lineWidth = 1;
       for (let x = 0; x < width; x += 40) {
         ctx.beginPath();
@@ -56,53 +75,47 @@ export function DigitalTwinCanvas({ currentAngle, targetAngle }: DigitalTwinCanv
         ctx.stroke();
       }
 
-      // Pivot position
-      const pivotX = 120;
-      const pivotY = 250;
-      const plankLength = 340;
-      const plankThickness = 28;
+      // 3. Geometría del Plano Inclinado
+      const pivotX = 110;
+      const pivotY = 255;
+      const plankLength = 360;
+      const plankThickness = 26;
 
-      const currentRad = (currentAngle * Math.PI) / 180;
-      const targetRad = (targetAngle * Math.PI) / 180;
+      const plankRad = (actualPlankAngle * Math.PI) / 180;
+      const servoRad = (actualServoAngle * Math.PI) / 180;
+      const isSlip = slipAngle > 0;
 
-      // Target ghost arc & angle indicator
-      ctx.strokeStyle = 'rgba(168, 85, 247, 0.3)';
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([4, 4]);
-      ctx.beginPath();
-      ctx.arc(pivotX, pivotY, 160, 0, -targetRad, true);
-      ctx.stroke();
-      ctx.setLineDash([]);
+      // 4. Arco transportador de grados
+      ctx.save();
+      ctx.translate(pivotX, pivotY);
 
-      // Angular Arc Ruler (0 to 90 degrees)
+      // Arco guía de 90° en celeste tenue
       ctx.strokeStyle = 'rgba(56, 189, 248, 0.2)';
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.arc(pivotX, pivotY, 160, 0, -Math.PI / 2, true);
+      ctx.arc(0, 0, 180, 0, -Math.PI / 2, true);
       ctx.stroke();
 
-      // Active travel arc (Blue Glow)
-      ctx.strokeStyle = '#38bdf8';
+      // Arco activo recorrido
+      ctx.strokeStyle = isSlip ? '#f85149' : '#38bdf8';
       ctx.lineWidth = 2.5;
       ctx.beginPath();
-      ctx.arc(pivotX, pivotY, 160, 0, -currentRad, true);
+      ctx.arc(0, 0, 180, 0, -plankRad, true);
       ctx.stroke();
 
-      // Degree Text near the arc
-      ctx.fillStyle = '#38bdf8';
-      ctx.font = 'bold 13px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
+      // Etiqueta numérica del ángulo
+      ctx.fillStyle = isSlip ? '#f85149' : '#38bdf8';
+      ctx.font = 'bold 12px ui-monospace, SFMono-Regular, Menlo, monospace';
       ctx.fillText(
-        `${currentAngle.toFixed(1)}°`,
-        pivotX + 175 * Math.cos(-currentRad / 2),
-        pivotY + 175 * Math.sin(-currentRad / 2)
+        `θ = ${actualPlankAngle.toFixed(1)}°`,
+        195 * Math.cos(-plankRad / 2),
+        195 * Math.sin(-plankRad / 2)
       );
 
-      // Save context for rotating the wooden plank
-      ctx.save();
-      ctx.translate(pivotX, pivotY);
-      ctx.rotate(-currentRad);
+      // 5. Rotación de la Rampa de Madera
+      ctx.rotate(-plankRad);
 
-      // Wooden Plank (Ramp)
+      // Viga de madera con bisel y gradiente
       const woodGrad = ctx.createLinearGradient(0, -plankThickness, 0, 0);
       woodGrad.addColorStop(0, '#8c5027');
       woodGrad.addColorStop(0.3, '#b87742');
@@ -118,75 +131,200 @@ export function DigitalTwinCanvas({ currentAngle, targetAngle }: DigitalTwinCanv
       }
       ctx.fill();
 
-      // Plank Outer Stroke
       ctx.strokeStyle = '#42220e';
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      // Wood Grain details
-      ctx.strokeStyle = 'rgba(66, 34, 14, 0.45)';
+      // Vetas de madera
+      ctx.strokeStyle = 'rgba(66, 34, 14, 0.4)';
       ctx.lineWidth = 1;
-      for (let i = 20; i < plankLength - 20; i += 38) {
+      for (let i = 20; i < plankLength - 20; i += 45) {
         ctx.beginPath();
         ctx.moveTo(i, -plankThickness + 4);
-        ctx.bezierCurveTo(i + 14, -plankThickness + 9, i + 24, -plankThickness + 17, i + 34, -4);
+        ctx.bezierCurveTo(i + 15, -plankThickness + 10, i + 25, -plankThickness + 18, i + 35, -4);
         ctx.stroke();
       }
 
-      // Metal Stop End Plate at the tip
-      ctx.fillStyle = '#94a3b8';
-      ctx.fillRect(plankLength - 8, -plankThickness - 18, 8, 20);
-      ctx.fillStyle = '#cbd5e1';
-      ctx.fillRect(plankLength - 14, -plankThickness - 2, 14, 4);
+      // Chapa metálica / Tope en la punta
+      ctx.fillStyle = '#8b949e';
+      ctx.fillRect(plankLength - 6, -plankThickness - 16, 6, 18);
 
-      // Small screws on metal plate
-      ctx.fillStyle = '#334155';
+      // ----------------------------------------------------
+      // SENSOR TCRT5000 EN LA PUNTA DE LA TABLA
+      // ----------------------------------------------------
+      const sensorX = plankLength - 40;
+      const sensorY = -plankThickness - 14;
+
+      // Placa PCB azul del sensor
+      ctx.fillStyle = '#0969da';
+      ctx.fillRect(sensorX, sensorY, 32, 12);
+      ctx.strokeStyle = '#54aeff';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(sensorX, sensorY, 32, 12);
+
+      // Potenciómetro azul de ajuste con tornillo
+      ctx.fillStyle = '#1f6feb';
+      ctx.fillRect(sensorX + 6, sensorY + 2, 7, 7);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(sensorX + 8, sensorY + 4, 3, 3);
+
+      // Diodos IR (Fototransistor negro y LED azul emisor)
+      ctx.fillStyle = '#0d1117';
       ctx.beginPath();
-      ctx.arc(plankLength - 4, -plankThickness - 10, 1.5, 0, Math.PI * 2);
+      ctx.arc(sensorX + 22, sensorY + 6, 4, 0, Math.PI * 2);
       ctx.fill();
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath();
+      ctx.arc(sensorX + 28, sensorY + 6, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Haz infrarrojo emitido dinámico
+      if (sensorCubePresent) {
+        const beamGrad = ctx.createLinearGradient(sensorX + 20, sensorY + 6, sensorX - 60, sensorY + 6);
+        beamGrad.addColorStop(0, 'rgba(34, 197, 94, 0.7)');
+        beamGrad.addColorStop(1, 'rgba(34, 197, 94, 0.05)');
+        ctx.fillStyle = beamGrad;
+        ctx.beginPath();
+        ctx.moveTo(sensorX + 20, sensorY + 3);
+        ctx.lineTo(sensorX - 60, sensorY - 10);
+        ctx.lineTo(sensorX - 60, sensorY + 20);
+        ctx.lineTo(sensorX + 20, sensorY + 9);
+        ctx.fill();
+      } else {
+        const beamGrad = ctx.createLinearGradient(sensorX + 20, sensorY + 6, sensorX - 100, sensorY + 6);
+        beamGrad.addColorStop(0, 'rgba(239, 68, 68, 0.8)');
+        beamGrad.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
+        ctx.fillStyle = beamGrad;
+        ctx.beginPath();
+        ctx.moveTo(sensorX + 20, sensorY + 2);
+        ctx.lineTo(sensorX - 100, sensorY - 15);
+        ctx.lineTo(sensorX - 100, sensorY + 25);
+        ctx.lineTo(sensorX + 20, sensorY + 10);
+        ctx.fill();
+      }
+
+      // ----------------------------------------------------
+      // CUBO DE PRUEBA SOBRE LA TABLA (DESLIZAMIENTO DINÁMICO)
+      // ----------------------------------------------------
+      const cubeBaseX = plankLength - 95;
+      if (!sensorCubePresent) {
+        cubeSlideOffsetRef.current = Math.min(140, cubeSlideOffsetRef.current + 3);
+      } else {
+        cubeSlideOffsetRef.current = 0;
+      }
+
+      const cubeX = cubeBaseX - cubeSlideOffsetRef.current;
+      const cubeSize = 34;
+      const cubeY = -plankThickness - cubeSize;
+
+      // Cubo con textura dorada/madera
+      ctx.fillStyle = '#eab308';
+      ctx.fillRect(cubeX, cubeY, cubeSize, cubeSize);
+      ctx.strokeStyle = '#ca8a04';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(cubeX, cubeY, cubeSize, cubeSize);
+
+      // Sombra inferior del cubo
+      ctx.fillStyle = 'rgba(0,0,0,0.2)';
+      ctx.fillRect(cubeX, cubeY + cubeSize - 6, cubeSize, 6);
+
+      // Letra 'm' de masa
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 13px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
+      ctx.fillText('m', cubeX + 11, cubeY + 21);
+
+      // Vectores de fuerza newtoniana sobre el cubo
+      if (actualPlankAngle > 2) {
+        // Vector Normal (perpendicular hacia arriba)
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cubeX + cubeSize / 2, cubeY);
+        ctx.lineTo(cubeX + cubeSize / 2, cubeY - 24);
+        ctx.stroke();
+
+        // Punta flecha Normal
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.moveTo(cubeX + cubeSize / 2, cubeY - 27);
+        ctx.lineTo(cubeX + cubeSize / 2 - 3, cubeY - 22);
+        ctx.lineTo(cubeX + cubeSize / 2 + 3, cubeY - 22);
+        ctx.fill();
+
+        // Vector Gravedad Paralela (hacia abajo de la rampa)
+        ctx.strokeStyle = '#f97316';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cubeX, cubeY + cubeSize / 2);
+        ctx.lineTo(cubeX - 25, cubeY + cubeSize / 2);
+        ctx.stroke();
+
+        // Punta flecha Paralela
+        ctx.fillStyle = '#f97316';
+        ctx.beginPath();
+        ctx.moveTo(cubeX - 28, cubeY + cubeSize / 2);
+        ctx.lineTo(cubeX - 23, cubeY + cubeSize / 2 - 3);
+        ctx.lineTo(cubeX - 23, cubeY + cubeSize / 2 + 3);
+        ctx.fill();
+      }
 
       ctx.restore();
 
-      // Servomotors at the base (Realistic MG996R dual setup)
-      // Servo Body (Black Case)
-      ctx.fillStyle = '#1e293b';
-      ctx.fillRect(pivotX - 35, pivotY - 25, 45, 50);
-
-      // MG996R Characteristic Red Band
-      ctx.fillStyle = '#ef4444';
-      ctx.fillRect(pivotX - 35, pivotY - 12, 45, 24);
-
-      // Servo label branding
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '7px sans-serif';
-      ctx.fillText('MG996R', pivotX - 31, pivotY + 2);
-
-      // Plastic Zip-Tie (Brida de sujeción blanca)
-      ctx.fillStyle = 'rgba(241, 245, 249, 0.9)';
-      ctx.fillRect(pivotX - 16, pivotY - 26, 6, 52);
-
-      // Lateral Metal Bracket Support
-      ctx.fillStyle = '#64748b';
+      // ----------------------------------------------------
+      // SERVOMOTORES EN LA BASE (Cuerpo Negro/Rojo + Horn Giratorio)
+      // ----------------------------------------------------
+      // Soporte metálico lateral
+      ctx.fillStyle = '#475569';
       ctx.fillRect(pivotX - 42, pivotY + 18, 55, 12);
-      ctx.fillStyle = '#334155';
-      ctx.beginPath();
-      ctx.arc(pivotX - 36, pivotY + 24, 2, 0, Math.PI * 2);
-      ctx.arc(pivotX + 6, pivotY + 24, 2, 0, Math.PI * 2);
-      ctx.fill();
 
-      // Center Rotation Hub & Shaft
-      ctx.fillStyle = '#38bdf8';
+      // Carcasa del servomotor (MG996R negro)
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(pivotX - 35, pivotY - 22, 45, 46);
+
+      // Franja roja distintiva
+      ctx.fillStyle = '#dc2626';
+      ctx.fillRect(pivotX - 35, pivotY - 10, 45, 22);
+
+      // Pestañas y tornillos de fijación
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(pivotX - 40, pivotY - 16, 5, 8);
+      ctx.fillRect(pivotX + 10, pivotY - 16, 5, 8);
+
+      // Horn blanco giratorio del servo (rota según actualServoAngle)
+      ctx.save();
+      ctx.translate(pivotX, pivotY);
+      ctx.rotate(-servoRad);
+
+      ctx.fillStyle = '#f8fafc';
       ctx.beginPath();
-      ctx.arc(pivotX, pivotY, 10, 0, Math.PI * 2);
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(-6, -6, 32, 12, 6);
+      } else {
+        ctx.rect(-6, -6, 32, 12);
+      }
       ctx.fill();
-      ctx.strokeStyle = '#0284c7';
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 1;
       ctx.stroke();
 
-      // Center Axis Screw
+      // Agujeros en el horn blanco
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.arc(10, 0, 1.5, 0, Math.PI * 2);
+      ctx.arc(16, 0, 1.5, 0, Math.PI * 2);
+      ctx.arc(22, 0, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Corona metálica central y tornillo del eje
+      ctx.fillStyle = '#0284c7';
+      ctx.beginPath();
+      ctx.arc(pivotX, pivotY, 8, 0, Math.PI * 2);
+      ctx.fill();
+
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
-      ctx.arc(pivotX, pivotY, 3.5, 0, Math.PI * 2);
+      ctx.arc(pivotX, pivotY, 3, 0, Math.PI * 2);
       ctx.fill();
 
       animationFrameId = requestAnimationFrame(render);
@@ -197,22 +335,32 @@ export function DigitalTwinCanvas({ currentAngle, targetAngle }: DigitalTwinCanv
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [currentAngle, targetAngle]);
+  }, [actualPlankAngle, actualServoAngle, sensorCubePresent, slipAngle]);
 
   return (
     <div className="relative w-full rounded-xl overflow-hidden border border-border/80 shadow-inner bg-slate-950">
       <canvas
         ref={canvasRef}
         width={600}
-        height={320}
-        className="w-full h-[280px] sm:h-[320px] block object-contain"
+        height={330}
+        className="w-full h-[280px] sm:h-[330px] block object-contain"
       />
-      <div className="absolute top-3 left-3 bg-background/80 backdrop-blur-md px-2.5 py-1 rounded-md border border-border/60 text-[11px] font-mono font-semibold text-muted-foreground flex items-center gap-1.5">
-        <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-        <span>Gemelo 2D a 60 FPS</span>
+      <div className="absolute top-3 left-3 bg-background/85 backdrop-blur-md px-2.5 py-1 rounded-md border border-border/60 text-[11px] font-mono font-semibold flex items-center gap-1.5">
+        <span
+          className={`h-2 w-2 rounded-full ${
+            isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-500'
+          }`}
+        />
+        <span className={isConnected ? 'text-emerald-400' : 'text-amber-400'}>
+          {isConnected
+            ? connectionSource === 'usb'
+              ? 'ESP32 USB (115200 baud)'
+              : 'ESP32 Betty Cloud'
+            : 'Hardware Desconectado'}
+        </span>
       </div>
-      <div className="absolute top-3 right-3 bg-background/80 backdrop-blur-md px-2.5 py-1 rounded-md border border-border/60 text-[11px] font-mono text-muted-foreground">
-        Maqueta Madera & 2x MG996R
+      <div className="absolute top-3 right-3 bg-background/85 backdrop-blur-md px-2.5 py-1 rounded-md border border-border/60 text-[11px] font-mono text-muted-foreground">
+        TCRT5000 IR & Cubo & Servos MG996R
       </div>
     </div>
   );

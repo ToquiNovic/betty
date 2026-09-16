@@ -1,6 +1,6 @@
 ---
 title: Guía de Conexión ESP32 (C++/Arduino)
-description: Código completo y configuración para conectar placas ESP32 a Betty PaaS.
+description: Código completo y configuración para conectar placas ESP32 a Betty.
 ---
 
 El ESP32 es el microcontrolador recomendado para Betty debido a su conectividad WiFi dual, aceleración criptográfica y bajo consumo.

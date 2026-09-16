@@ -1,9 +1,9 @@
 ---
-title: Introducción a Betty PaaS
+title: Introducción a Betty
 description: Visión general de Betty, la plataforma abierta de IoT y Gemelos Digitales.
 ---
 
-**Betty PaaS** es una plataforma como servicio (PaaS) de código abierto diseñada para la ingesta de telemetría de alto rendimiento, el procesamiento de series temporales y la sincronización en tiempo real con entornos virtuales, gemelos digitales y metaversos.
+**Betty** es una IoT Application Enablement Platform (AEP) de código abierto diseñada para la ingesta de telemetría de alto rendimiento, el procesamiento de series temporales y la sincronización en tiempo real con entornos virtuales, gemelos digitales y metaversos.
 
 ---
 

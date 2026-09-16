@@ -1,6 +1,6 @@
 ---
 title: Arquitectura del Sistema
-description: Conoce los componentes centrales, flujo de datos y modelo de capas de Betty PaaS.
+description: Conoce los componentes centrales, flujo de datos y modelo de capas de Betty IoT Platform.
 ---
 
 Betty está construida siguiendo principios de **Clean Architecture (Arquitectura Hexagonal)** y microservicios modulares para garantizar alta disponibilidad y throughput masivo.

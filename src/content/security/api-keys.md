@@ -1,6 +1,6 @@
 ---
 title: Gestión Segura de API Keys
-description: Cómo se generan, hashean y auditan las claves criptográficas en Betty PaaS.
+description: Cómo se generan, hashean y auditan las claves criptográficas en Betty.
 ---
 
 La seguridad en la ingesta de telemetría es fundamental en Betty. Las API Keys autentican a cada dispositivo físico o virtual de forma individual.

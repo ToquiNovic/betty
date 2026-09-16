@@ -8,8 +8,8 @@ import { LocaleSwitcher } from '@/components/layout/locale-switcher';
 import { DocsSearchDialog } from './docs-search-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { BettyLogo } from '@/components/common/betty-logo';
 import {
-  Activity,
   Search,
   LayoutDashboard,
   ExternalLink,
@@ -42,23 +42,8 @@ export function DocsHeader({ onToggleMobileSidebar }: DocsHeaderProps) {
               </Button>
             )}
 
-            <Link href={`/${locale}/docs`} className="flex items-center gap-2.5 group">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-indigo-600 to-cyan-400 text-white shadow-md shadow-indigo-500/20 transition-transform group-hover:scale-105">
-                <Activity className="h-5 w-5 animate-pulse" />
-              </div>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-bold tracking-tight text-base text-foreground group-hover:text-primary transition-colors">
-                    Betty Docs
-                  </span>
-                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-semibold bg-primary/10 text-primary border-primary/20">
-                    PaaS
-                  </Badge>
-                </div>
-                <span className="text-[10px] text-muted-foreground font-mono leading-none">
-                  IoT & Digital Twins
-                </span>
-              </div>
+            <Link href={`/${locale}/docs`} className="group inline-flex items-center">
+              <BettyLogo size="sm" showBadge subtitle="Documentation" priority />
             </Link>
           </div>
 

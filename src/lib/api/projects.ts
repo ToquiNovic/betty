@@ -70,22 +70,28 @@ export function useProjects(filters?: ProjectFilters) {
   };
 }
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * Hook for single project detail
  */
 export function useProject(id: string | null) {
   const defaultProj = DEFAULT_PROJECTS.find((p) => p.id === id || p.slug === id) || null;
+  const isUuid = !!id && UUID_REGEX.test(id);
+
+  // If this is a local built-in project or not a valid UUID, do not query the backend
+  const endpoint = id && isUuid && !defaultProj ? `/projects/${id}` : null;
 
   const { data, error, isLoading, mutate } = useSWR<Project>(
-    id ? `/projects/${id}` : null,
+    endpoint,
     fetcher
   );
 
   return {
-    project: data || defaultProj,
-    isLoading: isLoading && !defaultProj,
-    isError: !!error && !defaultProj,
-    error,
+    project: defaultProj || data || null,
+    isLoading: endpoint ? isLoading : false,
+    isError: endpoint ? !!error : false,
+    error: endpoint ? error : undefined,
     mutate,
   };
 }

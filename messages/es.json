@@ -1,7 +1,7 @@
 {
   "common": {
-    "appName": "Betty",
-    "appTagline": "Plataforma PaaS de IoT, Gemelos Digitales y Metaversos",
+    "appName": "Betty Platform",
+    "appTagline": "IoT Application Enablement Platform para Gemelos Digitales y Metaversos",
     "save": "Guardar",
     "saving": "Guardando...",
     "cancel": "Cancelar",
@@ -29,12 +29,12 @@
     "all": "Todos"
   },
   "landing": {
-    "badge": "PaaS de Próxima Generación",
+    "badge": "IoT Application Enablement Platform de Próxima Generación",
     "heroTitle": "Infraestructura Inteligente para IoT y Gemelos Digitales",
     "heroSubtitle": "Ingesta de alto throughput con MQTT (EMQX), almacenamiento en series de tiempo con TimescaleDB, dashboards en tiempo real y soporte nativo para simulaciones y metaversos.",
     "ctaStart": "Comenzar Ahora",
     "ctaExplore": "Explorar Dashboards Públicos",
-    "featuresTitle": "¿Por qué elegir Betty?",
+    "featuresTitle": "¿Por qué elegir Betty Platform?",
     "featuresSubtitle": "Diseñado para investigadores, empresas e ingenieros que necesitan rendimiento extremo y visualizaciones en vivo.",
     "featureMqttTitle": "Broker MQTT de Alto Throughput",
     "featureMqttDesc": "Alimentado por EMQX con autenticación criptográfica vía API keys por sensor (prefijo betty_live_...).",
@@ -63,7 +63,7 @@
     "readyCtaTitle": "¿Listo para desplegar tu infraestructura de telemetría?",
     "readyCtaSubtitle": "Regístrate gratis, configura tus dispositivos y monitorea en tiempo real sin límites de escala.",
     "openDocs": "Documentación Developers",
-    "footerText": "Betty PaaS — Plataforma Abierta de Gemelos Digitales e IoT."
+    "footerText": "Betty Platform — IoT Application Enablement Platform para Gemelos Digitales e IoT."
   },
   "nav": {
     "overview": "Resumen",
@@ -71,6 +71,7 @@
     "dashboards": "Dashboards",
     "teams": "Equipos",
     "projects": "Proyectos",
+    "digitalTwin": "Gemelo Digital",
     "admin": "Administración",
     "settings": "Configuración",
     "publicDashboards": "Explorar Públicos",
@@ -100,7 +101,7 @@
     "orContinueWith": "O ingresar con credenciales locales",
     "googleAuth": "Continuar con Google",
     "ua3dAuth": "Iniciar Sesión con UA3D Grid Platform",
-    "ssoTitle": "Acceso Unificado UA3D & Betty PaaS",
+    "ssoTitle": "Acceso Unificado UA3D & Betty Platform",
     "ssoSubtitle": "Inicia sesión con tu cuenta centralizada de Keycloak",
     "ssoDescription": "Una sola cuenta compartida entre el Metaverso OpenSim, la Consola de Gestión y los Gemelos Digitales.",
     "ssoBadge": "SSO Centralizado",
@@ -233,7 +234,7 @@
   },
   "admin": {
     "title": "Consola de Administración",
-    "subtitle": "Gestión global de usuarios y roles de la plataforma Betty",
+    "subtitle": "Gestión global de usuarios y roles de Betty Platform",
     "totalUsers": "Total de Usuarios",
     "adminUsers": "Administradores",
     "standardUsers": "Usuarios Estándar",

@@ -1,6 +1,6 @@
 ---
 title: ESP32 Hardware Guide (C++/Arduino)
-description: Complete firmware template for connecting ESP32 to Betty PaaS.
+description: Complete firmware template for connecting ESP32 to Betty.
 ---
 
 ## 💻 Sample Code
