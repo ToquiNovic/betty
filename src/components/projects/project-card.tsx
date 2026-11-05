@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { DifficultyBadge } from "./difficulty-badge";
 import { Link } from "@/i18n/routing";
 import Image from "next/image";
+import { ProjectModelThumbnail } from "./project-model-thumbnail";
 import {
   ArrowRight,
   Cpu,
@@ -48,6 +49,8 @@ export function ProjectCard({ project }: ProjectCardProps) {
             className="object-cover group-hover:scale-105 transition-transform duration-300"
             unoptimized
           />
+        ) : project.model3dUrl ? (
+          <ProjectModelThumbnail modelUrl={project.model3dUrl} />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 via-muted to-muted text-muted-foreground/60">
             {project.hasDigitalTwin || project.id === "plano-inclinado" ? (

@@ -8,6 +8,7 @@ import { DifficultyBadge } from '@/components/projects/difficulty-badge';
 import { ProjectStepsList } from '@/components/projects/project-steps';
 import { ProjectMaterialsTable } from '@/components/projects/project-materials';
 import { ProjectModelViewer } from '@/components/projects/project-model-viewer';
+import { ProjectModelThumbnail } from '@/components/projects/project-model-thumbnail';
 import { FirmwareFlasher } from '@/components/projects/firmware-flasher';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -126,7 +127,7 @@ export default function ProjectDetailPage() {
       {/* Hero Card */}
       <Card className="border shadow-sm overflow-hidden bg-card">
         <div className="flex flex-col md:flex-row">
-          {/* Cover / Image */}
+          {/* Cover / Image / 3D Model Hero Preview */}
           <div className="relative md:w-2/5 aspect-video md:aspect-auto overflow-hidden bg-muted/60 min-h-[220px]">
             {project.coverImageUrl ? (
               <img
@@ -134,6 +135,20 @@ export default function ProjectDetailPage() {
                 alt={project.title}
                 className="h-full w-full object-cover"
               />
+            ) : project.model3dUrl ? (
+              <div className="relative h-full w-full min-h-[220px]">
+                <ProjectModelThumbnail
+                  modelUrl={project.model3dUrl}
+                  interactive={true}
+                  cameraPosition={[2.8, 2.2, 4.2]}
+                />
+                <div className="absolute bottom-2 left-2 pointer-events-none">
+                  <Badge variant="secondary" className="backdrop-blur-md bg-background/80 text-[10px] font-mono gap-1 border shadow-xs">
+                    <Box className="h-3 w-3 text-primary" />
+                    <span>Vista Previa 3D</span>
+                  </Badge>
+                </div>
+              </div>
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/15 via-muted to-muted text-primary/40">
                 <Cpu className="h-16 w-16 stroke-1" />
