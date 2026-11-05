@@ -1,0 +1,528 @@
+/* =========================================================================
+ * Anatomy Isometric Design Tokens & Styles
+ * Supports Light & Dark Themes + Real 3D Physical Machine Materials
+ * ========================================================================= */
+
+:root,
+.iso,
+.iso-figure,
+.iso-plate,
+html.light,
+.light {
+  --anatomy-page: #f8fafc;
+  --anatomy-card: #ffffff;
+  --anatomy-text: #475569;
+  --anatomy-strong: #0f172a;
+  --anatomy-muted: #64748b;
+  --anatomy-paper: #f8fafc;
+  --anatomy-face: #ffffff;
+  --anatomy-top: #ffffff;
+  --anatomy-shade-0: #cbd5e1;
+  --anatomy-shade-1: #e2e8f0;
+  --anatomy-shade-2: #edf2f7;
+  --anatomy-shade-3: #f8fafc;
+  --anatomy-lit-top: #ffffff;
+  --anatomy-lit-shade: #f1f5f9;
+  --anatomy-hi: #1e293b;
+  --anatomy-mid: #64748b;
+  --anatomy-lo: #94a3b8;
+  --anatomy-faint: #cbd5e1;
+  --anatomy-lit: #0284c7;
+  --anatomy-halo: #94a3b8;
+  --anatomy-halo-opacity: 0.22;
+  --anatomy-dot: #475569;
+  --anatomy-red: #ef4444;
+  --anatomy-green: #22c55e;
+  --anatomy-blue: #3b82f6;
+  --anatomy-gold: #f59e0b;
+  --anatomy-weight: 0.75px;
+  --anatomy-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --anatomy-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+html.dark,
+.dark,
+.dark .iso,
+.dark .iso-figure,
+.dark .iso-plate {
+  --anatomy-page: #090d16;
+  --anatomy-card: #0f172a;
+  --anatomy-text: #94a3b8;
+  --anatomy-strong: #f8fafc;
+  --anatomy-muted: #64748b;
+  --anatomy-paper: #0f172a;
+  --anatomy-face: #1e293b;
+  --anatomy-top: #334155;
+  --anatomy-shade-0: #060911;
+  --anatomy-shade-1: #0f172a;
+  --anatomy-shade-2: #1e293b;
+  --anatomy-shade-3: #334155;
+  --anatomy-lit-top: #475569;
+  --anatomy-lit-shade: #1e293b;
+  --anatomy-hi: #e2e8f0;
+  --anatomy-mid: #94a3b8;
+  --anatomy-lo: #475569;
+  --anatomy-faint: #1e293b;
+  --anatomy-lit: #38bdf8;
+  --anatomy-halo: #000000;
+  --anatomy-halo-opacity: 0.55;
+  --anatomy-dot: #e2e8f0;
+  --anatomy-red: #f87171;
+  --anatomy-green: #4ade80;
+  --anatomy-blue: #60a5fa;
+  --anatomy-gold: #fbbf24;
+}
+
+/* Base SVG Rules */
+.iso-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.iso-svg path,
+.iso-svg circle,
+.iso-svg line {
+  vector-effect: non-scaling-stroke;
+}
+
+.iso-fill {
+  fill: var(--anatomy-paper);
+  stroke: none;
+}
+
+.iso-solid[data-lit] > .iso-fill {
+  fill: var(--anatomy-face);
+}
+
+.iso-shade,
+.iso-top {
+  stroke: none;
+}
+
+.iso-shade[data-shade="0"] {
+  fill: var(--anatomy-shade-0);
+}
+.iso-shade[data-shade="1"] {
+  fill: var(--anatomy-shade-1);
+}
+.iso-shade[data-shade="2"] {
+  fill: var(--anatomy-shade-2);
+}
+.iso-shade[data-shade="3"] {
+  fill: var(--anatomy-shade-3);
+}
+
+.iso-top {
+  fill: var(--anatomy-top);
+}
+
+.iso-solid[data-lit] > .iso-top {
+  fill: var(--anatomy-lit-top);
+}
+.iso-solid[data-lit] > .iso-shade {
+  fill: var(--anatomy-lit-shade);
+}
+
+.iso-solid[data-seamless] > .iso-shade,
+.iso-solid[data-seamless] > .iso-top {
+  stroke-width: 0.4;
+  stroke-linejoin: round;
+}
+
+.iso-solid[data-seamless] > .iso-top {
+  stroke: var(--anatomy-top);
+}
+
+.iso-solid[data-lit] > .iso-edge {
+  stroke: var(--anatomy-lit);
+}
+
+.iso-halo {
+  fill: var(--anatomy-halo);
+  stroke: none;
+  filter: blur(10px);
+  opacity: var(--anatomy-halo-opacity);
+  transform: translateY(4px);
+}
+
+.iso-line {
+  fill: none;
+  stroke: var(--anatomy-lo);
+  stroke-width: var(--anatomy-weight);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.iso-line[data-tone="hi"] {
+  stroke: var(--anatomy-hi);
+}
+.iso-line[data-tone="mid"] {
+  stroke: var(--anatomy-mid);
+}
+.iso-line[data-tone="lo"] {
+  stroke: var(--anatomy-lo);
+}
+.iso-line[data-tone="faint"] {
+  stroke: var(--anatomy-faint);
+}
+.iso-line[data-tone="lit"] {
+  stroke: var(--anatomy-lit);
+}
+.iso-line[data-tone="red"] {
+  stroke: var(--anatomy-red);
+}
+.iso-line[data-tone="green"] {
+  stroke: var(--anatomy-green);
+}
+.iso-line[data-tone="blue"] {
+  stroke: var(--anatomy-blue);
+}
+
+.iso-line[data-dotted] {
+  stroke-dasharray: 0.01 3.5;
+  stroke-width: 1.2;
+}
+
+.iso-line[data-dashed] {
+  stroke-dasharray: 4 3;
+}
+
+.iso-wire-end {
+  fill: var(--anatomy-paper);
+  stroke: var(--anatomy-lo);
+  stroke-width: var(--anatomy-weight);
+}
+
+.iso-wire[data-tone="hi"] .iso-wire-end {
+  stroke: var(--anatomy-hi);
+}
+.iso-wire[data-tone="mid"] .iso-wire-end {
+  stroke: var(--anatomy-mid);
+}
+.iso-wire[data-tone="lit"] .iso-wire-end {
+  fill: var(--anatomy-lit);
+  stroke: var(--anatomy-lit);
+}
+
+.iso-dots circle {
+  fill: var(--anatomy-dot);
+  stroke: none;
+  opacity: 0.35;
+}
+
+.iso-dots[data-tone="hi"] circle {
+  opacity: 0.9;
+}
+.iso-dots[data-tone="mid"] circle {
+  opacity: 0.55;
+}
+.iso-dots[data-tone="lo"] circle {
+  opacity: 0.3;
+}
+.iso-dots[data-tone="faint"] circle {
+  opacity: 0.15;
+}
+
+/* =========================================================================
+ * Real Physical Machine Materials (Matching 3D Reference Model)
+ * ========================================================================= */
+
+/* Dark Anodized Aluminum / Slate (Base & Incline Beam) */
+.mat-chassis > .iso-top {
+  fill: #334155;
+}
+.mat-chassis > .iso-shade[data-shade="0"] {
+  fill: #0f172a;
+}
+.mat-chassis > .iso-shade[data-shade="1"] {
+  fill: #1e293b;
+}
+.mat-chassis > .iso-shade[data-shade="2"] {
+  fill: #273449;
+}
+.mat-chassis > .iso-shade[data-shade="3"] {
+  fill: #334155;
+}
+.mat-chassis > .iso-edge {
+  stroke: #64748b;
+  stroke-width: 0.8px;
+}
+
+/* Tilting Beam (Dark Satin with crisp contrast lines) */
+.mat-beam > .iso-top {
+  fill: #2c3647;
+}
+.mat-beam > .iso-shade[data-shade="0"] {
+  fill: #0d131f;
+}
+.mat-beam > .iso-shade[data-shade="1"] {
+  fill: #1a2230;
+}
+.mat-beam > .iso-shade[data-shade="2"] {
+  fill: #222c3e;
+}
+.mat-beam > .iso-shade[data-shade="3"] {
+  fill: #2c3647;
+}
+.mat-beam > .iso-edge {
+  stroke: #94a3b8;
+  stroke-width: 0.9px;
+}
+
+/* MG996R Servo Red Housing */
+.mat-servo-red > .iso-top {
+  fill: #ef4444;
+}
+.mat-servo-red > .iso-shade[data-shade="0"] {
+  fill: #7f1d1d;
+}
+.mat-servo-red > .iso-shade[data-shade="1"] {
+  fill: #991b1b;
+}
+.mat-servo-red > .iso-shade[data-shade="2"] {
+  fill: #b91c1c;
+}
+.mat-servo-red > .iso-shade[data-shade="3"] {
+  fill: #dc2626;
+}
+.mat-servo-red > .iso-edge {
+  stroke: #f87171;
+}
+
+/* MG996R Servo Black Case Ears & Top */
+.mat-servo-black > .iso-top {
+  fill: #27272a;
+}
+.mat-servo-black > .iso-shade[data-shade="0"] {
+  fill: #09090b;
+}
+.mat-servo-black > .iso-shade[data-shade="1"] {
+  fill: #18181b;
+}
+.mat-servo-black > .iso-shade[data-shade="2"] {
+  fill: #202024;
+}
+.mat-servo-black > .iso-shade[data-shade="3"] {
+  fill: #27272a;
+}
+.mat-servo-black > .iso-edge {
+  stroke: #52525b;
+}
+
+/* Brass & Golden Gears / Output Horns / Pivot Collars */
+.mat-brass > .iso-top {
+  fill: #fbbf24;
+}
+.mat-brass > .iso-shade[data-shade="0"] {
+  fill: #78350f;
+}
+.mat-brass > .iso-shade[data-shade="1"] {
+  fill: #92400e;
+}
+.mat-brass > .iso-shade[data-shade="2"] {
+  fill: #b45309;
+}
+.mat-brass > .iso-shade[data-shade="3"] {
+  fill: #d97706;
+}
+.mat-brass > .iso-edge {
+  stroke: #fcd34d;
+}
+
+/* Sensor Cube Cargo (White Alabaster Translucent) */
+.mat-cube > .iso-top {
+  fill: #ffffff;
+}
+.mat-cube > .iso-shade[data-shade="0"] {
+  fill: #94a3b8;
+}
+.mat-cube > .iso-shade[data-shade="1"] {
+  fill: #cbd5e1;
+}
+.mat-cube > .iso-shade[data-shade="2"] {
+  fill: #e2e8f0;
+}
+.mat-cube > .iso-shade[data-shade="3"] {
+  fill: #f1f5f9;
+}
+.mat-cube > .iso-edge {
+  stroke: #38bdf8;
+  stroke-width: 1px;
+}
+
+/* Brushed Chrome / Stainless Steel (Pushrods, Axle, Screws) */
+.mat-steel > .iso-top {
+  fill: #f1f5f9;
+}
+.mat-steel > .iso-shade[data-shade="0"] {
+  fill: #64748b;
+}
+.mat-steel > .iso-shade[data-shade="1"] {
+  fill: #94a3b8;
+}
+.mat-steel > .iso-shade[data-shade="2"] {
+  fill: #cbd5e1;
+}
+.mat-steel > .iso-shade[data-shade="3"] {
+  fill: #e2e8f0;
+}
+.mat-steel > .iso-edge {
+  stroke: #cbd5e1;
+}
+
+/* ESP32 Solder Mask Circuit Green */
+.mat-pcb > .iso-top {
+  fill: #16a34a;
+}
+.mat-pcb > .iso-shade[data-shade="0"] {
+  fill: #052e16;
+}
+.mat-pcb > .iso-shade[data-shade="1"] {
+  fill: #14532d;
+}
+.mat-pcb > .iso-shade[data-shade="2"] {
+  fill: #166534;
+}
+.mat-pcb > .iso-shade[data-shade="3"] {
+  fill: #15803d;
+}
+.mat-pcb > .iso-edge {
+  stroke: #4ade80;
+}
+
+/* =========================================================================
+ * Card Container (Plate) & Legends
+ * ========================================================================= */
+
+.iso-figure {
+  margin: 16px 0 24px;
+}
+
+.iso-plate {
+  position: relative;
+  padding: 44px 20px 24px;
+  border-radius: 16px;
+  background: var(--anatomy-card);
+  border: 1px solid var(--anatomy-shade-1);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+}
+
+html.dark .iso-plate {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.35);
+}
+
+.iso-plate-corners {
+  position: absolute;
+  inset: 14px 18px;
+  pointer-events: none;
+}
+
+.iso-plate-corner {
+  position: absolute;
+  color: var(--anatomy-muted);
+  font-family: var(--anatomy-mono);
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.iso-plate-corner[data-corner="fig"] {
+  top: 0;
+  left: 0;
+  color: var(--anatomy-strong);
+  font-weight: 700;
+}
+
+.iso-plate-corner[data-corner="title"] {
+  top: 0;
+  right: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  color: var(--anatomy-muted);
+}
+
+.iso-plate-corner[data-corner="hint"] {
+  bottom: 0;
+  left: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--anatomy-muted);
+}
+
+.iso-plate-corner[data-corner="readout"] {
+  right: 0;
+  bottom: 0;
+  color: var(--anatomy-strong);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.iso-plate .iso-svg {
+  margin: 0 auto;
+}
+
+.iso-legend {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  color: var(--anatomy-muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.iso-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+
+.iso-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+}
+
+.iso-swatch {
+  width: 16px;
+  height: 10px;
+  flex: none;
+  overflow: visible;
+}
+
+.iso-swatch path {
+  fill: none;
+  stroke: var(--anatomy-hi);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.iso-swatch[data-mark="raised"] path,
+.iso-swatch[data-mark="flat"] path {
+  stroke: var(--anatomy-mid);
+}
+
+.iso-swatch[data-mark="lit"] path {
+  stroke: var(--anatomy-lit);
+}
+
+.iso-swatch[data-mark="dotted"] path {
+  stroke-dasharray: 0.01 3;
+  stroke-width: 1.4;
+}
+
+@media (max-width: 640px) {
+  .iso-plate {
+    padding: 42px 10px 48px;
+  }
+  .iso-plate-corner[data-corner="hint"] {
+    bottom: 24px;
+  }
+}

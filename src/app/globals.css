@@ -3,6 +3,7 @@
 @import "shadcn/tailwind.css";
 @import "sileo/styles.css";
 @import "katex/dist/katex.min.css";
+@import "../components/iso/iso.css";
 
 @custom-variant dark (&:is(.dark *));
 

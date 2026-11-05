@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { DigitalTwinCanvas } from './digital-twin-canvas';
 import { TelemetryMetricsGrid } from './telemetry-metrics-grid';
 import { SerialControlPanel, TelemetryPacketData } from './serial-control-panel';
@@ -8,8 +9,21 @@ import { RealtimeTelemetryChart, TelemetryPoint } from './realtime-telemetry-cha
 import { MathematicalModelCard, EasingType } from './mathematical-model-card';
 import { useSensorRealtime } from '@/hooks/use-sensor-realtime';
 import { Button } from '@/components/ui/button';
-import { Activity, Sparkles, AlertTriangle, Unlock, Wifi, Usb } from 'lucide-react';
+import { Activity, AlertTriangle, Unlock, Wifi, Usb, Box } from 'lucide-react';
 import { toast } from '@/lib/toast';
+
+const DigitalTwin3DDynamic = dynamic(
+  () => import('./digital-twin-3d').then((mod) => mod.DigitalTwin3D),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex flex-col items-center justify-center h-110 sm:h-125 w-full rounded-xl border bg-muted/20 text-muted-foreground gap-3">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <span className="text-xs font-semibold">Cargando Gemelo Digital 3D...</span>
+      </div>
+    ),
+  }
+);
 
 interface PlanoInclinadoVisualizerProps {
   sensorId?: string;
@@ -38,6 +52,9 @@ export function PlanoInclinadoVisualizer({
 
   // Estado de conexión física por USB
   const [isUsbConnected, setIsUsbConnected] = useState<boolean>(false);
+
+  // Modo de visualización: 3D con GLB o 2D esquemático
+  const [viewMode, setViewMode] = useState<'3d' | '2d'>('3d');
 
   // Historial para la gráfica en tiempo real
   const [telemetryHistory, setTelemetryHistory] = useState<TelemetryPoint[]>(() => {
@@ -203,16 +220,41 @@ export function PlanoInclinadoVisualizer({
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Left Column: Digital Twin Canvas & Telemetry Metrics (7 cols) */}
             <div className="lg:col-span-7 space-y-4">
-              {/* Canvas 2D Interactivo */}
-              <DigitalTwinCanvas
-                plankAngle={currentPlankAngle}
-                servoAngle={currentServoAngle}
-                targetAngle={targetServoAngle}
-                sensorCubePresent={sensorCubePresent}
-                slipAngle={slipAngle}
-                isConnected={hasConnection}
-                connectionSource={connSource}
-              />
+              {viewMode === '3d' ? (
+                <DigitalTwin3DDynamic
+                  plankAngle={currentPlankAngle}
+                  servoAngle={currentServoAngle}
+                  targetAngle={targetServoAngle}
+                  sensorCubePresent={sensorCubePresent}
+                  slipAngle={slipAngle}
+                  isConnected={hasConnection}
+                  connectionSource={connSource}
+                  onToggle2D={() => setViewMode('2d')}
+                />
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex justify-end">
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      onClick={() => setViewMode('3d')}
+                      className="text-xs h-7 gap-1 shadow-xs border bg-background/80"
+                    >
+                      <Box className="h-3.5 w-3.5 text-primary" />
+                      <span>Ver Gemelo Digital 3D (GLB)</span>
+                    </Button>
+                  </div>
+                  <DigitalTwinCanvas
+                    plankAngle={currentPlankAngle}
+                    servoAngle={currentServoAngle}
+                    targetAngle={targetServoAngle}
+                    sensorCubePresent={sensorCubePresent}
+                    slipAngle={slipAngle}
+                    isConnected={hasConnection}
+                    connectionSource={connSource}
+                  />
+                </div>
+              )}
 
               {/* Cuadrícula de 8 Métricas de Telemetría */}
               <TelemetryMetricsGrid

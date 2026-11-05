@@ -16,6 +16,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from '@/i18n/routing';
 import { PlanoInclinadoVisualizer } from '@/components/projects/plano-inclinado/plano-inclinado-visualizer';
+import { PlanoInclinadoAnatomyFigure } from '@/components/projects/plano-inclinado/anatomy/plano-inclinado-anatomy-figure';
 import {
   ArrowLeft,
   Cpu,
@@ -29,6 +30,7 @@ import {
   Share2,
   Calendar,
   Activity,
+  DraftingCompass,
 } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { formatDistanceToNow } from 'date-fns';
@@ -201,36 +203,57 @@ export default function ProjectDetailPage() {
           project.id === 'plano-inclinado' ||
           project.slug === 'plano-inclinado-esp32';
 
+        const hasAnatomy =
+          project.id === 'plano-inclinado' ||
+          project.slug === 'plano-inclinado-esp32';
+
+        const defaultTab = hasDigitalTwin ? 'digital-twin' : 'model3d';
+
         return (
-          <Tabs defaultValue={hasDigitalTwin ? 'digital-twin' : 'steps'} className="space-y-6">
-            <TabsList className={`grid w-full ${hasDigitalTwin ? 'grid-cols-5 max-w-2xl' : 'grid-cols-4 max-w-xl'}`}>
-              {hasDigitalTwin && (
-                <TabsTrigger value="digital-twin" className="gap-1.5 text-xs font-semibold text-sky-500 data-[state=active]:bg-sky-500/10 data-[state=active]:text-sky-400">
-                  <Activity className="h-3.5 w-3.5 animate-pulse text-sky-500" />
-                  <span>Gemelo Digital</span>
+          <Tabs defaultValue={defaultTab} className="space-y-6">
+            <div className="overflow-x-auto pb-1">
+              <TabsList className="inline-flex h-auto flex-wrap items-center justify-start gap-1 p-1 bg-muted/60 border rounded-xl w-auto max-w-full">
+                {hasDigitalTwin && (
+                  <TabsTrigger
+                    value="digital-twin"
+                    className="gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg text-sky-500 data-[state=active]:bg-sky-500/10 data-[state=active]:text-sky-400"
+                  >
+                    <Activity className="h-3.5 w-3.5 animate-pulse text-sky-500" />
+                    <span>Gemelo Digital</span>
+                  </TabsTrigger>
+                )}
+
+                {hasAnatomy && (
+                  <TabsTrigger
+                    value="anatomy"
+                    className="gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg text-amber-500 data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-400"
+                  >
+                    <DraftingCompass className="h-3.5 w-3.5 text-amber-500" />
+                    <span>Anatomía Mecánica</span>
+                  </TabsTrigger>
+                )}
+
+                <TabsTrigger value="model3d" className="gap-1.5 text-xs px-3 py-1.5 rounded-lg">
+                  <Box className="h-3.5 w-3.5 text-primary" />
+                  <span>Modelo 3D</span>
                 </TabsTrigger>
-              )}
 
-              <TabsTrigger value="steps" className="gap-1.5 text-xs">
-                <Layers className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Pasos</span> ({project.steps?.length || 0})
-              </TabsTrigger>
+                <TabsTrigger value="steps" className="gap-1.5 text-xs px-3 py-1.5 rounded-lg">
+                  <Layers className="h-3.5 w-3.5" />
+                  <span>Pasos ({project.steps?.length || 0})</span>
+                </TabsTrigger>
 
-              <TabsTrigger value="materials" className="gap-1.5 text-xs">
-                <Wrench className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Materiales</span> ({project.materials?.length || 0})
-              </TabsTrigger>
+                <TabsTrigger value="materials" className="gap-1.5 text-xs px-3 py-1.5 rounded-lg">
+                  <Wrench className="h-3.5 w-3.5" />
+                  <span>Materiales ({project.materials?.length || 0})</span>
+                </TabsTrigger>
 
-              <TabsTrigger value="model3d" className="gap-1.5 text-xs">
-                <Box className="h-3.5 w-3.5" />
-                <span>Modelo 3D</span>
-              </TabsTrigger>
-
-              <TabsTrigger value="firmware" className="gap-1.5 text-xs">
-                <Zap className="h-3.5 w-3.5 text-emerald-500" />
-                <span className="font-semibold text-foreground">Firmware</span>
-              </TabsTrigger>
-            </TabsList>
+                <TabsTrigger value="firmware" className="gap-1.5 text-xs px-3 py-1.5 rounded-lg">
+                  <Zap className="h-3.5 w-3.5 text-emerald-500" />
+                  <span>Firmware</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             {/* 0. Digital Twin Tab (If Available) */}
             {hasDigitalTwin && (
@@ -239,17 +262,14 @@ export default function ProjectDetailPage() {
               </TabsContent>
             )}
 
-            {/* 1. Steps Tab */}
-            <TabsContent value="steps" className="space-y-4">
-              <ProjectStepsList steps={project.steps || []} />
-            </TabsContent>
+            {/* Anatomy Skill Tab */}
+            {hasAnatomy && (
+              <TabsContent value="anatomy" className="space-y-4">
+                <PlanoInclinadoAnatomyFigure />
+              </TabsContent>
+            )}
 
-            {/* 2. Materials Tab */}
-            <TabsContent value="materials" className="space-y-4">
-              <ProjectMaterialsTable materials={project.materials || []} />
-            </TabsContent>
-
-            {/* 3. 3D Model Tab */}
+            {/* 3D Model Tab */}
             <TabsContent value="model3d" className="space-y-4">
               <ProjectModelViewer
                 modelUrl={project.model3dUrl}
@@ -257,7 +277,17 @@ export default function ProjectDetailPage() {
               />
             </TabsContent>
 
-            {/* 4. Firmware Flashing Tab */}
+            {/* Steps Tab */}
+            <TabsContent value="steps" className="space-y-4">
+              <ProjectStepsList steps={project.steps || []} />
+            </TabsContent>
+
+            {/* Materials Tab */}
+            <TabsContent value="materials" className="space-y-4">
+              <ProjectMaterialsTable materials={project.materials || []} />
+            </TabsContent>
+
+            {/* Firmware Flashing Tab */}
             <TabsContent value="firmware" className="space-y-4">
               <FirmwareFlasher
                 firmwares={project.firmware || []}
