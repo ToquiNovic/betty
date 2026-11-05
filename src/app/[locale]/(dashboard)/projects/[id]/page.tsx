@@ -18,6 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from '@/i18n/routing';
 import { PlanoInclinadoVisualizer } from '@/components/projects/plano-inclinado/plano-inclinado-visualizer';
 import { PlanoInclinadoAnatomyFigure } from '@/components/projects/plano-inclinado/anatomy/plano-inclinado-anatomy-figure';
+import { RielNewtonAnatomyFigure } from '@/components/projects/riel-newton/anatomy/riel-newton-anatomy-figure';
 import {
   ArrowLeft,
   Cpu,
@@ -220,9 +221,11 @@ export default function ProjectDetailPage() {
 
         const hasAnatomy =
           project.id === 'plano-inclinado' ||
-          project.slug === 'plano-inclinado-esp32';
+          project.slug === 'plano-inclinado-esp32' ||
+          project.id === 'riel-newton' ||
+          project.slug === 'riel-newton-esp32';
 
-        const defaultTab = hasDigitalTwin ? 'digital-twin' : 'model3d';
+        const defaultTab = hasDigitalTwin ? 'digital-twin' : hasAnatomy ? 'anatomy' : 'model3d';
 
         return (
           <Tabs defaultValue={defaultTab} className="space-y-6">
@@ -280,7 +283,11 @@ export default function ProjectDetailPage() {
             {/* Anatomy Skill Tab */}
             {hasAnatomy && (
               <TabsContent value="anatomy" className="space-y-4">
-                <PlanoInclinadoAnatomyFigure />
+                {project.id === 'riel-newton' || project.slug === 'riel-newton-esp32' ? (
+                  <RielNewtonAnatomyFigure />
+                ) : (
+                  <PlanoInclinadoAnatomyFigure />
+                )}
               </TabsContent>
             )}
 

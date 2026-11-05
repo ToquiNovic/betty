@@ -311,6 +311,26 @@ html.dark,
   stroke: #52525b;
 }
 
+/* TowerPro SG90 Micro-Servo Blue Translucent Casing */
+.mat-servo-blue > .iso-top {
+  fill: #0284c7;
+}
+.mat-servo-blue > .iso-shade[data-shade="0"] {
+  fill: #082f49;
+}
+.mat-servo-blue > .iso-shade[data-shade="1"] {
+  fill: #0c4a6e;
+}
+.mat-servo-blue > .iso-shade[data-shade="2"] {
+  fill: #0369a1;
+}
+.mat-servo-blue > .iso-shade[data-shade="3"] {
+  fill: #0284c7;
+}
+.mat-servo-blue > .iso-edge {
+  stroke: #38bdf8;
+}
+
 /* Brass & Golden Gears / Output Horns / Pivot Collars */
 .mat-brass > .iso-top {
   fill: #fbbf24;
