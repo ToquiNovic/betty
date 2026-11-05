@@ -24,9 +24,10 @@ interface ModelProps {
 
 function GLTFModel({ url, wireframe }: { url: string; wireframe: boolean }) {
   const { scene } = useGLTF(url);
+  const clonedScene = React.useMemo(() => scene.clone(true), [scene]);
 
   useEffect(() => {
-    scene.traverse((child) => {
+    clonedScene.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh;
         if (Array.isArray(mesh.material)) {
@@ -38,9 +39,9 @@ function GLTFModel({ url, wireframe }: { url: string; wireframe: boolean }) {
         }
       }
     });
-  }, [scene, wireframe]);
+  }, [clonedScene, wireframe]);
 
-  return <primitive object={scene} />;
+  return <primitive object={clonedScene} />;
 }
 
 function STLModel({ url, wireframe }: { url: string; wireframe: boolean }) {
@@ -197,7 +198,7 @@ export function ModelViewerInner({ modelUrl, format }: InnerViewerProps) {
             </Html>
           }
         >
-          <Stage environment="city" intensity={0.6} adjustCamera={1.2}>
+          <Stage environment={null} intensity={0.6} adjustCamera={1.2}>
             <Center>
               <ModelLoader
                 url={modelUrl}

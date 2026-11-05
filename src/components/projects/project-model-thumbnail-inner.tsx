@@ -14,11 +14,12 @@ interface ModelThumbnailProps {
 
 function ThumbnailModel({ url }: { url: string }) {
   const { scene } = useGLTF(url);
+  const clonedScene = React.useMemo(() => scene.clone(true), [scene]);
   const { invalidate } = useThree();
 
   useEffect(() => {
     // Traverse materials to ensure clean standard rendering
-    scene.traverse((child) => {
+    clonedScene.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh;
         mesh.castShadow = false;
@@ -27,9 +28,9 @@ function ThumbnailModel({ url }: { url: string }) {
     });
     // Request a render when scene is mounted and ready
     invalidate();
-  }, [scene, invalidate]);
+  }, [clonedScene, invalidate]);
 
-  return <primitive object={scene} />;
+  return <primitive object={clonedScene} />;
 }
 
 export function ProjectModelThumbnailInner({

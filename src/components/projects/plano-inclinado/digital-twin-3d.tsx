@@ -268,7 +268,7 @@ export function DigitalTwin3D({
             </Html>
           }
         >
-          <Stage environment="city" intensity={0.5} adjustCamera={1.2}>
+          <Stage environment={null} intensity={0.5} adjustCamera={1.2}>
             <Center>
               <InclinadoModel3D
                 plankAngle={actualPlankAngle}
