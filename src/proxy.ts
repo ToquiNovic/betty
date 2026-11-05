@@ -7,7 +7,7 @@ const intlMiddleware = createMiddleware(routing);
 const PROTECTED_ROUTES = ['/overview', '/sensors', '/dashboards', '/teams', '/settings', '/admin'];
 const AUTH_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password'];
 
-export default function middleware(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get('betty_token')?.value;
   const role = request.cookies.get('betty_user_role')?.value;
