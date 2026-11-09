@@ -3,7 +3,7 @@ title: Cliente Python
 description: Script de publicación de datos y consumo de telemetría con Python.
 ---
 
-Python es perfecto para scripts de ciencia de datos, Raspberry Pi y prototipado rápido con Betty.
+Python es perfecto para scripts de ciencia de datos, Raspberry Pi y prototipado rápido con Botuto.
 
 ---
 
@@ -24,15 +24,15 @@ import time
 import random
 
 SENSOR_ID = "4c40ea57-43e0-4ee2-a8d5-77aae4fc387b"
-API_KEY = "betty_live_xxxxxxxxxxxxxxxxxxxxxxxx"
+API_KEY = "botuto_live_xxxxxxxxxxxxxxxxxxxxxxxx"
 BROKER_HOST = "localhost"
 BROKER_PORT = 1883
 
-TOPIC = f"betty/sensor/{SENSOR_ID}/data"
+TOPIC = f"botuto/sensor/{SENSOR_ID}/data"
 
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
-        print("✅ Conectado exitosamente a Betty MQTT")
+        print("✅ Conectado exitosamente a Botuto MQTT")
     else:
         print(f"❌ Error al conectar, código de retorno: {rc}")
 

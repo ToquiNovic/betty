@@ -3,7 +3,7 @@ title: Cliente Node.js / TypeScript
 description: Ejemplo de integración y publicación de telemetría con Node.js y TypeScript.
 ---
 
-Puedes interactuar con Betty en tus aplicaciones de servidor o microservicios usando librerías estándar como `mqtt` y `socket.io-client`.
+Puedes interactuar con Botuto en tus aplicaciones de servidor o microservicios usando librerías estándar como `mqtt` y `socket.io-client`.
 
 ---
 
@@ -21,7 +21,7 @@ npm install mqtt socket.io-client
 import mqtt from 'mqtt';
 
 const SENSOR_ID = '4c40ea57-43e0-4ee2-a8d5-77aae4fc387b';
-const API_KEY = 'betty_live_xxxxxxxxxxxxxxxxxxxxxxxx';
+const API_KEY = 'botuto_live_xxxxxxxxxxxxxxxxxxxxxxxx';
 const BROKER_URL = 'mqtt://localhost:1883';
 
 const client = mqtt.connect(BROKER_URL, {
@@ -31,7 +31,7 @@ const client = mqtt.connect(BROKER_URL, {
 });
 
 client.on('connect', () => {
-  console.log('✅ Conectado a Betty MQTT Broker');
+  console.log('✅ Conectado a Botuto MQTT Broker');
 
   // Enviar telemetría periódica
   setInterval(() => {
@@ -42,7 +42,7 @@ client.on('connect', () => {
       origin_type: 'sensor',
     };
 
-    const topic = `betty/sensor/${SENSOR_ID}/data`;
+    const topic = `botuto/sensor/${SENSOR_ID}/data`;
     client.publish(topic, JSON.stringify(payload), { qos: 1 }, (err) => {
       if (err) console.error('Error publicando:', err);
       else console.log('📤 Telemetría enviada:', payload);

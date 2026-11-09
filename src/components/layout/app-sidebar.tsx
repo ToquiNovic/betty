@@ -20,7 +20,7 @@ import {
   SidebarRail,
 } from '@/components/ui/sidebar';
 import { UserNav } from './user-nav';
-import { BettyLogo } from '@/components/common/betty-logo';
+import { BotutoLogo } from '@/components/common/botuto-logo';
 import {
   Activity,
   LayoutDashboard,
@@ -134,7 +134,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" render={<Link href="/overview" />} className="hover:bg-transparent">
-              <BettyLogo size="sm" showBadge subtitle="Digital Twins & Realtime" collapseOnSidebar priority />
+              <BotutoLogo size="sm" showBadge subtitle="Digital Twins & Realtime" collapseOnSidebar priority />
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

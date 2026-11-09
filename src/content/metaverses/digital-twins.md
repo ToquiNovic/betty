@@ -1,5 +1,5 @@
 ---
-title: Concepto de Gemelos Digitales en Betty
+title: Concepto de Gemelos Digitales en Botuto
 description: Entiende la correlación entre flujos de datos de hardware físico y entornos virtuales 3D.
 ---
 
@@ -9,7 +9,7 @@ Un **Gemelo Digital (*Digital Twin*)** es una representación virtual viva de un
 
 ## 🎭 Clasificación de Origen de Datos
 
-Betty incorpora soporte nativo para clasificar la telemetría según su procedencia:
+Botuto incorpora soporte nativo para clasificar la telemetría según su procedencia:
 
 1. **Origen Físico (`origin_type: "sensor"`)**:
    - Lecturas reales provenientes de sensores de hardware conectados en el mundo real.
@@ -28,7 +28,7 @@ Betty incorpora soporte nativo para clasificar la telemetría según su proceden
 └─────────────────────────┘                └─────────────────────────┘
 ```
 
-Con Betty puedes:
+Con Botuto puedes:
 - Escuchar los eventos del sensor físico vía WebSocket.
 - Modificar en tiempo real la animación, posición, rotación, color o emisión lumínica del modelo 3D según los valores recibidos.
 - Comparar las métricas reales del sensor contra el comportamiento esperado de la simulación.

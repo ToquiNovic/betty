@@ -8,7 +8,7 @@ import { LocaleSwitcher } from '@/components/layout/locale-switcher';
 import { DocsSearchDialog } from './docs-search-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { BettyLogo } from '@/components/common/betty-logo';
+import { BotutoLogo } from '@/components/common/botuto-logo';
 import {
   Search,
   LayoutDashboard,
@@ -43,7 +43,7 @@ export function DocsHeader({ onToggleMobileSidebar }: DocsHeaderProps) {
             )}
 
             <Link href={`/${locale}/docs`} className="group inline-flex items-center">
-              <BettyLogo size="sm" showBadge subtitle="Documentation" priority />
+              <BotutoLogo size="sm" showBadge subtitle="Documentation" priority />
             </Link>
           </div>
 

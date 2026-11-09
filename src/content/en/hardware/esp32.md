@@ -1,6 +1,6 @@
 ---
 title: ESP32 Hardware Guide (C++/Arduino)
-description: Complete firmware template for connecting ESP32 to Betty.
+description: Complete firmware template for connecting ESP32 to Botuto.
 ---
 
 ## 💻 Sample Code
@@ -16,8 +16,8 @@ const char* mqtt_server = "192.168.1.100";
 const int mqtt_port = 1883;
 
 const char* sensor_id = "4c40ea57-43e0-4ee2-a8d5-77aae4fc387b";
-const char* api_key = "betty_live_...";
-const char* mqtt_topic = "betty/sensor/4c40ea57-43e0-4ee2-a8d5-77aae4fc387b/data";
+const char* api_key = "botuto_live_...";
+const char* mqtt_topic = "botuto/sensor/4c40ea57-43e0-4ee2-a8d5-77aae4fc387b/data";
 
 WiFiClient espClient;
 PubSubClient client(espClient);

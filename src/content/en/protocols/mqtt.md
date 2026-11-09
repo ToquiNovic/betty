@@ -6,8 +6,8 @@ description: Messaging protocol specifications for hardware devices and simulati
 ## 🔐 Credentials
 
 - **Username**: Sensor UUID (e.g., `4c40ea57-43e0-4ee2-a8d5-77aae4fc387b`)
-- **Password**: Full cryptographic API Key (`betty_live_...`)
-- **Topic**: `betty/sensor/<SENSOR_UUID>/data`
+- **Password**: Full cryptographic API Key (`botuto_live_...`)
+- **Topic**: `botuto/sensor/<SENSOR_UUID>/data`
 
 ---
 

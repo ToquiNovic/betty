@@ -25,7 +25,7 @@ export function HowItWorks() {
       number: '02',
       title: t('step2Title'),
       description: t('step2Desc'),
-      highlight: 'betty/sensor/:id/data',
+      highlight: 'botuto/sensor/:id/data',
     },
     {
       icon: LineChart,
@@ -40,29 +40,29 @@ export function HowItWorks() {
     cli: `# Ingesta instantánea con Mosquitto CLI
 mosquitto_pub -h localhost -p 1883 \\
   -u "<SENSOR_ID>" \\
-  -P "betty_live_abc123..." \\
-  -t "betty/sensor/<SENSOR_ID>/data" \\
+  -P "botuto_live_abc123..." \\
+  -t "botuto/sensor/<SENSOR_ID>/data" \\
   -m '{"origin_type":"sensor","temperature":23.4,"humidity":58.2}'`,
     python: `# Ingesta en Python con paho-mqtt
 import paho.mqtt.client as mqtt, json
 
 client = mqtt.Client(client_id="esp32-node")
-client.username_pw_set(username="<SENSOR_ID>", password="betty_live_abc123...")
+client.username_pw_set(username="<SENSOR_ID>", password="botuto_live_abc123...")
 client.connect("localhost", 1883, 60)
 
 payload = {"origin_type": "sensor", "temperature": 23.4, "humidity": 58.2}
-client.publish("betty/sensor/<SENSOR_ID>/data", json.dumps(payload))`,
+client.publish("botuto/sensor/<SENSOR_ID>/data", json.dumps(payload))`,
     node: `// Ingesta en Node.js / TypeScript
 import mqtt from "mqtt";
 
 const client = mqtt.connect("mqtt://localhost:1883", {
   username: "<SENSOR_ID>",
-  password: "betty_live_abc123...",
+  password: "botuto_live_abc123...",
 });
 
 client.on("connect", () => {
   const data = { origin_type: "metaverso", position_x: 120.5, users_count: 42 };
-  client.publish("betty/sensor/<SENSOR_ID>/data", JSON.stringify(data));
+  client.publish("botuto/sensor/<SENSOR_ID>/data", JSON.stringify(data));
 });`,
     esp32: `// Microcontrolador ESP32 (Arduino C++)
 #include <WiFi.h>
@@ -73,8 +73,8 @@ PubSubClient client(espClient);
 
 void sendTelemetry() {
   client.setServer("192.168.1.100", 1883);
-  if (client.connect("ESP32_Device", "<SENSOR_ID>", "betty_live_abc123...")) {
-    client.publish("betty/sensor/<SENSOR_ID>/data", "{\\"origin_type\\":\\"sensor\\",\\"temp\\":23.4}");
+  if (client.connect("ESP32_Device", "<SENSOR_ID>", "botuto_live_abc123...")) {
+    client.publish("botuto/sensor/<SENSOR_ID>/data", "{\\"origin_type\\":\\"sensor\\",\\"temp\\":23.4}");
   }
 }`,
   };

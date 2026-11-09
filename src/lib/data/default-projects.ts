@@ -28,7 +28,7 @@ export const DEFAULT_PROJECTS: Project[] = [
     hasFirmware: true,
     has3DModel: true,
     hasDigitalTwin: true,
-    creatorName: 'Betty IoT Lab',
+    creatorName: 'Botuto IoT Lab',
     creatorAvatar: null,
     steps: [
       {
@@ -196,7 +196,7 @@ export const DEFAULT_PROJECTS: Project[] = [
     hasFirmware: true,
     has3DModel: true,
     hasDigitalTwin: false,
-    creatorName: 'Betty IoT Lab',
+    creatorName: 'Botuto IoT Lab',
     creatorAvatar: null,
     steps: [
       {

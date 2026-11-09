@@ -3,7 +3,7 @@ title: WebSocket Gateway en Tiempo Real
 description: Conexión bidireccional y suscripciones en tiempo real con Socket.IO.
 ---
 
-Betty expone un Gateway WebSocket basado en **Socket.IO** en la ruta `/realtime`, permitiendo a dashboards, gemelos digitales 3D y aplicaciones móviles recibir lecturas instantáneamente en cuanto se publican vía MQTT.
+Botuto expone un Gateway WebSocket basado en **Socket.IO** en la ruta `/realtime`, permitiendo a dashboards, gemelos digitales 3D y aplicaciones móviles recibir lecturas instantáneamente en cuanto se publican vía MQTT.
 
 ---
 
@@ -34,7 +34,7 @@ const socket = io('http://localhost:3000/realtime', {
 });
 
 socket.on('connect', () => {
-  console.log('Conectado al Gateway de Betty');
+  console.log('Conectado al Gateway de Botuto');
   
   // Suscribirse a la sala del sensor
   socket.emit('subscribe:sensor', { sensorId: '4c40ea57-43e0-4ee2-a8d5-77aae4fc387b' });

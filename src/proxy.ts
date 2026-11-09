@@ -9,8 +9,8 @@ const AUTH_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password
 
 export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const token = request.cookies.get('betty_token')?.value;
-  const role = request.cookies.get('betty_user_role')?.value;
+  const token = request.cookies.get('botuto_token')?.value || request.cookies.get('betty_token')?.value;
+  const role = request.cookies.get('botuto_user_role')?.value || request.cookies.get('betty_user_role')?.value;
 
   // Extract route without locale prefix if present (/es/sensors -> /sensors)
   const segments = pathname.split('/').filter(Boolean);

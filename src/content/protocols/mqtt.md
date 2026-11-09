@@ -3,16 +3,16 @@ title: Ingesta MQTT (EMQX)
 description: Protocolo de mensajería para sensores IoT y transmisiones de telemetría.
 ---
 
-El protocolo MQTT es el estándar principal para enviar telemetría de dispositivos hacia Betty.
+El protocolo MQTT es el estándar principal para enviar telemetría de dispositivos hacia Botuto.
 
 ---
 
 ## 🔐 Autenticación MQTT
 
-Betty implementa autenticación HTTP delegada en el broker EMQX. Cada conexión debe autenticarse con las siguientes credenciales:
+Botuto implementa autenticación HTTP delegada en el broker EMQX. Cada conexión debe autenticarse con las siguientes credenciales:
 
 - **Username**: El UUID del sensor registrado (ej: `4c40ea57-43e0-4ee2-a8d5-77aae4fc387b`).
-- **Password**: La API Key criptográfica completa (ej: `betty_live_1234567890abcdef...`).
+- **Password**: La API Key criptográfica completa (ej: `botuto_live_1234567890abcdef...`).
 - **Client ID**: Cualquier identificador único o el mismo UUID del sensor.
 
 ---
@@ -22,7 +22,7 @@ Betty implementa autenticación HTTP delegada en el broker EMQX. Cada conexión 
 Los sensores solo tienen permiso para publicar en su propio tópico dedicado:
 
 ```
-betty/sensor/<SENSOR_UUID>/data
+botuto/sensor/<SENSOR_UUID>/data
 ```
 
 > 💡 **Nota**: Intentar publicar en el tópico de otro sensor o sin credenciales válidas resultará en la desconexión inmediata por parte de EMQX.
@@ -31,7 +31,7 @@ betty/sensor/<SENSOR_UUID>/data
 
 ## 📦 Estructura del Payload JSON
 
-El payload publicado debe ser un objeto JSON válido. Betty extrae y almacena todos los campos numéricos y de texto automáticamente.
+El payload publicado debe ser un objeto JSON válido. Botuto extrae y almacena todos los campos numéricos y de texto automáticamente.
 
 ### Ejemplo de Payload Básico:
 

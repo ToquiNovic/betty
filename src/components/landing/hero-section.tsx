@@ -104,7 +104,7 @@ export function HeroSection() {
                     <div className="h-3 w-3 rounded-full bg-emerald-500/80" />
                   </div>
                   <span className="text-xs font-mono text-muted-foreground ml-2 truncate">
-                    topic: <span className="text-foreground font-semibold">betty/sensor/{activeTab === 'physical' ? 'esp32-node-01' : 'digital-twin-sim'}/data</span>
+                    topic: <span className="text-foreground font-semibold">botuto/sensor/{activeTab === 'physical' ? 'esp32-node-01' : 'digital-twin-sim'}/data</span>
                   </span>
                 </div>
 

@@ -3,7 +3,7 @@ title: Referencia de API REST
 description: Especificación técnica de endpoints HTTP, autenticación y respuestas.
 ---
 
-La API REST de Betty opera en el prefijo `/api` y utiliza formato JSON tanto para peticiones como para respuestas.
+La API REST de Botuto opera en el prefijo `/api` y utiliza formato JSON tanto para peticiones como para respuestas.
 
 ---
 

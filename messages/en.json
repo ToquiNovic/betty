@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Betty Platform",
+    "appName": "Botuto Platform",
     "appTagline": "IoT Application Enablement Platform for Digital Twins and Metaverses",
     "save": "Save",
     "saving": "Saving...",
@@ -34,10 +34,10 @@
     "heroSubtitle": "High-throughput ingestion with MQTT (EMQX), scalable time-series storage with TimescaleDB, real-time dashboards, and native simulation support.",
     "ctaStart": "Get Started",
     "ctaExplore": "Explore Public Dashboards",
-    "featuresTitle": "Why Choose Betty Platform?",
+    "featuresTitle": "Why Choose Botuto Platform?",
     "featuresSubtitle": "Engineered for researchers, enterprise, and developers requiring extreme performance and live analytics.",
     "featureMqttTitle": "High-Throughput MQTT Broker",
-    "featureMqttDesc": "Powered by EMQX with cryptographic HTTP authentication per sensor (betty_live_... prefix).",
+    "featureMqttDesc": "Powered by EMQX with cryptographic HTTP authentication per sensor (botuto_live_... prefix).",
     "featureRealtimeTitle": "Real-Time Telemetry",
     "featureRealtimeDesc": "Bidirectional WebSocket gateway backed by Dragonfly memory-cached Pub/Sub.",
     "featureTimescaleTitle": "Hyper-Scalable Time Series",
@@ -52,7 +52,7 @@
     "step1Title": "1. Register Your Sensor",
     "step1Desc": "Generate a cryptographic API key to authenticate your hardware device or digital twin.",
     "step2Title": "2. Publish Telemetry",
-    "step2Desc": "Send JSON payloads to the dedicated MQTT topic betty/sensor/:id/data.",
+    "step2Desc": "Send JSON payloads to the dedicated MQTT topic botuto/sensor/:id/data.",
     "step3Title": "3. Visualize & Collaborate",
     "step3Desc": "Build live dashboards with charts, maps and gauges, and share them with teammates or publicly.",
     "liveDemoTag": "Live Telemetry",
@@ -63,7 +63,7 @@
     "readyCtaTitle": "Ready to Deploy Your Telemetry Infrastructure?",
     "readyCtaSubtitle": "Sign up for free, register your devices, and monitor in real-time with zero scale friction.",
     "openDocs": "Developer Documentation",
-    "footerText": "Betty Platform — IoT Application Enablement Platform for Digital Twins and IoT."
+    "footerText": "Botuto Platform — IoT Application Enablement Platform for Digital Twins and IoT."
   },
   "nav": {
     "overview": "Overview",
@@ -101,7 +101,7 @@
     "orContinueWith": "Or sign in with local credentials",
     "googleAuth": "Continue with Google",
     "ua3dAuth": "Sign In with UA3D Grid Platform",
-    "ssoTitle": "Unified Access: UA3D & Betty Platform",
+    "ssoTitle": "Unified Access: UA3D & Botuto Platform",
     "ssoSubtitle": "Sign in with your centralized Keycloak account",
     "ssoDescription": "A single shared account for OpenSim Metaverse, Admin Console, and Digital Twins.",
     "ssoBadge": "Centralized SSO",
@@ -234,7 +234,7 @@
   },
   "admin": {
     "title": "Admin Console",
-    "subtitle": "Global management of users and RBAC roles in Betty Platform",
+    "subtitle": "Global management of users and RBAC roles in Botuto Platform",
     "totalUsers": "Total Users",
     "adminUsers": "Administrators",
     "standardUsers": "Standard Users",

@@ -1,9 +1,9 @@
 ---
 title: Guía de Conexión ESP32 (C++/Arduino)
-description: Código completo y configuración para conectar placas ESP32 a Betty.
+description: Código completo y configuración para conectar placas ESP32 a Botuto.
 ---
 
-El ESP32 es el microcontrolador recomendado para Betty debido a su conectividad WiFi dual, aceleración criptográfica y bajo consumo.
+El ESP32 es el microcontrolador recomendado para Botuto debido a su conectividad WiFi dual, aceleración criptográfica y bajo consumo.
 
 ---
 
@@ -26,16 +26,16 @@ Instala las siguientes librerías desde el Gestor de Librerías:
 const char* ssid = "TU_WIFI_SSID";
 const char* password = "TU_WIFI_PASSWORD";
 
-// 2. Configuración de Betty MQTT Broker
-const char* mqtt_server = "192.168.1.100"; // IP o dominio de tu servidor Betty
+// 2. Configuración de Botuto MQTT Broker
+const char* mqtt_server = "192.168.1.100"; // IP o dominio de tu servidor Botuto
 const int mqtt_port = 1883;
 
-// 3. Credenciales del Sensor en Betty
+// 3. Credenciales del Sensor en Botuto
 const char* sensor_id = "4c40ea57-43e0-4ee2-a8d5-77aae4fc387b"; // UUID
-const char* api_key = "betty_live_a1b2c3d4e5f6g7h8...";          // API Key completa
+const char* api_key = "botuto_live_a1b2c3d4e5f6g7h8...";          // API Key completa
 
-const char* mqtt_topic = "betty/sensor/4c40ea57-43e0-4ee2-a8d5-77aae4fc387b/data";
-const char* mqtt_command_topic = "betty/sensor/4c40ea57-43e0-4ee2-a8d5-77aae4fc387b/command";
+const char* mqtt_topic = "botuto/sensor/4c40ea57-43e0-4ee2-a8d5-77aae4fc387b/data";
+const char* mqtt_command_topic = "botuto/sensor/4c40ea57-43e0-4ee2-a8d5-77aae4fc387b/command";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -90,7 +90,7 @@ void setup_wifi() {
 
 void reconnect() {
   while (!client.connected()) {
-    Serial.print("Conectando a Betty MQTT Broker...");
+    Serial.print("Conectando a Botuto MQTT Broker...");
     if (client.connect(sensor_id, sensor_id, api_key)) {
       Serial.println(" ¡Conectado exitosamente!");
       client.subscribe(mqtt_command_topic); // Suscripción a comandos del Activador

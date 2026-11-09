@@ -1,13 +1,13 @@
 ---
-title: Introducción a Betty
-description: Visión general de Betty, la plataforma abierta de IoT y Gemelos Digitales.
+title: Introducción a Botuto
+description: Visión general de Botuto, la plataforma abierta de IoT y Gemelos Digitales.
 ---
 
-**Betty** es una IoT Application Enablement Platform (AEP) de código abierto diseñada para la ingesta de telemetría de alto rendimiento, el procesamiento de series temporales y la sincronización en tiempo real con entornos virtuales, gemelos digitales y metaversos.
+**Botuto** es una IoT Application Enablement Platform (AEP) de código abierto diseñada para la ingesta de telemetría de alto rendimiento, el procesamiento de series temporales y la sincronización en tiempo real con entornos virtuales, gemelos digitales y metaversos.
 
 ---
 
-## 🎯 ¿Por qué Betty?
+## 🎯 ¿Por qué Botuto?
 
 El desarrollo de soluciones IoT tradicionales a menudo enfrenta desafíos complejos:
 - Servidores que no escalan ante ráfagas de datos MQTT.
@@ -15,7 +15,7 @@ El desarrollo de soluciones IoT tradicionales a menudo enfrenta desafíos comple
 - Desconexión entre los dispositivos físicos de hardware y los modelos virtuales de simulación 3D.
 - Dificultad para que los usuarios finales carguen firmware sin instalar cadenas de herramientas complejas en su ordenador.
 
-Betty resuelve estos problemas unificando:
+Botuto resuelve estos problemas unificando:
 1. **Ingesta Ultrarrápida**: Broker MQTT (**EMQX**) con autenticación criptográfica vía HTTP.
 2. **Persistencia Optimizada**: **PostgreSQL 16 + TimescaleDB** con hypertables particionadas por tiempo.
 3. **Caché y Mensajería Multihilo**: **Dragonfly** (compatible con Redis) para Pub/Sub y caché de consultas.

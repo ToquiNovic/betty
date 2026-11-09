@@ -1,13 +1,13 @@
 ---
-title: Introduction to Betty
-description: Architectural overview of Betty open source platform for IoT and Digital Twins.
+title: Introduction to Botuto
+description: Architectural overview of Botuto open source platform for IoT and Digital Twins.
 ---
 
-**Betty** is an open-source IoT Application Enablement Platform (AEP) engineered for high-throughput telemetry ingestion, time-series storage, real-time visual dashboards, and native digital twin metaverse synchronization.
+**Botuto** is an open-source IoT Application Enablement Platform (AEP) engineered for high-throughput telemetry ingestion, time-series storage, real-time visual dashboards, and native digital twin metaverse synchronization.
 
 ---
 
-## 🎯 Why Betty?
+## 🎯 Why Botuto?
 
 - **Extreme Ingestion Throughput**: Powered by **EMQX 5.8** MQTT broker with per-sensor HTTP cryptographic auth.
 - **Fast Analytical Time-Series**: **PostgreSQL 16 + TimescaleDB** hypertables with automatic temporal partitioning.

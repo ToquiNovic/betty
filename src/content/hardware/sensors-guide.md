@@ -3,7 +3,7 @@ title: Sensores Físicos Compatibles
 description: Lista y diagramas de conexionado para sensores populares en proyectos IoT.
 ---
 
-Betty es agnóstica al hardware: cualquier sensor conectado a un microcontrolador que transmita datos en formato JSON es 100% compatible.
+Botuto es agnóstica al hardware: cualquier sensor conectado a un microcontrolador que transmita datos en formato JSON es 100% compatible.
 
 ---
 

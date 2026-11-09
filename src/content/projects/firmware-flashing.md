@@ -3,7 +3,7 @@ title: Flasheo de Firmware por Web Serial (USB)
 description: Cómo funciona la instalación de firmware directa desde el navegador sin instalar herramientas locales.
 ---
 
-Betty integra la **Web Serial API** y la librería `esptool-js` para permitir a los usuarios programar sus placas ESP32 y ESP8266 conectándolas directamente por cable USB a su ordenador.
+Botuto integra la **Web Serial API** y la librería `esptool-js` para permitir a los usuarios programar sus placas ESP32 y ESP8266 conectándolas directamente por cable USB a su ordenador.
 
 ---
 
@@ -14,14 +14,14 @@ Betty integra la **Web Serial API** y la librería `esptool-js` para permitir a 
            │
            │ HTTP GET /api/files/firmware/...
            ▼
-[Betty API Server (Almacenamiento Local)]
+[Botuto API Server (Almacenamiento Local)]
 ```
 
 1. El usuario conecta su placa ESP32 por USB y hace clic en **"Flashear Firmware"**.
 2. El navegador solicita permiso para acceder al puerto COM serie mediante `navigator.serial.requestPort()`.
-3. Betty establece conexión con el bootloader del ESP a una velocidad de **921600 baudios**.
+3. Botuto establece conexión con el bootloader del ESP a una velocidad de **921600 baudios**.
 4. Se detecta el modelo exacto de chip (ej: `ESP32-D0WD-V3`).
-5. Se descarga el archivo `.bin` compilado desde el servidor de Betty y se escribe en la dirección de memoria especificada (por defecto `0x10000`).
+5. Se descarga el archivo `.bin` compilado desde el servidor de Botuto y se escribe en la dirección de memoria especificada (por defecto `0x10000`).
 6. El microcontrolador se reinicia automáticamente y comienza a ejecutar el firmware.
 
 ---

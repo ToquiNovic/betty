@@ -1,6 +1,6 @@
 ---
 title: Integración 3D en Tiempo Real con Three.js
-description: Cómo conectar un modelo 3D GLTF/GLB a la telemetría en vivo de Betty.
+description: Cómo conectar un modelo 3D GLTF/GLB a la telemetría en vivo de Botuto.
 ---
 
 Esta guía muestra cómo vincular un visor 3D interactivo en la web para que responda dinámicamente a las lecturas de los sensores.
@@ -22,7 +22,7 @@ function DigitalTwinModel({ sensorId }: { sensorId: string }) {
   const meshRef = useRef<THREE.Group>(null);
 
   useEffect(() => {
-    // 1. Conectar a Betty Realtime Gateway
+    // 1. Conectar a Botuto Realtime Gateway
     const socket = io("http://localhost:3000/realtime", {
       transports: ["websocket"],
     });

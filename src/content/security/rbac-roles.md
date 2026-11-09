@@ -3,7 +3,7 @@ title: Roles y Permisos (RBAC)
 description: Sistema unificado de control de acceso basado en roles para la plataforma y equipos.
 ---
 
-Betty implementa un modelo de **Control de Acceso Basado en Roles (RBAC)** relacional unificado en la tabla `roles` con dos ámbitos (*scopes*):
+Botuto implementa un modelo de **Control de Acceso Basado en Roles (RBAC)** relacional unificado en la tabla `roles` con dos ámbitos (*scopes*):
 
 ---
 

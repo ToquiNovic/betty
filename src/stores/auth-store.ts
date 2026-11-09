@@ -38,6 +38,9 @@ export const useAuthStore = create<AuthState>()(
       isHydrated: false,
 
       login: (response: AuthResponse) => {
+        setCookie('botuto_token', response.accessToken, 1);
+        setCookie('botuto_refresh_token', response.refreshToken, 7);
+        setCookie('botuto_user_role', response.user.role, 7);
         setCookie('betty_token', response.accessToken, 1);
         setCookie('betty_refresh_token', response.refreshToken, 7);
         setCookie('betty_user_role', response.user.role, 7);
@@ -51,6 +54,9 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
+        deleteCookie('botuto_token');
+        deleteCookie('botuto_refresh_token');
+        deleteCookie('botuto_user_role');
         deleteCookie('betty_token');
         deleteCookie('betty_refresh_token');
         deleteCookie('betty_user_role');

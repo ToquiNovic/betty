@@ -52,7 +52,7 @@ export function LoginForm() {
     try {
       const email = data.email.includes("@")
         ? data.email.trim()
-        : `${data.email.trim()}@betty.local`;
+        : `${data.email.trim()}@botuto.local`;
       const response = await authApi.login({ ...data, email });
       login(response);
       toast.success(t("loginSuccess"));

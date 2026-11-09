@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Betty Platform",
+    "appName": "Botuto Platform",
     "appTagline": "IoT Application Enablement Platform para Gemelos Digitales y Metaversos",
     "save": "Guardar",
     "saving": "Guardando...",
@@ -34,10 +34,10 @@
     "heroSubtitle": "Ingesta de alto throughput con MQTT (EMQX), almacenamiento en series de tiempo con TimescaleDB, dashboards en tiempo real y soporte nativo para simulaciones y metaversos.",
     "ctaStart": "Comenzar Ahora",
     "ctaExplore": "Explorar Dashboards Públicos",
-    "featuresTitle": "¿Por qué elegir Betty Platform?",
+    "featuresTitle": "¿Por qué elegir Botuto Platform?",
     "featuresSubtitle": "Diseñado para investigadores, empresas e ingenieros que necesitan rendimiento extremo y visualizaciones en vivo.",
     "featureMqttTitle": "Broker MQTT de Alto Throughput",
-    "featureMqttDesc": "Alimentado por EMQX con autenticación criptográfica vía API keys por sensor (prefijo betty_live_...).",
+    "featureMqttDesc": "Alimentado por EMQX con autenticación criptográfica vía API keys por sensor (prefijo botuto_live_...).",
     "featureRealtimeTitle": "Telemetría en Tiempo Real",
     "featureRealtimeDesc": "Gateway WebSocket bidireccional respaldado por la memoria ultra rápida de Dragonfly Pub/Sub.",
     "featureTimescaleTitle": "Series Temporales Hiper-Escalables",
@@ -52,7 +52,7 @@
     "step1Title": "1. Registra tu Sensor",
     "step1Desc": "Obtén una API key criptográfica única para autenticar tu dispositivo o gemelo digital.",
     "step2Title": "2. Publica Telemetría",
-    "step2Desc": "Envía lecturas en formato JSON al broker MQTT en el topic dedicado betty/sensor/:id/data.",
+    "step2Desc": "Envía lecturas en formato JSON al broker MQTT en el topic dedicado botuto/sensor/:id/data.",
     "step3Title": "3. Visualiza y Colabora",
     "step3Desc": "Crea tableros interactivos con gráficas, mapas y medidores, compártelos con tu equipo o el mundo.",
     "liveDemoTag": "Telemetría en Vivo",
@@ -63,7 +63,7 @@
     "readyCtaTitle": "¿Listo para desplegar tu infraestructura de telemetría?",
     "readyCtaSubtitle": "Regístrate gratis, configura tus dispositivos y monitorea en tiempo real sin límites de escala.",
     "openDocs": "Documentación Developers",
-    "footerText": "Betty Platform — IoT Application Enablement Platform para Gemelos Digitales e IoT."
+    "footerText": "Botuto Platform — IoT Application Enablement Platform para Gemelos Digitales e IoT."
   },
   "nav": {
     "overview": "Resumen",
@@ -101,7 +101,7 @@
     "orContinueWith": "O ingresar con credenciales locales",
     "googleAuth": "Continuar con Google",
     "ua3dAuth": "Iniciar Sesión con UA3D Grid Platform",
-    "ssoTitle": "Acceso Unificado UA3D & Betty Platform",
+    "ssoTitle": "Acceso Unificado UA3D & Botuto Platform",
     "ssoSubtitle": "Inicia sesión con tu cuenta centralizada de Keycloak",
     "ssoDescription": "Una sola cuenta compartida entre el Metaverso OpenSim, la Consola de Gestión y los Gemelos Digitales.",
     "ssoBadge": "SSO Centralizado",
@@ -234,7 +234,7 @@
   },
   "admin": {
     "title": "Consola de Administración",
-    "subtitle": "Gestión global de usuarios y roles de Betty Platform",
+    "subtitle": "Gestión global de usuarios y roles de Botuto Platform",
     "totalUsers": "Total de Usuarios",
     "adminUsers": "Administradores",
     "standardUsers": "Usuarios Estándar",

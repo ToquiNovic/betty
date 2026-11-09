@@ -1,9 +1,9 @@
 ---
 title: Arquitectura del Sistema
-description: Conoce los componentes centrales, flujo de datos y modelo de capas de Betty IoT Platform.
+description: Conoce los componentes centrales, flujo de datos y modelo de capas de Botuto IoT Platform.
 ---
 
-Betty está construida siguiendo principios de **Clean Architecture (Arquitectura Hexagonal)** y microservicios modulares para garantizar alta disponibilidad y throughput masivo.
+Botuto está construida siguiendo principios de **Clean Architecture (Arquitectura Hexagonal)** y microservicios modulares para garantizar alta disponibilidad y throughput masivo.
 
 ---
 
@@ -13,7 +13,7 @@ Betty está construida siguiendo principios de **Clean Architecture (Arquitectur
 [Dispositivo Físico / ESP32]          [Simulación 3D / Metaverso]
             │                                     │
             └───────────────┬─────────────────────┘
-                            │ MQTT Publish (betty/sensor/:id/data)
+                            │ MQTT Publish (botuto/sensor/:id/data)
                             ▼
                     ┌───────────────┐
                     │    EMQX 5.8   │◄── HTTP Auth (POST /api/mqtt/auth)
@@ -22,7 +22,7 @@ Betty está construida siguiendo principios de **Clean Architecture (Arquitectur
                             │ Webhook HTTP (POST /api/mqtt/webhook)
                             ▼
                     ┌───────────────┐
-                    │   Betty API   │ (NestJS)
+                    │   Botuto API   │ (NestJS)
                     └───────┬───────┘
             ┌───────────────┴───────────────┐
             ▼                               ▼
@@ -48,9 +48,9 @@ Betty está construida siguiendo principios de **Clean Architecture (Arquitectur
 ### 1. Ingesta de Datos: EMQX Broker (5.8)
 - Broker MQTT escalable capaz de gestionar millones de conexiones concurrentes.
 - Cuando un dispositivo se conecta, EMQX consulta a `betty-api` mediante HTTP webhook (`POST /api/mqtt/auth`) verificando el ID del sensor y el hash de la API Key.
-- Al recibir un mensaje en `betty/sensor/:id/data`, EMQX reenvía el payload a `betty-api` vía `POST /api/mqtt/webhook`.
+- Al recibir un mensaje en `botuto/sensor/:id/data`, EMQX reenvía el payload a `betty-api` vía `POST /api/mqtt/webhook`.
 
-### 2. Capa de Negocio: Betty API (NestJS)
+### 2. Capa de Negocio: Botuto API (NestJS)
 - Procesa el payload JSON, valida los tipos y persiste la lectura en la base de datos.
 - Invalida la caché de lecturas recientes del sensor en Dragonfly.
 - Publica el evento en el canal interno `sensor:<id>:data`.

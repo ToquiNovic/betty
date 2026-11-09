@@ -8,7 +8,7 @@ import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { LocaleSwitcher } from '@/components/layout/locale-switcher';
 import { ArrowRight, LayoutDashboard, Globe, FileCode } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
-import { BettyLogo } from '@/components/common/betty-logo';
+import { BotutoLogo } from '@/components/common/botuto-logo';
 
 export function LandingHeader() {
   const t = useTranslations('nav');
@@ -20,7 +20,7 @@ export function LandingHeader() {
       <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Brand */}
         <Link href="/" className="group inline-flex items-center">
-          <BettyLogo size="md" showBadge subtitle="IoT & Digital Twins" priority />
+          <BotutoLogo size="md" showBadge subtitle="IoT & Digital Twins" priority />
         </Link>
 
         {/* Navigation Links */}

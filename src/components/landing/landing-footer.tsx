@@ -4,7 +4,7 @@ import React from 'react';
 import { useTranslations } from 'next-intl';
 import { Activity, Globe, FileCode, ExternalLink } from 'lucide-react';
 import { Link } from '@/i18n/routing';
-import { BettyLogo } from '@/components/common/betty-logo';
+import { BotutoLogo } from '@/components/common/botuto-logo';
 
 export function LandingFooter() {
   const t = useTranslations('landing');
@@ -17,7 +17,7 @@ export function LandingFooter() {
           {/* Column 1: Brand & Bio */}
           <div className="md:col-span-2 space-y-3">
             <div className="inline-flex items-center">
-              <BettyLogo size="sm" showBadge />
+              <BotutoLogo size="sm" showBadge />
             </div>
             <p className="text-xs text-muted-foreground max-w-sm leading-relaxed">
               {common('appTagline')}. Arquitectura unificada para telemetría física y simulaciones en mundos virtuales con almacenamiento en series temporales.

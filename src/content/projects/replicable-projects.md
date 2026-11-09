@@ -1,5 +1,5 @@
 ---
-title: Proyectos Replicables en Betty
+title: Proyectos Replicables en Botuto
 description: Guía para crear y publicar proyectos guiados con modelos 3D y firmware instalable.
 ---
 
