@@ -21,6 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { sensorApi } from '@/lib/api/sensors';
 import { useTeams } from '@/lib/api/teams';
 import { ApiKeyDisplayDialog } from './api-key-display';
+import { LocationPickerMap } from './location-picker-map';
 import {
   Plus,
   Loader2,
@@ -32,6 +33,10 @@ import {
   ChevronDown,
   ChevronUp,
   Sparkles,
+  LocateFixed,
+  Map as MapIcon,
+  Wifi,
+  Share2,
 } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { CreateSensorResponse } from '@/types';
@@ -43,6 +48,8 @@ const createSensorSchema = z.object({
   originType: z.enum(['sensor', 'metaverso']),
   hardware: z.string().optional(),
   location: z.string().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
   metadataJson: z.string().optional(),
 });
 
@@ -63,6 +70,24 @@ const HARDWARE_PRESETS = [
   { id: 'Otro', label: 'Otro' },
 ];
 
+const LORA_BANDS = [
+  { id: '433 MHz', label: '433 MHz (Ra-02 / SX1278)', bandHz: 433000000 },
+  { id: '915 MHz', label: '915 MHz (US915 / Colombia)', bandHz: 915000000 },
+  { id: '868 MHz', label: '868 MHz (EU868)', bandHz: 868000000 },
+];
+
+const LORA_SF_OPTIONS = [
+  { sf: 7, label: 'SF7', rangeKm: '1.5 km (Rápido)', radiusMeters: 1500 },
+  { sf: 8, label: 'SF8', rangeKm: '2.5 km', radiusMeters: 2500 },
+  { sf: 9, label: 'SF9', rangeKm: '3.5 km', radiusMeters: 3500 },
+  { sf: 10, label: 'SF10', rangeKm: '5.0 km', radiusMeters: 5000 },
+  { sf: 12, label: 'SF12', rangeKm: '7.0 km (Máx. Alcance)', radiusMeters: 7000 },
+];
+
+// Default coordinates: Florencia, Caquetá (Campus Central Universidad de la Amazonia)
+const DEFAULT_LAT = 1.6144;
+const DEFAULT_LNG = -75.6062;
+
 export function CreateSensorDialog({ onSuccess, trigger }: CreateSensorDialogProps) {
   const t = useTranslations('sensors');
   const common = useTranslations('common');
@@ -71,6 +96,18 @@ export function CreateSensorDialog({ onSuccess, trigger }: CreateSensorDialogPro
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [createdData, setCreatedData] = useState<CreateSensorResponse | null>(null);
   const [showKeyDialog, setShowKeyDialog] = useState(false);
+
+  // Geographic coordinates state
+  const [lat, setLat] = useState<number>(DEFAULT_LAT);
+  const [lng, setLng] = useState<number>(DEFAULT_LNG);
+  const [showMap, setShowMap] = useState<boolean>(false);
+  const [isLocating, setIsLocating] = useState<boolean>(false);
+
+  // LoRaWAN specific parameters (aligned with betty-gateway)
+  const [loraBand, setLoraBand] = useState<string>('433 MHz');
+  const [loraSf, setLoraSf] = useState<number>(7);
+  const [loraGatewayId, setLoraGatewayId] = useState<string>('gateway-esp32-01');
+  const [shareOnMap, setShareOnMap] = useState<boolean>(true);
 
   const { teams } = useTeams();
 
@@ -87,7 +124,7 @@ export function CreateSensorDialog({ onSuccess, trigger }: CreateSensorDialogPro
       teamId: 'personal',
       originType: 'sensor',
       hardware: 'ESP32',
-      location: '',
+      location: 'Florencia, Caquetá - Campus Porvenir',
       description: '',
       metadataJson: '',
     },
@@ -97,6 +134,38 @@ export function CreateSensorDialog({ onSuccess, trigger }: CreateSensorDialogPro
   const selectedHardware = watch('hardware');
   const selectedTeamId = watch('teamId');
   const sensorName = watch('name');
+
+  const selectedSfOption = LORA_SF_OPTIONS.find((opt) => opt.sf === loraSf) || LORA_SF_OPTIONS[0];
+
+  // Detect GPS coordinates using browser Geolocation API
+  const handleDetectGps = () => {
+    if (!navigator.geolocation) {
+      toast.error('La geolocalización no está soportada en este navegador');
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const userLat = Number(pos.coords.latitude.toFixed(6));
+        const userLng = Number(pos.coords.longitude.toFixed(6));
+        setLat(userLat);
+        setLng(userLng);
+        setShowMap(true);
+        setIsLocating(false);
+        toast.success(`Coordenadas GPS obtenidas: ${userLat}, ${userLng}`);
+      },
+      (err) => {
+        setIsLocating(false);
+        toast.error(`No se pudo obtener el GPS: ${err.message}`);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  const handleMapCoordinateChange = (newLat: number, newLng: number) => {
+    setLat(Number(newLat.toFixed(6)));
+    setLng(Number(newLng.toFixed(6)));
+  };
 
   const onSubmit = async (data: CreateSensorFormValues) => {
     setIsLoading(true);
@@ -116,6 +185,20 @@ export function CreateSensorDialog({ onSuccess, trigger }: CreateSensorDialogPro
         origin_type: data.originType,
         hardware: data.hardware || undefined,
         location: data.location || undefined,
+        latitude: lat,
+        longitude: lng,
+        ...(data.hardware === 'LoRaWAN' && {
+          lora_config: {
+            frequency: loraBand,
+            band_hz: LORA_BANDS.find((b) => b.id === loraBand)?.bandHz || 433000000,
+            spreading_factor: loraSf,
+            bandwidth: '125 kHz',
+            coding_rate: '4/5',
+            gateway_id: loraGatewayId.trim() || 'gateway-esp32-01',
+            shared_on_network_map: shareOnMap,
+            coverage_radius_meters: selectedSfOption.radiusMeters,
+          },
+        }),
         ...customMetadata,
       };
 
@@ -155,7 +238,7 @@ export function CreateSensorDialog({ onSuccess, trigger }: CreateSensorDialogPro
             )
           }
         />
-        <DialogContent className="sm:max-w-lg max-h-[92vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-xl max-h-[92vh] overflow-y-auto">
           <DialogHeader className="space-y-2">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center justify-center">
@@ -280,20 +363,210 @@ export function CreateSensorDialog({ onSuccess, trigger }: CreateSensorDialogPro
               </div>
             </div>
 
-            {/* Location Input */}
-            <div className="space-y-1.5">
-              <Label htmlFor="sensor-loc" className="text-xs font-semibold flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-                <span>Ubicación o Región</span>
-              </Label>
+            {/* Location & Geographical Coordinates */}
+            <div className="space-y-2 p-3 rounded-xl border border-border/80 bg-muted/20">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="sensor-loc" className="text-xs font-semibold flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 text-emerald-500" />
+                  <span>Ubicación y Coordenadas Geográficas</span>
+                </Label>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={handleDetectGps}
+                    disabled={isLocating}
+                    className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 transition-all cursor-pointer"
+                  >
+                    <LocateFixed className={`h-3 w-3 ${isLocating ? 'animate-spin' : ''}`} />
+                    <span>{isLocating ? 'Obteniendo GPS...' : 'Mi GPS'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowMap(!showMap)}
+                    className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-md bg-muted/70 hover:bg-muted text-foreground border border-border transition-all cursor-pointer"
+                  >
+                    <MapIcon className="h-3 w-3" />
+                    <span>{showMap ? 'Ocultar Mapa' : 'Ver Mapa'}</span>
+                  </button>
+                </div>
+              </div>
+
               <Input
                 id="sensor-loc"
-                placeholder="ej: Laboratorio 3D - Bloque C o Parcela Metaverso"
+                placeholder="ej: Florencia, Caquetá - Campus Porvenir"
                 disabled={isLoading}
                 className="h-9 text-xs"
                 {...register('location')}
               />
+
+              {/* Coordinates Inputs */}
+              <div className="grid grid-cols-2 gap-2 pt-0.5">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-mono text-muted-foreground">Latitud (GPS)</span>
+                  <Input
+                    type="number"
+                    step="0.000001"
+                    value={lat}
+                    onChange={(e) => setLat(parseFloat(e.target.value) || 0)}
+                    className="h-8 text-xs font-mono"
+                    placeholder="1.6144"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[10px] font-mono text-muted-foreground">Longitud (GPS)</span>
+                  <Input
+                    type="number"
+                    step="0.000001"
+                    value={lng}
+                    onChange={(e) => setLng(parseFloat(e.target.value) || 0)}
+                    className="h-8 text-xs font-mono"
+                    placeholder="-75.6062"
+                  />
+                </div>
+              </div>
+
+              {/* Interactive Location Picker Map */}
+              {(showMap || selectedHardware === 'LoRaWAN') && (
+                <div className="pt-1.5 space-y-1.5 animate-in fade-in-50 duration-200">
+                  <div className="h-48 w-full rounded-xl overflow-hidden border border-border">
+                    <LocationPickerMap
+                      lat={lat}
+                      lng={lng}
+                      onChange={handleMapCoordinateChange}
+                      showCoverageCircle={selectedHardware === 'LoRaWAN' && shareOnMap}
+                      coverageRadiusMeters={selectedSfOption.radiusMeters}
+                      sensorName={sensorName || 'Nodo Sensor'}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] text-muted-foreground px-1">
+                    <span>💡 Haz clic sobre el mapa para fijar la ubicación del dispositivo.</span>
+                    {selectedHardware === 'LoRaWAN' && shareOnMap && (
+                      <span className="font-mono text-emerald-500 font-semibold">
+                        Radio LoRa: {(selectedSfOption.radiusMeters / 1000).toFixed(1)} km
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
+
+            {/* Specialized LoRaWAN & Gateway Parameters (When LoRa is selected) */}
+            {selectedHardware === 'LoRaWAN' && (
+              <div className="space-y-3 p-3.5 rounded-xl border border-emerald-500/40 bg-emerald-500/5 shadow-xs animate-in fade-in-50 duration-200">
+                <div className="flex items-center gap-2">
+                  <div className="p-1 rounded-md bg-emerald-500/20 text-emerald-500">
+                    <Wifi className="h-3.5 w-3.5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-foreground">
+                      Parámetros LoRaWAN & Integración con Betty Gateway
+                    </h4>
+                    <p className="text-[10px] text-muted-foreground">
+                      Alineado con el firmware ESP32 + SX1278 Ra-02 (betty-gateway).
+                    </p>
+                  </div>
+                </div>
+
+                {/* LoRa Frequency Band Chips */}
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-semibold text-muted-foreground">
+                    Frecuencia de Operación (Banda)
+                  </Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {LORA_BANDS.map((b) => {
+                      const isSel = loraBand === b.id;
+                      return (
+                        <button
+                          key={b.id}
+                          type="button"
+                          onClick={() => setLoraBand(b.id)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
+                            isSel
+                              ? 'bg-emerald-500/20 border-emerald-500 text-emerald-600 dark:text-emerald-400 font-bold shadow-xs'
+                              : 'bg-background/80 border-border/80 text-muted-foreground hover:bg-muted'
+                          }`}
+                        >
+                          {b.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Spreading Factor (SF) Chips */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[11px] font-semibold text-muted-foreground">
+                      Factor de Dispersión (Spreading Factor)
+                    </Label>
+                    <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">
+                      Alcance: {selectedSfOption.rangeKm}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {LORA_SF_OPTIONS.map((opt) => {
+                      const isSel = loraSf === opt.sf;
+                      return (
+                        <button
+                          key={opt.sf}
+                          type="button"
+                          onClick={() => setLoraSf(opt.sf)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
+                            isSel
+                              ? 'bg-emerald-500/20 border-emerald-500 text-emerald-600 dark:text-emerald-400 font-bold shadow-xs'
+                              : 'bg-background/80 border-border/80 text-muted-foreground hover:bg-muted'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Target Gateway ESP32 ID */}
+                <div className="space-y-1">
+                  <Label htmlFor="gateway-id" className="text-[11px] font-semibold text-muted-foreground">
+                    Gateway LoRa Receptor (Bridge ID)
+                  </Label>
+                  <Input
+                    id="gateway-id"
+                    value={loraGatewayId}
+                    onChange={(e) => setLoraGatewayId(e.target.value)}
+                    placeholder="gateway-esp32-01"
+                    className="h-8 text-xs font-mono"
+                  />
+                </div>
+
+                {/* Optional Community Network Coverage Share Toggle */}
+                <div
+                  onClick={() => setShareOnMap(!shareOnMap)}
+                  className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-start gap-2.5 ${
+                    shareOnMap
+                      ? 'border-emerald-500/60 bg-emerald-500/10'
+                      : 'border-border/70 bg-background/60 hover:bg-muted/40'
+                  }`}
+                >
+                  <div className="pt-0.5">
+                    <input
+                      type="checkbox"
+                      checked={shareOnMap}
+                      onChange={(e) => setShareOnMap(e.target.checked)}
+                      className="rounded border-emerald-500 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                    />
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                      <Share2 className="h-3.5 w-3.5 text-emerald-500" />
+                      Compartir en el Mapa Comunitario de Red LoRa (Opcional)
+                    </span>
+                    <p className="text-[10px] text-muted-foreground leading-tight">
+                      Permite a la red de investigación y metaversos de la Universidad de la Amazonia proyectar la cobertura y nodo en el mapa colectivo de sensores.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Team / Scope Selection Chips (No dropdowns!) */}
             <div className="space-y-1.5">
