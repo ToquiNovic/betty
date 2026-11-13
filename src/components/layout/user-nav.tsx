@@ -16,7 +16,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { User, Settings, LogOut, Shield, ChevronsUpDown, FileCode } from 'lucide-react';
+import { User, Settings, LogOut, Shield, ChevronsUpDown, FileCode, ArrowRightLeft } from 'lucide-react';
 
 export function UserNav() {
   const { user, logout } = useAuthStore();
@@ -37,6 +37,18 @@ export function UserNav() {
   const handleLogout = () => {
     logout();
     router.push('/login');
+  };
+
+  const handleSwitchAccount = () => {
+    logout();
+    let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+    if (
+      typeof window !== 'undefined' &&
+      window.location.hostname.includes('laboratorio3d.online')
+    ) {
+      apiUrl = 'https://betty-api.laboratorio3d.online/api';
+    }
+    window.location.href = `${apiUrl}/auth/ua3d?prompt=login`;
   };
 
   return (
@@ -114,6 +126,13 @@ export function UserNav() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator className="my-1" />
+        <DropdownMenuItem
+          onClick={handleSwitchAccount}
+          className="cursor-pointer text-xs py-2 rounded-md text-foreground focus:bg-sidebar-accent/80"
+        >
+          <ArrowRightLeft className="mr-2 h-3.5 w-3.5 text-emerald-500" />
+          <span>Cambiar de cuenta</span>
+        </DropdownMenuItem>
         <DropdownMenuItem
           onClick={handleLogout}
           className="cursor-pointer text-xs py-2 rounded-md text-destructive focus:text-destructive focus:bg-destructive/10"

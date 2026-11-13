@@ -4,25 +4,36 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/routing";
 import { useAuthStore } from "@/stores/auth-store";
-import { Loader2, AlertTriangle, LogIn } from "lucide-react";
+import { Loader2, AlertTriangle, LogIn, ArrowRightLeft } from "lucide-react";
 
 export function LoginForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, logout } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [actionType, setActionType] = useState<"standard" | "switch" | null>(null);
 
   const error = searchParams.get("error");
+  const forceSwitch = searchParams.get("switch") === "true";
 
   useEffect(() => {
+    if (forceSwitch) {
+      logout();
+      return;
+    }
     if (isAuthenticated && user) {
       router.replace("/overview");
     }
-  }, [isAuthenticated, user, router]);
+  }, [isAuthenticated, user, router, forceSwitch, logout]);
 
-  const handleSignIn = () => {
+  const handleSignIn = (switchAccount = false) => {
     if (isLoading) return;
     setIsLoading(true);
+    setActionType(switchAccount ? "switch" : "standard");
+
+    if (switchAccount) {
+      logout();
+    }
 
     let apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
     if (
@@ -32,7 +43,8 @@ export function LoginForm() {
       apiUrl = "https://betty-api.laboratorio3d.online/api";
     }
 
-    window.location.href = `${apiUrl}/auth/ua3d`;
+    const query = switchAccount ? "?prompt=login" : "";
+    window.location.href = `${apiUrl}/auth/ua3d${query}`;
   };
 
   const getErrorMessage = (code: string | null) => {
@@ -80,14 +92,14 @@ export function LoginForm() {
           </div>
         )}
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           <button
             type="button"
-            onClick={handleSignIn}
+            onClick={() => handleSignIn(false)}
             disabled={isLoading}
             className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-600/20 cursor-pointer"
           >
-            {isLoading ? (
+            {isLoading && actionType === "standard" ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
                 <span>Conectando con el Campus Virtual...</span>
@@ -96,6 +108,25 @@ export function LoginForm() {
               <>
                 <LogIn className="w-4 h-4" />
                 <span>Iniciar Sesión Institucional</span>
+              </>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleSignIn(true)}
+            disabled={isLoading}
+            className="w-full py-2.5 px-4 rounded-xl border border-border/80 bg-background/50 hover:bg-muted/80 disabled:opacity-60 disabled:cursor-not-allowed text-foreground font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm"
+          >
+            {isLoading && actionType === "switch" ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Abriendo inicio con otra cuenta...</span>
+              </>
+            ) : (
+              <>
+                <ArrowRightLeft className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Iniciar con una cuenta diferente</span>
               </>
             )}
           </button>
