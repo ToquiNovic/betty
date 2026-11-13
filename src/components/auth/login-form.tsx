@@ -1,66 +1,110 @@
 "use client";
 
-import React from "react";
-import { useTranslations } from "next-intl";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardFooter,
-} from "@/components/ui/card";
-import { Ua3dAuthButton } from "./ua3d-auth-button";
+import React, { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
+import { useAuthStore } from "@/stores/auth-store";
+import { Loader2, AlertTriangle, LogIn } from "lucide-react";
 
 export function LoginForm() {
-  const t = useTranslations("auth");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const { user, isAuthenticated } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const error = searchParams.get("error");
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      router.replace("/overview");
+    }
+  }, [isAuthenticated, user, router]);
+
+  const handleSignIn = () => {
+    if (isLoading) return;
+    setIsLoading(true);
+
+    let apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+    if (
+      typeof window !== "undefined" &&
+      window.location.hostname.includes("laboratorio3d.online")
+    ) {
+      apiUrl = "https://betty-api.laboratorio3d.online/api";
+    }
+
+    window.location.href = `${apiUrl}/auth/ua3d`;
+  };
+
+  const getErrorMessage = (code: string | null) => {
+    if (!code) return null;
+    if (code === "ua3d_code_missing") return "Código de autorización ausente.";
+    if (code === "ua3d_token_exchange_failed")
+      return "Fallo en el intercambio de credenciales con Keycloak.";
+    if (code === "ua3d_userinfo_failed")
+      return "No se pudo recuperar la identidad del usuario.";
+    if (code === "OAuthCallback" || code === "ua3d_login_error")
+      return "Error al procesar el inicio de sesión institucional.";
+    return `Error de autenticación (${code}). Intenta de nuevo.`;
+  };
 
   return (
-    <Card className="shadow-xl border border-border/80 overflow-hidden backdrop-blur-sm">
-      <div className="h-1.5 w-full bg-linear-to-r from-emerald-500 via-teal-400 to-primary" />
-      <CardHeader className="space-y-2 text-center pb-4">
-        <div className="mx-auto w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-500 mb-1">
-          <span className="font-mono text-xl font-black">UA</span>
-        </div>
-        <CardTitle className="text-2xl font-bold tracking-tight">
-          {t("ssoTitle")}
-        </CardTitle>
-        <CardDescription className="text-xs text-muted-foreground max-w-sm mx-auto">
-          {t("ssoDescription")}
-        </CardDescription>
-      </CardHeader>
+    <div className="relative w-full max-w-sm mx-auto">
+      {/* Background glow decorations matching Distro */}
+      <div className="absolute -top-24 -left-24 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-24 -right-24 w-72 h-72 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
 
-      <CardContent className="space-y-5">
-        {/* Exclusive Unified Authentication Action */}
-        <div className="space-y-3 p-1 rounded-xl bg-emerald-500/5 border border-emerald-500/15">
-          <Ua3dAuthButton />
+      <div className="relative z-10 w-full glass-panel p-8 sm:p-10 rounded-3xl border border-border shadow-2xl shadow-black/20 text-center space-y-6 bg-card/80 backdrop-blur-md">
+        {/* Institutional UA Logo */}
+        <div className="w-16 h-16 rounded-2xl bg-secondary/80 border border-border flex items-center justify-center mx-auto p-2 shadow-sm animate-pulse">
+          <img
+            src="/ua-logo.png"
+            alt="Escudo Universidad de la Amazonia"
+            className="w-full h-full object-contain"
+          />
         </div>
 
-        <div className="rounded-lg bg-muted/40 p-3 text-[11px] text-muted-foreground space-y-1.5 border border-border/50">
-          <p className="font-semibold text-foreground flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            Acceso Unificado con Cuentas de la Grid (Keycloak SSO):
-          </p>
-          <p>
-            • <strong>Administrador:</strong> usuario <code>admin</code> |
-            contraseña <code>admin</code>
-          </p>
-          <p>
-            • <strong>Operador / Avatar:</strong> usuario <code>operator</code>{" "}
-            o tu avatar institucional de OpenSim
-          </p>
-          <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium pt-0.5">
-            💡 Haz clic en el botón superior para autenticarte mediante el proveedor de identidad de la Grid.
+        <div className="space-y-1.5">
+          <h1 className="text-xl font-bold tracking-tight text-foreground flex items-center justify-center gap-1.5">
+            Botuto & UA3D Platform
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          </h1>
+          <p className="text-xs text-muted-foreground">
+            Iniciando sesión segura con el Campus Virtual...
           </p>
         </div>
-      </CardContent>
 
-      <CardFooter className="flex justify-center border-t py-3 text-xs text-muted-foreground bg-muted/20">
-        <span>Gestión de identidad institucional por </span>
-        <strong className="text-foreground ml-1">
-          Keycloak OpenID Connect
-        </strong>
-      </CardFooter>
-    </Card>
+        {error && (
+          <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-center gap-2 text-left">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>{getErrorMessage(error)}</span>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <button
+            type="button"
+            onClick={handleSignIn}
+            disabled={isLoading}
+            className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-600/20 cursor-pointer"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Conectando con el Campus Virtual...</span>
+              </>
+            ) : (
+              <>
+                <LogIn className="w-4 h-4" />
+                <span>Iniciar Sesión Institucional</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        <div className="pt-2 text-[10px] font-mono text-muted-foreground/60">
+          Investigación Metaversos UDLA &bull; Gemelos Digitales IoT
+        </div>
+      </div>
+    </div>
   );
 }
