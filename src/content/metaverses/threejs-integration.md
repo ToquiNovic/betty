@@ -23,7 +23,7 @@ function DigitalTwinModel({ sensorId }: { sensorId: string }) {
 
   useEffect(() => {
     // 1. Conectar a Botuto Realtime Gateway
-    const socket = io("http://localhost:3000/realtime", {
+    const socket = io("https://betty-api.laboratorio3d.online/realtime", {
       transports: ["websocket"],
     });
 

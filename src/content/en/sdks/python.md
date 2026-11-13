@@ -9,7 +9,7 @@ import json, time
 
 client = mqtt.Client(client_id="python_client")
 client.username_pw_set(username="YOUR_SENSOR_UUID", password="botuto_live_...")
-client.connect("localhost", 1883)
+client.connect("botuto.laboratorio3d.online", 1883)
 
 client.publish("botuto/sensor/YOUR_SENSOR_UUID/data", json.dumps({
     "temperature": 23.4,

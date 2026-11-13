@@ -26,7 +26,7 @@ Envía el evento `subscribe:sensor` con el ID del sensor:
 ```javascript
 import { io } from 'socket.io-client';
 
-const socket = io('http://localhost:3000/realtime', {
+const socket = io('https://betty-api.laboratorio3d.online/realtime', {
   transports: ['websocket'],
   auth: {
     token: 'TU_JWT_BEARER_TOKEN_AQUI' // Opcional para dashboards públicos

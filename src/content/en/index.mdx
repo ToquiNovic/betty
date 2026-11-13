@@ -1,9 +1,9 @@
 ---
-title: Betty — Developer Documentation
+title: Botuto — Developer Documentation
 description: Open source IoT Application Enablement Platform (AEP) for Internet of Things (IoT), Digital Twins, and Metaverses.
 template: splash
 hero:
-  tagline: Connect physical hardware, 3D simulations, store ultra-fast time series, and build real-time dashboards with Betty.
+  tagline: Connect physical hardware, 3D simulations, store ultra-fast time series, and build real-time dashboards with Botuto Platform.
   image:
     file: ../../../assets/hero-icon.svg
   actions:
@@ -35,10 +35,10 @@ Publish standard telemetry from any programming language or microcontroller in m
   <TabItem label="cURL / CLI" icon="terminal">
 ```bash
 mosquitto_pub \
-  -h localhost -p 1883 \
+  -h botuto.laboratorio3d.online -p 1883 \
   -u "4c40ea57-43e0-4ee2-a8d5-77aae4fc387b" \
-  -P "betty_live_xxxxxxxxxxxxxxxxxxxxxxxx" \
-  -t "betty/sensor/4c40ea57-43e0-4ee2-a8d5-77aae4fc387b/data" \
+  -P "botuto_live_xxxxxxxxxxxxxxxxxxxxxxxx" \
+  -t "botuto/sensor/4c40ea57-43e0-4ee2-a8d5-77aae4fc387b/data" \
   -m '{"temperature": 24.5, "humidity": 60.2, "origin_type": "sensor"}'
 ```
   </TabItem>
@@ -54,7 +54,7 @@ doc["origin_type"] = "sensor";
 
 char buffer[128];
 serializeJson(doc, buffer);
-client.publish("betty/sensor/UUID/data", buffer);
+client.publish("botuto/sensor/UUID/data", buffer);
 ```
   </TabItem>
   <TabItem label="Python" icon="document">
@@ -62,10 +62,10 @@ client.publish("betty/sensor/UUID/data", buffer);
 import paho.mqtt.client as mqtt, json
 
 client = mqtt.Client()
-client.username_pw_set("SENSOR_UUID", "betty_live_...")
-client.connect("localhost", 1883)
+client.username_pw_set("SENSOR_UUID", "botuto_live_...")
+client.connect("botuto.laboratorio3d.online", 1883)
 
-client.publish("betty/sensor/SENSOR_UUID/data", json.dumps({
+client.publish("botuto/sensor/SENSOR_UUID/data", json.dumps({
     "temperature": 24.5, "humidity": 60.2, "origin_type": "sensor"
 }))
 ```
@@ -74,12 +74,12 @@ client.publish("betty/sensor/SENSOR_UUID/data", json.dumps({
 ```typescript
 import mqtt from 'mqtt';
 
-const client = mqtt.connect('mqtt://localhost:1883', {
+const client = mqtt.connect('mqtt://botuto.laboratorio3d.online:1883', {
   username: 'SENSOR_UUID',
-  password: 'betty_live_...',
+  password: 'botuto_live_...',
 });
 
-client.publish('betty/sensor/SENSOR_UUID/data', JSON.stringify({
+client.publish('botuto/sensor/SENSOR_UUID/data', JSON.stringify({
   temperature: 24.5, humidity: 60.2, origin_type: 'sensor'
 }));
 ```
@@ -92,7 +92,7 @@ client.publish('betty/sensor/SENSOR_UUID/data', JSON.stringify({
 
 <CardGrid stagger>
   <Card title="High-Throughput MQTT Ingestion" icon="rocket">
-    Powered by **EMQX 5.8** with per-sensor cryptographic HTTP authentication (`betty_live_...`) supporting thousands of messages per second.
+    Powered by **EMQX 5.8** with per-sensor cryptographic HTTP authentication (`botuto_live_...`) supporting thousands of messages per second.
   </Card>
   <Card title="Hardware + Metaverse Support" icon="laptop">
     Classify telemetry as `sensor` (physical hardware) or `metaverso` (virtual 3D simulation) within a unified pipeline.

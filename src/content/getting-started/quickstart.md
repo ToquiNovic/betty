@@ -9,7 +9,7 @@ En esta guía rápida conectarás tu primer dispositivo o simulación a Botuto y
 
 ## 📋 Requisitos Previos
 
-- Tener acceso a la plataforma Botuto (ej: `http://localhost:3001` en local).
+- Tener acceso a la plataforma Botuto (ej: `https://botuto.laboratorio3d.online` o `http://localhost:3001` en local).
 - Cliente MQTT (como `mosquitto_pub`, un script en Python o un microcontrolador ESP32).
 
 ---
@@ -31,10 +31,10 @@ En esta guía rápida conectarás tu primer dispositivo o simulación a Botuto y
 
 ## 📡 Paso 2: Publica Datos vía MQTT
 
-El broker EMQX escucha por defecto en el puerto `1883`.
+El broker EMQX escucha por defecto en el puerto `1883` (TCP) y `8083` (WebSockets).
 
 ### Parámetros de Conexión:
-- **Broker Host**: `localhost` (o la IP/dominio de tu servidor)
+- **Broker Host**: `botuto.laboratorio3d.online` (o `localhost` en desarrollo)
 - **Puerto**: `1883` (TCP)
 - **Usuario (`Username`)**: El ID del sensor (UUID, ej. `4c40ea57-43e0-4ee2-a8d5-77aae4fc387b`)
 - **Contraseña (`Password`)**: Tu API Key completa (`botuto_live_...`)
@@ -47,7 +47,7 @@ El broker EMQX escucha por defecto en el puerto `1883`.
 
 ```bash
 mosquitto_pub \
-  -h localhost \
+  -h botuto.laboratorio3d.online \
   -p 1883 \
   -u "4c40ea57-43e0-4ee2-a8d5-77aae4fc387b" \
   -P "botuto_live_xxxxxxxxxxxxxxxxxxxxxxxx" \

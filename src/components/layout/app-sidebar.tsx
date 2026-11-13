@@ -270,37 +270,62 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
 
         {/* Live System Health Mini-Card (Collapsible Hidden) */}
-        <div className="mt-auto pt-2 group-data-[collapsible=icon]:hidden">
-          <div className="p-3 rounded-xl border border-border/70 bg-card/60 backdrop-blur-xs space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground">
+        {user?.role === 'admin' ? (
+          <div className="mt-auto pt-2 group-data-[collapsible=icon]:hidden">
+            <div className="p-3 rounded-xl border border-border/70 bg-card/60 backdrop-blur-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground">
+                  <span className="relative flex h-2 w-2">
+                    {isConnected && (
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    )}
+                    <span
+                      className={`relative inline-flex rounded-full h-2 w-2 ${
+                        isConnected ? 'bg-emerald-500' : 'bg-rose-500'
+                      }`}
+                    />
+                  </span>
+                  <span>EMQX Broker</span>
+                </div>
+                <span className="text-[10px] font-mono text-muted-foreground font-medium">1883</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-1.5 pt-1 border-t border-border/40 text-[10px] font-mono text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <Database className="h-2.5 w-2.5 text-primary" />
+                  <span>Timescale</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Zap className="h-2.5 w-2.5 text-cyan-500" />
+                  <span>Dragonfly</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-auto pt-2 group-data-[collapsible=icon]:hidden">
+            <div className="p-2.5 rounded-xl border border-border/60 bg-muted/30 text-xs flex items-center justify-between">
+              <div className="flex items-center gap-2">
                 <span className="relative flex h-2 w-2">
                   {isConnected && (
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                   )}
                   <span
                     className={`relative inline-flex rounded-full h-2 w-2 ${
-                      isConnected ? 'bg-emerald-500' : 'bg-rose-500'
+                      isConnected ? 'bg-emerald-500' : 'bg-amber-500'
                     }`}
                   />
                 </span>
-                <span>EMQX Broker</span>
+                <span className="text-[11px] font-medium text-foreground">
+                  {isConnected ? 'Red de Telemetría' : 'Reconectando...'}
+                </span>
               </div>
-              <span className="text-[10px] font-mono text-muted-foreground font-medium">1883</span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-1.5 pt-1 border-t border-border/40 text-[10px] font-mono text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Database className="h-2.5 w-2.5 text-primary" />
-                <span>Timescale</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Zap className="h-2.5 w-2.5 text-cyan-500" />
-                <span>Dragonfly</span>
-              </div>
+              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20">
+                EN VIVO
+              </span>
             </div>
           </div>
-        </div>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-border/60 p-2">

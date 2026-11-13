@@ -18,7 +18,7 @@ Connect your physical hardware device or simulation to Botuto and watch data str
 
 ## 📡 Step 2: Publish via MQTT
 
-- **Broker**: `localhost:1883`
+- **Broker**: `botuto.laboratorio3d.online:1883` (or `localhost:1883` locally)
 - **Username**: Sensor UUID (e.g., `4c40ea57-43e0-4ee2-a8d5-77aae4fc387b`)
 - **Password**: API Key (`botuto_live_...`)
 - **Topic**: `botuto/sensor/<sensorId>/data`
@@ -27,7 +27,7 @@ Connect your physical hardware device or simulation to Botuto and watch data str
 
 ```bash
 mosquitto_pub \
-  -h localhost \
+  -h botuto.laboratorio3d.online \
   -p 1883 \
   -u "4c40ea57-43e0-4ee2-a8d5-77aae4fc387b" \
   -P "botuto_live_xxxxxxxxxxxxxxxxxxxxxxxx" \

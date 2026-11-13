@@ -34,10 +34,10 @@ const SAMPLE_CODE_TABS = [
   {
     label: 'cURL / HTTP Webhook',
     language: 'bash',
-    code: `curl -X POST http://localhost:3000/api/mqtt/webhook \\
+    code: `curl -X POST https://betty-api.laboratorio3d.online/api/mqtt/webhook \\
   -H "Content-Type: application/json" \\
   -d '{
-    "topic": "betty/sensor/sn_lab_01/data",
+    "topic": "botuto/sensor/sn_lab_01/data",
     "payload": {
       "temperature": 23.4,
       "humidity": 58.2,
@@ -54,9 +54,9 @@ const SAMPLE_CODE_TABS = [
 
 const char* ssid = "MI_WIFI";
 const char* password = "PASSWORD";
-const char* mqtt_server = "broker.betty.local";
+const char* mqtt_server = "botuto.laboratorio3d.online";
 const char* sensor_id = "sn_lab_01";
-const char* api_key = "betty_live_a1b2c3d4e5f6...";
+const char* api_key = "botuto_live_a1b2c3d4e5f6...";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -69,7 +69,7 @@ void sendTelemetry(float temp, float hum) {
 
   char buffer[256];
   serializeJson(doc, buffer);
-  client.publish("betty/sensor/sn_lab_01/data", buffer);
+  client.publish("botuto/sensor/sn_lab_01/data", buffer);
 }`,
   },
   {
@@ -79,8 +79,8 @@ void sendTelemetry(float temp, float hum) {
 import paho.mqtt.client as mqtt
 
 SENSOR_ID = "sn_lab_01"
-API_KEY = "betty_live_a1b2c3d4e5f6..."
-BROKER = "localhost"
+API_KEY = "botuto_live_a1b2c3d4e5f6..."
+BROKER = "botuto.laboratorio3d.online"
 
 client = mqtt.Client(client_id=f"sensor_{SENSOR_ID}")
 client.username_pw_set(username=SENSOR_ID, password=API_KEY)
@@ -92,8 +92,8 @@ payload = {
     "origin_type": "sensor"
 }
 
-client.publish(f"betty/sensor/{SENSOR_ID}/data", json.dumps(payload))
-print("Telemetría enviada exitosamente a Betty")`,
+client.publish(f"botuto/sensor/{SENSOR_ID}/data", json.dumps(payload))
+print("Telemetría enviada exitosamente a Botuto Platform")`,
   },
   {
     label: 'Node.js / TypeScript',
@@ -101,9 +101,9 @@ print("Telemetría enviada exitosamente a Betty")`,
     code: `import mqtt from 'mqtt';
 
 const SENSOR_ID = 'sn_lab_01';
-const API_KEY = 'betty_live_a1b2c3d4e5f6...';
+const API_KEY = 'botuto_live_a1b2c3d4e5f6...';
 
-const client = mqtt.connect('mqtt://localhost:1883', {
+const client = mqtt.connect('mqtt://botuto.laboratorio3d.online:1883', {
   username: SENSOR_ID,
   password: API_KEY,
 });
@@ -116,10 +116,10 @@ client.on('connect', () => {
   };
 
   client.publish(
-    \`betty/sensor/\${SENSOR_ID}/data\`,
+    \`botuto/sensor/\${SENSOR_ID}/data\`,
     JSON.stringify(telemetry)
   );
-  console.log('Datos transmitidos a Betty');
+  console.log('Datos transmitidos a Botuto Platform');
 });`,
   },
 ];
@@ -147,7 +147,7 @@ export default async function DocsIndexPage() {
         <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
           {isEn
             ? 'Technical specifications, hardware integration templates, high-throughput protocols, and SDKs for IoT, Digital Twins, and Metaverses.'
-            : 'Especificaciones técnicas, plantillas de hardware, protocolos de alta ingesta y SDKs para conectar sensores reales, gemelos digitales y metaversos a Betty.'}
+            : 'Especificaciones técnicas, plantillas de hardware, protocolos de alta ingesta y SDKs para conectar sensores reales, gemelos digitales y metaversos a Botuto Platform.'}
         </p>
 
         {/* Action Buttons */}

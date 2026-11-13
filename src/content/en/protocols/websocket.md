@@ -8,7 +8,7 @@ Connect to `ws://<HOST>:3000/realtime` and join rooms per sensor:
 ```javascript
 import { io } from 'socket.io-client';
 
-const socket = io('http://localhost:3000/realtime', {
+const socket = io('https://betty-api.laboratorio3d.online/realtime', {
   transports: ['websocket'],
 });
 

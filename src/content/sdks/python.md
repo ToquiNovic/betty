@@ -25,7 +25,7 @@ import random
 
 SENSOR_ID = "4c40ea57-43e0-4ee2-a8d5-77aae4fc387b"
 API_KEY = "botuto_live_xxxxxxxxxxxxxxxxxxxxxxxx"
-BROKER_HOST = "localhost"
+BROKER_HOST = "botuto.laboratorio3d.online"
 BROKER_PORT = 1883
 
 TOPIC = f"botuto/sensor/{SENSOR_ID}/data"

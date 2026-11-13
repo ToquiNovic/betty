@@ -22,7 +22,7 @@ import mqtt from 'mqtt';
 
 const SENSOR_ID = '4c40ea57-43e0-4ee2-a8d5-77aae4fc387b';
 const API_KEY = 'botuto_live_xxxxxxxxxxxxxxxxxxxxxxxx';
-const BROKER_URL = 'mqtt://localhost:1883';
+const BROKER_URL = 'mqtt://botuto.laboratorio3d.online:1883';
 
 const client = mqtt.connect(BROKER_URL, {
   username: SENSOR_ID,
