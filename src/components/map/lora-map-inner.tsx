@@ -154,25 +154,25 @@ export default function LoraMapInner({
 
         {/* 4. Central Gateway Marker */}
         <Marker position={[gateway.lat, gateway.lng]} icon={gatewayIcon}>
-          <Popup className="text-xs">
-            <div className="space-y-1 p-1">
-              <div className="flex items-center gap-1.5 font-bold text-cyan-600 dark:text-cyan-400">
+          <Popup className="lora-gateway-popup">
+            <div className="space-y-1.5 p-1 min-w-[190px] text-slate-900">
+              <div className="flex items-center gap-1.5 font-bold text-cyan-800 text-xs border-b pb-1 border-slate-200">
                 <Radio className="h-4 w-4" />
                 <span>{gateway.name}</span>
               </div>
-              <p className="text-[11px] text-muted-foreground">{gateway.model}</p>
-              <div className="pt-1 border-t space-y-0.5 text-[10px]">
+              <p className="text-[11px] text-slate-600">{gateway.model}</p>
+              <div className="pt-1 space-y-0.5 text-[10px] text-slate-700">
                 <p>
-                  <strong>Frecuencia:</strong> {gateway.frequency}
+                  <strong className="text-slate-900">Frecuencia:</strong> {gateway.frequency}
                 </p>
                 <p>
-                  <strong>Radio Cobertura:</strong> {gateway.coverageRadiusMeters}m
+                  <strong className="text-slate-900">Radio Cobertura:</strong> {gateway.coverageRadiusMeters}m
                 </p>
                 <p>
-                  <strong>Nodos Conectados:</strong> {nodes.length}
+                  <strong className="text-slate-900">Nodos Conectados:</strong> {nodes.length}
                 </p>
                 <p>
-                  <strong>Coordenadas:</strong> {gateway.lat.toFixed(4)}, {gateway.lng.toFixed(4)}
+                  <strong className="text-slate-900">Coordenadas:</strong> {gateway.lat.toFixed(4)}, {gateway.lng.toFixed(4)}
                 </p>
               </div>
             </div>
@@ -193,39 +193,39 @@ export default function LoraMapInner({
                 click: () => onSelectNode(node),
               }}
             >
-              <Popup className="text-xs">
-                <div className="space-y-1.5 p-1 min-w-[180px]">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-bold text-foreground">{node.name}</span>
+              <Popup className="lora-node-popup">
+                <div className="space-y-2 p-1 min-w-[190px] text-slate-900">
+                  <div className="flex items-center justify-between gap-2 border-b pb-1.5 border-slate-200">
+                    <span className="font-bold text-slate-900 text-xs truncate">{node.name}</span>
                     <span
-                      className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${
+                      className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
                         node.status === 'active'
-                          ? 'bg-emerald-500/10 text-emerald-600'
-                          : 'bg-muted text-muted-foreground'
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                          : 'bg-slate-100 text-slate-600 border border-slate-300'
                       }`}
                     >
                       {node.status}
                     </span>
                   </div>
-                  <div className="text-[11px] space-y-1 text-muted-foreground">
+                  <div className="text-[11px] space-y-1 text-slate-700">
                     <div className="flex items-center justify-between">
-                      <span>RSSI (Señal):</span>
-                      <strong className="font-mono text-foreground">{node.rssi} dBm</strong>
+                      <span className="text-slate-600">RSSI (Señal):</span>
+                      <strong className="font-mono text-emerald-700 font-bold">{node.rssi} dBm</strong>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span>SNR:</span>
-                      <strong className="font-mono text-foreground">{node.snr} dB</strong>
+                      <span className="text-slate-600">SNR:</span>
+                      <strong className="font-mono text-cyan-700 font-bold">{node.snr} dB</strong>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span>Spreading Factor:</span>
-                      <strong className="font-mono text-foreground">
+                      <span className="text-slate-600">Spreading Factor:</span>
+                      <strong className="font-mono text-slate-900 font-bold">
                         SF{node.loraConfig?.spreading_factor || 7}
                       </strong>
                     </div>
                   </div>
                   <button
                     onClick={() => onSelectNode(node)}
-                    className="w-full mt-2 py-1 px-2 text-[10px] font-semibold rounded bg-primary text-primary-foreground text-center"
+                    className="w-full mt-1.5 py-1 px-2 text-[10px] font-bold rounded bg-cyan-700 hover:bg-cyan-800 text-white text-center transition-colors shadow-xs"
                   >
                     Ver Telemetría en Vivo
                   </button>

@@ -45,6 +45,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { sensors } = useSensors();
   const { isConnected } = useSocket();
 
+  const isAdmin =
+    user?.role === 'admin' ||
+    user?.email === 'j.toquica@udla.edu.co' ||
+    user?.email === 'danieltoquicadev@gmail.com';
+
   const activeSensorsCount = sensors.filter((s) => s.status === 'active').length;
 
   const mainNav = [
@@ -97,11 +102,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const adminNav = [
     {
-      title: t('admin'),
+      title: 'Administración Global',
       url: '/admin',
       icon: ShieldAlert,
       isActive: pathname === '/admin',
-      badge: 'Users',
+      badge: 'Usuarios & Sensores',
     },
     {
       title: 'Gestión Proyectos',
@@ -177,7 +182,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
 
         {/* Administration Group (Admin only) */}
-        {user?.role === 'admin' && (
+        {isAdmin && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-[10px] font-bold tracking-wider text-muted-foreground/70 uppercase px-2 mb-1">
               Sistema & Control

@@ -62,7 +62,7 @@ interface CreateSensorDialogProps {
   trigger?: React.ReactNode;
 }
 
-const HARDWARE_PRESETS = [
+export const HARDWARE_PRESETS = [
   { id: 'ESP32', label: 'ESP32' },
   { id: 'LoRaWAN', label: 'LoRaWAN / LoRa' },
   { id: 'Arduino', label: 'Arduino / ESP8266' },
@@ -72,13 +72,13 @@ const HARDWARE_PRESETS = [
   { id: 'Otro', label: 'Otro' },
 ];
 
-const LORA_BANDS = [
+export const LORA_BANDS = [
   { id: '433 MHz', label: '433 MHz (Ra-02 / SX1278)', bandHz: 433000000 },
   { id: '915 MHz', label: '915 MHz (US915 / Colombia)', bandHz: 915000000 },
   { id: '868 MHz', label: '868 MHz (EU868)', bandHz: 868000000 },
 ];
 
-const LORA_SF_OPTIONS = [
+export const LORA_SF_OPTIONS = [
   { sf: 7, label: 'SF7', rangeKm: '1.5 km (Rápido)', radiusMeters: 1500 },
   { sf: 8, label: 'SF8', rangeKm: '2.5 km', radiusMeters: 2500 },
   { sf: 9, label: 'SF9', rangeKm: '3.5 km', radiusMeters: 3500 },
@@ -87,8 +87,8 @@ const LORA_SF_OPTIONS = [
 ];
 
 // Default coordinates: Florencia, Caquetá (Campus Central Universidad de la Amazonia)
-const DEFAULT_LAT = 1.6144;
-const DEFAULT_LNG = -75.6062;
+export const DEFAULT_LAT = 1.6144;
+export const DEFAULT_LNG = -75.6062;
 
 export function CreateSensorDialog({ onSuccess, trigger }: CreateSensorDialogProps) {
   const t = useTranslations('sensors');
@@ -452,7 +452,7 @@ export function CreateSensorDialog({ onSuccess, trigger }: CreateSensorDialogPro
                     <button
                       type="button"
                       onClick={() => setIsBigMapOpen(true)}
-                      className="absolute top-2 right-2 z-[400] flex items-center gap-1 px-2 py-1 text-[10px] font-semibold rounded-md bg-background/90 hover:bg-background text-foreground shadow-md border border-border/80 backdrop-blur-xs transition-all cursor-pointer"
+                      className="absolute top-2 right-2 z-400 flex items-center gap-1 px-2 py-1 text-[10px] font-semibold rounded-md bg-background/90 hover:bg-background text-foreground shadow-md border border-border/80 backdrop-blur-xs transition-all cursor-pointer"
                       title="Abrir mapa en pantalla completa"
                     >
                       <Maximize2 className="h-3 w-3 text-emerald-500" />

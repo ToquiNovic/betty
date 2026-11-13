@@ -11,6 +11,11 @@ export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get('botuto_token')?.value || request.cookies.get('betty_token')?.value;
   const role = request.cookies.get('botuto_user_role')?.value || request.cookies.get('betty_user_role')?.value;
+  const userEmail = request.cookies.get('botuto_user_email')?.value || request.cookies.get('betty_user_email')?.value;
+  const isSuperAdmin =
+    role === 'admin' ||
+    userEmail === 'j.toquica@udla.edu.co' ||
+    userEmail === 'danieltoquicadev@gmail.com';
   const termsAccepted =
     request.cookies.get('betty_terms_accepted')?.value === 'true' ||
     request.cookies.get('botuto_terms_accepted')?.value === 'true';
@@ -47,7 +52,7 @@ export default function proxy(request: NextRequest) {
   }
 
   // 3. Non-admin user trying to access /admin -> redirect to /overview
-  if (pathWithoutLocale.startsWith('/admin') && token && role !== 'admin') {
+  if (pathWithoutLocale.startsWith('/admin') && token && !isSuperAdmin) {
     return NextResponse.redirect(new URL(`/${currentLocale}/overview`, request.url));
   }
 

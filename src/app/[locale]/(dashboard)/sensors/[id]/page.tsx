@@ -29,88 +29,9 @@ import {
   Settings,
   Copy,
   Check,
-  Cpu,
 } from 'lucide-react';
 import { toast } from '@/lib/toast';
-import { PlanoInclinadoVisualizer } from '@/components/projects/plano-inclinado/plano-inclinado-visualizer';
-
-interface SensorSettingsFormProps {
-  sensor: NonNullable<ReturnType<typeof useSensor>['sensor']>;
-  onUpdated: () => void;
-  nameLabel: string;
-  descLabel: string;
-  saveLabel: string;
-  errorLabel: string;
-}
-
-function SensorSettingsForm({
-  sensor,
-  onUpdated,
-  nameLabel,
-  descLabel,
-  saveLabel,
-  errorLabel,
-}: SensorSettingsFormProps) {
-  const [name, setName] = useState(sensor.name);
-  const [description, setDescription] = useState(sensor.description || '');
-  const [isUpdating, setIsUpdating] = useState(false);
-
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsUpdating(true);
-    try {
-      await sensorApi.update(sensor.id, {
-        name,
-        description: description || undefined,
-      });
-      onUpdated();
-      toast.success('Sensor actualizado correctamente');
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : errorLabel;
-      toast.error(msg);
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  return (
-    <Card className="border shadow-sm">
-      <CardHeader className="p-5 pb-3">
-        <CardTitle className="text-base font-bold">Editar Sensor</CardTitle>
-        <CardDescription className="text-xs">
-          Modifica el nombre o la descripción del dispositivo.
-        </CardDescription>
-      </CardHeader>
-      <form onSubmit={handleUpdate}>
-        <CardContent className="p-5 pt-0 space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="edit-name">{nameLabel}</Label>
-            <Input
-              id="edit-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={isUpdating}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="edit-desc">{descLabel}</Label>
-            <Input
-              id="edit-desc"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              disabled={isUpdating}
-            />
-          </div>
-        </CardContent>
-        <CardFooter className="p-5 pt-0 border-t bg-muted/10 py-3 flex justify-end">
-          <Button type="submit" size="sm" disabled={isUpdating}>
-            {saveLabel}
-          </Button>
-        </CardFooter>
-      </form>
-    </Card>
-  );
-}
+import { SensorSettingsForm } from '@/components/sensors/sensor-settings-form';
 
 export default function SensorDetailPage() {
   const t = useTranslations('sensors');
@@ -296,14 +217,10 @@ export default function SensorDetailPage() {
 
       {/* Interactive Tabs */}
       <Tabs defaultValue="chart" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 max-w-xl">
+        <TabsList className="grid w-full grid-cols-3 max-w-md">
           <TabsTrigger value="chart" className="gap-2 text-xs">
             <Activity className="h-3.5 w-3.5" />
             <span>{t('chartTab')}</span>
-          </TabsTrigger>
-          <TabsTrigger value="digital-twin" className="gap-2 text-xs font-semibold text-purple-600 dark:text-purple-400">
-            <Cpu className="h-3.5 w-3.5" />
-            <span>Gemelo Digital</span>
           </TabsTrigger>
           <TabsTrigger value="table" className="gap-2 text-xs">
             <Table className="h-3.5 w-3.5" />
@@ -320,18 +237,13 @@ export default function SensorDetailPage() {
           <SensorDataChart data={allReadings} sensorName={sensor.name} />
         </TabsContent>
 
-        {/* Digital Twin View */}
-        <TabsContent value="digital-twin" className="space-y-4">
-          <PlanoInclinadoVisualizer sensorId={sensor.id} />
-        </TabsContent>
-
         {/* Table View */}
         <TabsContent value="table" className="space-y-4">
           <SensorDataTable data={allReadings} />
         </TabsContent>
 
         {/* Settings View */}
-        <TabsContent value="settings" className="space-y-4 max-w-xl">
+        <TabsContent value="settings" className="space-y-4 max-w-2xl">
           <SensorSettingsForm
             key={`${sensor.id}-${sensor.updatedAt || ''}`}
             sensor={sensor}

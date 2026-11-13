@@ -1,47 +1,59 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { useTranslations } from 'next-intl';
-import { useUsers } from '@/lib/api/users';
-import { useAdminTeams } from '@/lib/api/teams';
-import { useAdminSensors } from '@/lib/api/sensors';
-import { PageHeader } from '@/components/common/page-header';
-import { UsersTable } from '@/components/admin/users-table';
-import { AdminTeamsTable } from '@/components/admin/admin-teams-table';
-import { AdminSensorsTable } from '@/components/admin/admin-sensors-table';
-import { TableSkeleton } from '@/components/common/loading-skeleton';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Users, Shield, Cpu, Search, UsersRound, Radio } from 'lucide-react';
+import React, { useState } from "react";
+import { useTranslations } from "next-intl";
+import { useUsers } from "@/lib/api/users";
+import { useAdminTeams } from "@/lib/api/teams";
+import { useAdminSensors } from "@/lib/api/sensors";
+import { PageHeader } from "@/components/common/page-header";
+import { UsersTable } from "@/components/admin/users-table";
+import { AdminTeamsTable } from "@/components/admin/admin-teams-table";
+import { AdminSensorsTable } from "@/components/admin/admin-sensors-table";
+import { TableSkeleton } from "@/components/common/loading-skeleton";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Users, Cpu, Search, UsersRound, Radio } from "lucide-react";
 
 export default function AdminPage() {
-  const t = useTranslations('admin');
-  const [activeTab, setActiveTab] = useState<'users' | 'teams' | 'sensors'>('users');
-  const [search, setSearch] = useState('');
+  const t = useTranslations("admin");
+  const [activeTab, setActiveTab] = useState<"users" | "teams" | "sensors">(
+    "users",
+  );
+  const [search, setSearch] = useState("");
 
-  const { users, isLoading: isUsersLoading, mutate: mutateUsers } = useUsers(100);
-  const { teams, isLoading: isTeamsLoading } = useAdminTeams(activeTab === 'teams' ? search : undefined);
-  const { sensors, isLoading: isSensorsLoading } = useAdminSensors(activeTab === 'sensors' ? search : undefined);
+  const {
+    users,
+    isLoading: isUsersLoading,
+    mutate: mutateUsers,
+  } = useUsers(100);
+  const { teams, isLoading: isTeamsLoading } = useAdminTeams(
+    activeTab === "teams" ? search : undefined,
+  );
+  const { sensors, isLoading: isSensorsLoading } = useAdminSensors(
+    activeTab === "sensors" ? search : undefined,
+  );
 
   const filteredUsers = users.filter(
     (u) =>
       u.name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase())
+      u.email.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const adminCount = users.filter((u) => u.role === 'admin').length;
-  const activeSensorsCount = sensors.filter((s) => s.status === 'active').length;
+  const adminCount = users.filter((u) => u.role === "admin").length;
+  const activeSensorsCount = sensors.filter(
+    (s) => s.status === "active",
+  ).length;
   const loraSensorsCount = sensors.filter(
     (s) =>
-      s.metadata?.hardware === 'LoRaWAN' ||
-      (s.metadata as any)?.lora_config !== undefined
+      s.metadata?.hardware === "LoRaWAN" ||
+      (s.metadata as any)?.lora_config !== undefined,
   ).length;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title={t('title')}
+        title={t("title")}
         subtitle="Gestión global de usuarios, grupos de investigación y sensores de Botuto Platform"
       />
 
@@ -51,9 +63,13 @@ export default function AdminPage() {
         <Card className="border shadow-sm">
           <CardContent className="p-5 flex items-center justify-between">
             <div className="space-y-1">
-              <p className="text-xs font-medium text-muted-foreground">{t('totalUsers')}</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                {t("totalUsers")}
+              </p>
               <div className="flex items-baseline gap-2">
-                <p className="text-3xl font-extrabold font-mono text-foreground">{users.length}</p>
+                <p className="text-3xl font-extrabold font-mono text-foreground">
+                  {users.length}
+                </p>
                 <span className="text-[11px] font-medium text-amber-500 font-mono">
                   ({adminCount} admin)
                 </span>
@@ -69,8 +85,12 @@ export default function AdminPage() {
         <Card className="border shadow-sm">
           <CardContent className="p-5 flex items-center justify-between">
             <div className="space-y-1">
-              <p className="text-xs font-medium text-muted-foreground">Grupos / Equipos</p>
-              <p className="text-3xl font-extrabold font-mono text-foreground">{teams.length}</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                Grupos / Equipos
+              </p>
+              <p className="text-3xl font-extrabold font-mono text-foreground">
+                {teams.length}
+              </p>
             </div>
             <div className="p-3 rounded-lg bg-sky-500/10 text-sky-500">
               <UsersRound className="h-5 w-5" />
@@ -82,9 +102,13 @@ export default function AdminPage() {
         <Card className="border shadow-sm">
           <CardContent className="p-5 flex items-center justify-between">
             <div className="space-y-1">
-              <p className="text-xs font-medium text-muted-foreground">Sensores Creados</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                Sensores Creados
+              </p>
               <div className="flex items-baseline gap-2">
-                <p className="text-3xl font-extrabold font-mono text-foreground">{sensors.length}</p>
+                <p className="text-3xl font-extrabold font-mono text-foreground">
+                  {sensors.length}
+                </p>
                 <span className="text-[11px] font-medium text-emerald-500 font-mono">
                   ({activeSensorsCount} activos)
                 </span>
@@ -100,7 +124,9 @@ export default function AdminPage() {
         <Card className="border shadow-sm">
           <CardContent className="p-5 flex items-center justify-between">
             <div className="space-y-1">
-              <p className="text-xs font-medium text-muted-foreground">Nodos de Red LoRa</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                Nodos de Red LoRa
+              </p>
               <p className="text-3xl font-extrabold font-mono text-cyan-600 dark:text-cyan-400">
                 {loraSensorsCount}
               </p>
@@ -116,22 +142,31 @@ export default function AdminPage() {
       <Tabs
         value={activeTab}
         onValueChange={(val) => {
-          setActiveTab(val as 'users' | 'teams' | 'sensors');
-          setSearch('');
+          setActiveTab(val as "users" | "teams" | "sensors");
+          setSearch("");
         }}
         className="space-y-4"
       >
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-          <TabsList className="grid grid-cols-3 w-full sm:w-[420px]">
-            <TabsTrigger value="users" className="gap-1.5 text-xs font-semibold">
+          <TabsList className="grid grid-cols-3 w-full sm:w-105">
+            <TabsTrigger
+              value="users"
+              className="gap-1.5 text-xs font-semibold"
+            >
               <Users className="h-3.5 w-3.5" />
               <span>Usuarios ({users.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="teams" className="gap-1.5 text-xs font-semibold">
+            <TabsTrigger
+              value="teams"
+              className="gap-1.5 text-xs font-semibold"
+            >
               <UsersRound className="h-3.5 w-3.5 text-sky-500" />
               <span>Grupos ({teams.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="sensors" className="gap-1.5 text-xs font-semibold">
+            <TabsTrigger
+              value="sensors"
+              className="gap-1.5 text-xs font-semibold"
+            >
               <Cpu className="h-3.5 w-3.5 text-primary" />
               <span>Sensores ({sensors.length})</span>
             </TabsTrigger>
@@ -141,11 +176,11 @@ export default function AdminPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder={
-                activeTab === 'users'
-                  ? 'Buscar por nombre o correo...'
-                  : activeTab === 'teams'
-                  ? 'Buscar por nombre de equipo, dueño o código...'
-                  : 'Buscar sensor por nombre...'
+                activeTab === "users"
+                  ? "Buscar por nombre o correo..."
+                  : activeTab === "teams"
+                    ? "Buscar por nombre de equipo, dueño o código..."
+                    : "Buscar sensor por nombre..."
               }
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -159,7 +194,10 @@ export default function AdminPage() {
           {isUsersLoading ? (
             <TableSkeleton rows={6} />
           ) : (
-            <UsersTable users={filteredUsers} onUserUpdated={() => mutateUsers()} />
+            <UsersTable
+              users={filteredUsers}
+              onUserUpdated={() => mutateUsers()}
+            />
           )}
         </TabsContent>
 

@@ -158,7 +158,7 @@ export function LocationPickerDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         overlayClassName="z-[60] bg-black/70 backdrop-blur-xs"
-        className="z-[60] sm:max-w-5xl w-[95vw] max-h-[94vh] flex flex-col p-4 sm:p-5 overflow-hidden gap-3 rounded-2xl bg-card border border-border shadow-2xl"
+        className="z-60 sm:max-w-5xl w-[95vw] max-h-[94vh] flex flex-col p-4 sm:p-5 overflow-hidden gap-3 rounded-2xl bg-card border border-border shadow-2xl"
       >
         <DialogHeader className="space-y-1 pb-1 border-b border-border/60">
           <div className="flex items-center gap-2.5">
@@ -300,7 +300,7 @@ export function LocationPickerDialog({
         </div>
 
         {/* Big Leaflet Map Canvas */}
-        <div className="flex-1 w-full min-h-[380px] sm:min-h-[440px] max-h-[58vh] rounded-xl overflow-hidden border border-border relative">
+        <div className="flex-1 w-full min-h-95 sm:min-h-110 max-h-[58vh] rounded-xl overflow-hidden border border-border relative">
           <LocationPickerMap
             lat={selectedLat}
             lng={selectedLng}
@@ -315,7 +315,7 @@ export function LocationPickerDialog({
           />
 
           {/* Map Overlay Floating Tip */}
-          <div className="absolute bottom-2 left-2 z-[400] flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-background/85 border border-border/80 shadow-sm backdrop-blur-xs text-[11px] text-foreground pointer-events-none">
+          <div className="absolute bottom-2 left-2 z-400 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-background/85 border border-border/80 shadow-sm backdrop-blur-xs text-[11px] text-foreground pointer-events-none">
             <Info className="h-3 w-3 text-emerald-500 shrink-0" />
             <span>Haz clic en el mapa o arrastra el pin para moverlo. Usa la rueda del ratón para zoom.</span>
           </div>

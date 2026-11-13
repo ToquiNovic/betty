@@ -38,18 +38,28 @@ export const useAuthStore = create<AuthState>()(
       isHydrated: false,
 
       login: (response: AuthResponse) => {
+        const isSuperAdmin =
+          response.user.role === 'admin' ||
+          response.user.email === 'j.toquica@udla.edu.co' ||
+          response.user.email === 'danieltoquicadev@gmail.com';
+
+        const effectiveRole = isSuperAdmin ? 'admin' : response.user.role;
+        const normalizedUser = { ...response.user, role: effectiveRole as 'admin' | 'user' };
+
         setCookie('botuto_token', response.accessToken, 1);
         setCookie('botuto_refresh_token', response.refreshToken, 7);
-        setCookie('botuto_user_role', response.user.role, 7);
+        setCookie('botuto_user_role', effectiveRole, 7);
+        setCookie('botuto_user_email', response.user.email, 7);
         setCookie('betty_token', response.accessToken, 1);
         setCookie('betty_refresh_token', response.refreshToken, 7);
-        setCookie('betty_user_role', response.user.role, 7);
+        setCookie('betty_user_role', effectiveRole, 7);
+        setCookie('betty_user_email', response.user.email, 7);
         const termsAcceptedStr = String(Boolean(response.user.termsAccepted));
         setCookie('botuto_terms_accepted', termsAcceptedStr, 7);
         setCookie('betty_terms_accepted', termsAcceptedStr, 7);
         setCookie('ua3d_terms_accepted', termsAcceptedStr, 7);
         set({
-          user: response.user,
+          user: normalizedUser,
           accessToken: response.accessToken,
           refreshToken: response.refreshToken,
           isAuthenticated: true,
@@ -61,9 +71,11 @@ export const useAuthStore = create<AuthState>()(
         deleteCookie('botuto_token');
         deleteCookie('botuto_refresh_token');
         deleteCookie('botuto_user_role');
+        deleteCookie('botuto_user_email');
         deleteCookie('betty_token');
         deleteCookie('betty_refresh_token');
         deleteCookie('betty_user_role');
+        deleteCookie('betty_user_email');
         deleteCookie('botuto_terms_accepted');
         deleteCookie('betty_terms_accepted');
         deleteCookie('ua3d_terms_accepted');
