@@ -7,7 +7,7 @@ import { useSocket } from '@/components/providers/socket-provider';
 import { LandingHeader } from '@/components/landing/landing-header';
 import { LandingFooter } from '@/components/landing/landing-footer';
 import { LoraNetworkMap } from '@/components/map/lora-network-map';
-import { LoraNetworkNode } from '@/types';
+import { LoraNetworkNode, LoraGatewayInfo } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -50,9 +50,25 @@ export default function PublicLoraMapPage() {
   const [showCoverage, setShowCoverage] = useState(true);
   const [livePackets, setLivePackets] = useState<LivePacketEntry[]>([]);
   const [lastPacketTime, setLastPacketTime] = useState<Date | null>(null);
+  const [gateway, setGateway] = useState<LoraGatewayInfo>({
+    id: '8e779657-48bf-4e9c-8e7d-1a586756392e',
+    name: 'LoRa-Gateway',
+    model: 'ESP32 DevKit + SX1278 (Ra-02)',
+    frequency: '433.000 MHz (Ra-02)',
+    lat: 1.6144,
+    lng: -75.6062,
+    coverageRadiusMeters: 3500,
+    status: 'online',
+    connectedNodesCount: 0,
+    rssi: -80,
+    snr: 8.5,
+  });
 
-  // Sync initial network nodes from REST API
+  // Sync initial network nodes & gateway from REST API
   useEffect(() => {
+    if (network?.gateway) {
+      setGateway(network.gateway);
+    }
     if (network?.nodes) {
       setNodes(network.nodes);
     }
@@ -85,6 +101,18 @@ export default function PublicLoraMapPage() {
       const snr = packetPayload.snr;
       const metrics = packetPayload.metrics || packetPayload;
 
+      // Update gateway state if packet belongs to base gateway
+      if (data.sensorId === gateway.id) {
+        setGateway((prev: LoraGatewayInfo) => ({
+          ...prev,
+          status: 'online',
+          latestTelemetry: { ...prev.latestTelemetry, ...metrics },
+          rssi: typeof rssi === 'number' ? rssi : prev.rssi,
+          snr: typeof snr === 'number' ? snr : prev.snr,
+          lastSeen: now.toISOString(),
+        }));
+      }
+
       // Update node in state
       setNodes((prevNodes) =>
         prevNodes.map((n) => {
@@ -108,10 +136,11 @@ export default function PublicLoraMapPage() {
       // Append to live rolling packet log (keep last 12)
       setLivePackets((prev) => {
         const foundNode = nodes.find((n) => n.id === data.sensorId);
+        const isGw = data.sensorId === gateway.id;
         const newEntry: LivePacketEntry = {
           id: `${data.sensorId}-${now.getTime()}`,
           sensorId: data.sensorId,
-          sensorName: foundNode?.name || 'Nodo LoRa',
+          sensorName: isGw ? `[Base] ${gateway.name}` : (foundNode?.name || 'Nodo LoRa'),
           rssi,
           snr,
           payload: metrics,
@@ -128,19 +157,7 @@ export default function PublicLoraMapPage() {
       socket.off('sensor:data', onSensorData);
       socket.emit('unsubscribe:public-network');
     };
-  }, [socket, nodes]);
-
-  const gateway = network?.gateway || {
-    id: 'gateway-esp32-01',
-    name: 'Gateway LoRa Base (ESP32 DevKit + Ra-02)',
-    model: 'ESP32-WROOM-32 + SX1278',
-    frequency: '433 MHz (Ra-02)',
-    lat: 1.6144,
-    lng: -75.6062,
-    coverageRadiusMeters: 3500,
-    status: 'online' as const,
-    connectedNodesCount: nodes.length,
-  };
+  }, [socket, nodes, gateway.id, gateway.name]);
 
   const activeNodesCount = nodes.filter((n) => n.status === 'active').length;
   const avgRssi =
@@ -279,34 +296,41 @@ export default function PublicLoraMapPage() {
 
             {/* Side Telemetry & Live Frame Inspector (4 Columns on desktop) */}
             <div className="lg:col-span-4 flex flex-col gap-4 h-full overflow-hidden">
-              {/* Node Inspector Card */}
+              {/* Node / Gateway Inspector Card */}
               <Card className="border shadow-sm flex flex-col shrink-0">
                 <CardHeader className="p-4 pb-3 border-b flex flex-row items-center justify-between">
                   <div className="space-y-0.5">
                     <CardTitle className="text-sm font-bold flex items-center gap-1.5 text-foreground">
                       {selectedNode ? (
                         <>
-                          <Radio className="h-4 w-4 text-cyan-500" />
+                          <Radio className="h-4 w-4 text-emerald-500" />
                           <span>{selectedNode.name}</span>
                         </>
                       ) : (
                         <>
-                          <Signal className="h-4 w-4 text-primary" />
+                          <Radio className="h-4 w-4 text-cyan-500" />
                           <span>{gateway.name}</span>
                         </>
                       )}
                     </CardTitle>
                     <p className="text-[11px] text-muted-foreground font-mono">
-                      {selectedNode ? `ID: ${selectedNode.id}` : `ID: ${gateway.id}`}
+                      {selectedNode ? `ID: ${selectedNode.id}` : `ID Base: ${gateway.id}`}
                     </p>
                   </div>
 
-                  <Badge
-                    variant={selectedNode?.status === 'active' || !selectedNode ? 'default' : 'secondary'}
-                    className="text-[10px]"
-                  >
-                    {selectedNode ? selectedNode.status : 'ONLINE'}
-                  </Badge>
+                  <div className="flex items-center gap-1.5">
+                    {!selectedNode && (
+                      <Badge variant="outline" className="text-[9px] bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/30">
+                        GATEWAY BASE
+                      </Badge>
+                    )}
+                    <Badge
+                      variant={selectedNode?.status === 'active' || !selectedNode ? 'default' : 'secondary'}
+                      className="text-[10px]"
+                    >
+                      {selectedNode ? selectedNode.status : gateway.status.toUpperCase()}
+                    </Badge>
+                  </div>
                 </CardHeader>
 
                 <CardContent className="p-4 space-y-4">
@@ -383,36 +407,57 @@ export default function PublicLoraMapPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => setSelectedNode(null)}
-                        className="w-full text-xs h-8"
+                        className="w-full text-xs h-8 border-cyan-500/30 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-500/10 cursor-pointer"
                       >
-                        Ver Información del Gateway
+                        Ver Gateway Base
                       </Button>
                     </>
                   ) : (
                     /* Gateway Overview Details */
-                    <div className="space-y-3 text-xs">
+                    <div className="space-y-4 text-xs">
+                      {/* Gateway RF Metrics */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="p-2.5 rounded-lg bg-muted/40 border space-y-0.5">
+                          <p className="text-[10px] text-muted-foreground">Potencia RSSI</p>
+                          <p className="text-base font-extrabold font-mono text-emerald-600 dark:text-emerald-400">
+                            {gateway.rssi ?? -80} <span className="text-xs font-normal">dBm</span>
+                          </p>
+                        </div>
+
+                        <div className="p-2.5 rounded-lg bg-muted/40 border space-y-0.5">
+                          <p className="text-[10px] text-muted-foreground">Relación SNR</p>
+                          <p className="text-base font-extrabold font-mono text-cyan-600 dark:text-cyan-400">
+                            {gateway.snr ?? 8.5} <span className="text-xs font-normal">dB</span>
+                          </p>
+                        </div>
+                      </div>
+
                       <div className="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-700 dark:text-cyan-300 space-y-1">
                         <p className="font-semibold text-xs flex items-center gap-1.5">
                           <Radio className="h-3.5 w-3.5" />
                           <span>Módulo SX1278 (Ra-02 433 MHz)</span>
                         </p>
                         <p className="text-[11px]">
-                          El Gateway de borde recibe tramas LoRa inalámbricas, valida las credenciales y las retransmite por WebSocket y MQTT a la nube.
+                          Estación Gateway central de borde conectada al broker MQTT y WebSocket. Recibe y decodifica las tramas de radiofrecuencia de los nodos periféricos.
                         </p>
                       </div>
 
-                      <div className="space-y-2 text-muted-foreground">
+                      <div className="space-y-2 text-muted-foreground border-t pt-3">
                         <div className="flex justify-between">
-                          <span>Placa Base:</span>
-                          <strong className="text-foreground">ESP32 DevKit V1</strong>
+                          <span>Placa Base / Hardware:</span>
+                          <strong className="text-foreground">{gateway.model}</strong>
                         </div>
                         <div className="flex justify-between">
                           <span>Frecuencia Central:</span>
-                          <strong className="font-mono text-foreground">433.000 MHz</strong>
+                          <strong className="font-mono text-foreground">{gateway.frequency}</strong>
                         </div>
                         <div className="flex justify-between">
                           <span>Radio Cobertura Máx:</span>
                           <strong className="font-mono text-foreground">{gateway.coverageRadiusMeters} m</strong>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Nodos Vinculados:</span>
+                          <strong className="font-mono text-foreground">{nodes.length} nodos</strong>
                         </div>
                         <div className="flex justify-between">
                           <span>Ubicación GPS:</span>
@@ -421,6 +466,28 @@ export default function PublicLoraMapPage() {
                           </strong>
                         </div>
                       </div>
+
+                      {/* Decoded Telemetry of Base Gateway */}
+                      {gateway.latestTelemetry && Object.keys(gateway.latestTelemetry).length > 0 && (
+                        <div className="border-t pt-3 space-y-2">
+                          <p className="text-[11px] font-semibold text-foreground uppercase tracking-wider">
+                            Telemetría Decodificada del Gateway
+                          </p>
+                          <div className="grid grid-cols-2 gap-2">
+                            {Object.entries(gateway.latestTelemetry).map(([key, val]) => (
+                              <div
+                                key={key}
+                                className="p-2 rounded bg-card border text-[11px] font-mono flex flex-col justify-between"
+                              >
+                                <span className="text-muted-foreground text-[10px] capitalize">{key}:</span>
+                                <span className="font-bold text-foreground">
+                                  {typeof val === 'number' ? val.toFixed(2) : String(val)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </CardContent>

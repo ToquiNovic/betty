@@ -106,6 +106,11 @@ export interface LoraGatewayInfo {
   coverageRadiusMeters: number;
   status: 'online' | 'offline' | 'degraded';
   connectedNodesCount: number;
+  latestTelemetry?: Record<string, any>;
+  rssi?: number;
+  snr?: number;
+  lastSeen?: string;
+  description?: string | null;
 }
 
 export interface LoraNetworkResponse {
