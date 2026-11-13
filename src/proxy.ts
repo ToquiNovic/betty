@@ -4,13 +4,16 @@ import { routing } from './i18n/routing';
 
 const intlMiddleware = createMiddleware(routing);
 
-const PROTECTED_ROUTES = ['/overview', '/sensors', '/dashboards', '/teams', '/settings', '/admin'];
+const PROTECTED_ROUTES = ['/overview', '/sensors', '/dashboards', '/teams', '/settings', '/admin', '/projects', '/digital-twin'];
 const AUTH_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password'];
 
 export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get('botuto_token')?.value || request.cookies.get('betty_token')?.value;
   const role = request.cookies.get('botuto_user_role')?.value || request.cookies.get('betty_user_role')?.value;
+  const termsAccepted =
+    request.cookies.get('betty_terms_accepted')?.value === 'true' ||
+    request.cookies.get('botuto_terms_accepted')?.value === 'true';
 
   // Extract route without locale prefix if present (/es/sensors -> /sensors)
   const segments = pathname.split('/').filter(Boolean);
@@ -38,14 +41,20 @@ export default function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // 2. Non-admin user trying to access /admin -> redirect to /overview
+  // 2. Authenticated user who has NOT accepted terms trying to access protected route -> redirect to /terms
+  if (isProtected && token && !termsAccepted) {
+    return NextResponse.redirect(new URL(`/${currentLocale}/terms`, request.url));
+  }
+
+  // 3. Non-admin user trying to access /admin -> redirect to /overview
   if (pathWithoutLocale.startsWith('/admin') && token && role !== 'admin') {
     return NextResponse.redirect(new URL(`/${currentLocale}/overview`, request.url));
   }
 
-  // 3. Authenticated user trying to access login/register -> redirect to /overview
+  // 4. Authenticated user trying to access login/register -> redirect to /overview (or /terms if pending)
   if (isAuthRoute && token) {
-    return NextResponse.redirect(new URL(`/${currentLocale}/overview`, request.url));
+    const destination = termsAccepted ? `/${currentLocale}/overview` : `/${currentLocale}/terms`;
+    return NextResponse.redirect(new URL(destination, request.url));
   }
 
   return intlMiddleware(request);

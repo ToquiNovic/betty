@@ -112,7 +112,37 @@
     "registerSuccess": "Cuenta creada con éxito",
     "passwordsDoNotMatch": "Las contraseñas no coinciden",
     "resetLinkSent": "Si el correo existe, recibirás las instrucciones en tu bandeja de entrada.",
-    "passwordChanged": "Tu contraseña ha sido actualizada. Inicia sesión."
+    "passwordChanged": "Tu contraseña ha sido actualizada. Inicia sesión.",
+    "termsAcceptLabel": "Acepto los",
+    "termsLink": "Términos y Condiciones de Uso",
+    "termsAndPrivacy": "y la Política de Privacidad",
+    "termsRequired": "Debes aceptar los Términos y Condiciones para registrarte"
+  },
+  "terms": {
+    "title": "Términos y Condiciones de Uso",
+    "subtitle": "Por favor revisa y acepta los términos de servicio y políticas de Botuto Platform para continuar.",
+    "badge": "Políticas de la Plataforma",
+    "mustAcceptAlert": "Para continuar utilizando la plataforma y acceder a tus tableros, sensores y gemelos digitales, debes aceptar los Términos y Condiciones vigentes.",
+    "alreadyAcceptedAlert": "Ya has aceptado los Términos y Condiciones vigentes de Botuto Platform.",
+    "acceptButton": "Aceptar Términos y Continuar",
+    "accepting": "Procesando aceptación...",
+    "acceptedSuccess": "¡Términos y Condiciones aceptados con éxito!",
+    "acceptedOn": "Aceptados el",
+    "backToDashboard": "Ir al Panel Principal",
+    "backToRegister": "Volver al Registro",
+    "logoutButton": "Cerrar Sesión",
+    "sections": {
+      "section1Title": "1. Objeto y Alcance del Servicio",
+      "section1Content": "Botuto Platform proporciona herramientas de ingestión de telemetría IoT de alto rendimiento mediante MQTT, integración con entornos virtuales y metaversos (OpenSim / UA3D), y tableros de visualización en tiempo real. Al registrarte y utilizar el servicio, te comprometes a usarlo con fines legítimos y de investigación.",
+      "section2Title": "2. Telemetría, Datos y Privacidad",
+      "section2Content": "Las lecturas de sensores, API keys y metadatos transmitidos a través de los brokers y sockets son almacenados de forma segura en bases de datos relacionales y de series temporales (TimescaleDB). La plataforma no compartirá tus datos privados ni credenciales con terceros no autorizados.",
+      "section3Title": "3. Uso Aceptable y Restricciones",
+      "section3Content": "Queda prohibido el uso de la plataforma para ataques de denegación de servicio (DDoS), saturación deliberada de brokers MQTT, transmisión de datos fraudulentos o vulneración de la privacidad de otros usuarios o equipos de trabajo.",
+      "section4Title": "4. Dispositivos Físicos y Firmware",
+      "section4Content": "El flasheo de firmware en microcontroladores (ESP32, ESP8266) y la ejecución de scripts en simuladores 3D o motores de juego son responsabilidad exclusiva del usuario u operador del dispositivo.",
+      "section5Title": "5. Modificaciones a los Términos",
+      "section5Content": "La administración se reserva el derecho de actualizar estos términos en caso de mejoras tecnológicas, normativas de seguridad o nuevas funcionalidades."
+    }
   },
   "overview": {
     "title": "Panel de Control",

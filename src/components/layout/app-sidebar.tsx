@@ -237,6 +237,24 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   render={
+                    <a
+                      href={process.env.NEXT_PUBLIC_UA3D_URL || 'https://laboratorio3d.online'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    />
+                  }
+                  tooltip="Campus Virtual 3D (UA3D Grid)"
+                  className="h-9 rounded-lg px-2.5 transition-all text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                >
+                  <Globe className="h-4 w-4 shrink-0 text-emerald-500" />
+                  <span className="truncate">Campus Virtual 3D</span>
+                  <ExternalLink className="ml-auto h-3 w-3 text-muted-foreground/50" />
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  render={
                     <Link href="/docs" />
                   }
                   tooltip="Documentación para Desarrolladores"

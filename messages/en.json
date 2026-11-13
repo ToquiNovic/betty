@@ -112,7 +112,37 @@
     "registerSuccess": "Account created successfully",
     "passwordsDoNotMatch": "Passwords do not match",
     "resetLinkSent": "If the account exists, instructions have been sent to your inbox.",
-    "passwordChanged": "Your password has been updated. Please log in."
+    "passwordChanged": "Your password has been updated. Please log in.",
+    "termsAcceptLabel": "I accept the",
+    "termsLink": "Terms and Conditions of Use",
+    "termsAndPrivacy": "and Privacy Policy",
+    "termsRequired": "You must accept the Terms and Conditions to register"
+  },
+  "terms": {
+    "title": "Terms and Conditions of Use",
+    "subtitle": "Please review and accept Botuto Platform terms of service and policies to continue.",
+    "badge": "Platform Policies",
+    "mustAcceptAlert": "To continue using the platform and access your dashboards, sensors, and digital twins, you must accept our current Terms and Conditions.",
+    "alreadyAcceptedAlert": "You have already accepted the current Terms and Conditions of Botuto Platform.",
+    "acceptButton": "Accept Terms & Continue",
+    "accepting": "Processing acceptance...",
+    "acceptedSuccess": "Terms and Conditions accepted successfully!",
+    "acceptedOn": "Accepted on",
+    "backToDashboard": "Go to Main Dashboard",
+    "backToRegister": "Back to Registration",
+    "logoutButton": "Sign Out",
+    "sections": {
+      "section1Title": "1. Purpose and Scope of Service",
+      "section1Content": "Botuto Platform provides high-throughput IoT telemetry ingestion via MQTT, virtual environment and metaverse integration (OpenSim / UA3D), and real-time visualization dashboards. By creating an account and using the service, you agree to utilize it for legitimate development and research purposes.",
+      "section2Title": "2. Telemetry, Data and Privacy",
+      "section2Content": "Sensor readings, API keys, and metadata transmitted across brokers and WebSocket channels are stored securely in relational and time-series databases (TimescaleDB). The platform does not share your private telemetry data or credentials with unauthorized third parties.",
+      "section3Title": "3. Acceptable Use and Restrictions",
+      "section3Content": "You may not use the platform for denial of service (DDoS) attacks, deliberate flooding of MQTT brokers, transmitting fraudulent data, or violating the privacy of other platform users or workspaces.",
+      "section4Title": "4. Physical Hardware and Firmware",
+      "section4Content": "Flashing firmware to microcontrollers (ESP32, ESP8266) and running simulation scripts within 3D engines or metaverses are the sole responsibility of the device owner or operator.",
+      "section5Title": "5. Amendments to Terms",
+      "section5Content": "Platform administration reserves the right to amend these terms to reflect technological enhancements, regulatory compliance, or new features."
+    }
   },
   "overview": {
     "title": "Control Center",

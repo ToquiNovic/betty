@@ -10,6 +10,15 @@ export interface User {
   roleId?: string;
   role: SystemRole;
   emailVerified: boolean;
+  termsAccepted: boolean;
+  termsAcceptedAt?: string | null;
+  dataConsentAccepted?: boolean;
+  dataConsentAcceptedAt?: string | null;
+  allowPhotos?: boolean;
+  allowAudio?: boolean;
+  allowVideo?: boolean;
+  consentVersion?: string;
+  consentVerificationHash?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -38,4 +47,34 @@ export interface JwtPayload {
   tokenId: string;
   iat: number;
   exp: number;
+}
+
+export interface ConsentEvidence {
+  certificateId: string;
+  verificationHash: string | null;
+  consentVersion: string;
+  generatedAt: string;
+  participant: {
+    id: string;
+    name: string;
+    email: string;
+    institution: string;
+  };
+  study: {
+    title: string;
+    leadInvestigator: string;
+    doctorateProgram: string;
+    legalFramework: string;
+  };
+  status: {
+    termsAccepted: boolean;
+    termsAcceptedAt?: string | null;
+    dataConsentAccepted?: boolean;
+    dataConsentAcceptedAt?: string | null;
+  };
+  mediaPermissions: {
+    photos: boolean;
+    audio: boolean;
+    video: boolean;
+  };
 }

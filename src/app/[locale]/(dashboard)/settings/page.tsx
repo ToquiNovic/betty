@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { useRouter, usePathname } from '@/i18n/routing';
+import { useRouter, usePathname, Link } from '@/i18n/routing';
 import { useAuthStore } from '@/stores/auth-store';
 import { authApi } from '@/lib/api/auth';
 import { PageHeader } from '@/components/common/page-header';
@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/components/providers/theme-provider';
-import { User, Shield, Sun, Moon, Laptop, Languages, Loader2, Check } from 'lucide-react';
+import { User, Shield, Sun, Moon, Laptop, Languages, Loader2, Check, ShieldCheck, Download, Camera, Mic, Video, FileText } from 'lucide-react';
 import { toast } from '@/lib/toast';
 
 interface ProfileSettingsFormProps {
@@ -165,6 +165,80 @@ export default function SettingsPage() {
         updateProfileLabel={t('updateProfile')}
         errorLabel={common('error')}
       />
+
+      {/* Consent & Data Protection Card */}
+      <Card className="border border-emerald-500/30 shadow-sm bg-gradient-to-r from-emerald-500/5 via-card to-background">
+        <CardHeader className="p-5 pb-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-base font-bold">Consentimiento Informado & Datos</CardTitle>
+                  <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30">
+                    Ley 1581 de 2012
+                  </Badge>
+                </div>
+                <CardDescription className="text-xs">
+                  Participación activa en el Pilotaje GAMMA (Física Mecánica, Gemelos Digitales y Metaverso UA3D).
+                </CardDescription>
+              </div>
+            </div>
+
+            <Link
+              href="/settings/consent-certificate"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shrink-0 transition-all cursor-pointer shadow-sm"
+            >
+              <Download className="h-3.5 w-3.5" />
+              <span>Descargar Constancia Oficial (PDF)</span>
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent className="p-5 pt-1 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="p-3 rounded-xl bg-muted/40 border border-border flex items-center justify-between text-xs">
+              <span className="flex items-center gap-2 text-muted-foreground">
+                <Camera className="h-3.5 w-3.5 text-emerald-500" />
+                Fotos de Tareas
+              </span>
+              <span className={`font-semibold px-2 py-0.5 rounded text-[11px] ${user.allowPhotos ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-muted text-muted-foreground'}`}>
+                {user.allowPhotos ? 'Autorizado' : 'No Autorizado'}
+              </span>
+            </div>
+
+            <div className="p-3 rounded-xl bg-muted/40 border border-border flex items-center justify-between text-xs">
+              <span className="flex items-center gap-2 text-muted-foreground">
+                <Mic className="h-3.5 w-3.5 text-cyan-500" />
+                Grabación Audio
+              </span>
+              <span className={`font-semibold px-2 py-0.5 rounded text-[11px] ${user.allowAudio ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-muted text-muted-foreground'}`}>
+                {user.allowAudio ? 'Autorizado' : 'No Autorizado'}
+              </span>
+            </div>
+
+            <div className="p-3 rounded-xl bg-muted/40 border border-border flex items-center justify-between text-xs">
+              <span className="flex items-center gap-2 text-muted-foreground">
+                <Video className="h-3.5 w-3.5 text-purple-500" />
+                Grabación Video
+              </span>
+              <span className={`font-semibold px-2 py-0.5 rounded text-[11px] ${user.allowVideo ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-muted text-muted-foreground'}`}>
+                {user.allowVideo ? 'Autorizado' : 'No Autorizado'}
+              </span>
+            </div>
+          </div>
+
+          <div className="p-3 rounded-xl bg-muted/30 border border-border/50 text-[11px] text-muted-foreground flex items-center justify-between flex-wrap gap-2">
+            <span>
+              💡 Todos los datos de telemetría y sensores se encuentran debidamente seudonimizados bajo custodia institucional.
+            </span>
+            <Link href="/terms" className="text-emerald-600 dark:text-emerald-400 hover:underline font-semibold">
+              Revisar o actualizar permisos
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Appearance Section */}
       <Card className="border shadow-sm">

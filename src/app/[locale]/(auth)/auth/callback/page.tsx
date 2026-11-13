@@ -48,7 +48,11 @@ function CallbackContent() {
           });
 
           toast.success('¡Sesión iniciada con éxito!');
-          router.replace('/overview');
+          if (!user.termsAccepted) {
+            router.replace('/terms');
+          } else {
+            router.replace('/overview');
+          }
         }
       } catch (err: unknown) {
         if (isMounted) {

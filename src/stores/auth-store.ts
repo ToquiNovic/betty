@@ -44,6 +44,10 @@ export const useAuthStore = create<AuthState>()(
         setCookie('betty_token', response.accessToken, 1);
         setCookie('betty_refresh_token', response.refreshToken, 7);
         setCookie('betty_user_role', response.user.role, 7);
+        const termsAcceptedStr = String(Boolean(response.user.termsAccepted));
+        setCookie('botuto_terms_accepted', termsAcceptedStr, 7);
+        setCookie('betty_terms_accepted', termsAcceptedStr, 7);
+        setCookie('ua3d_terms_accepted', termsAcceptedStr, 7);
         set({
           user: response.user,
           accessToken: response.accessToken,
@@ -60,6 +64,9 @@ export const useAuthStore = create<AuthState>()(
         deleteCookie('betty_token');
         deleteCookie('betty_refresh_token');
         deleteCookie('betty_user_role');
+        deleteCookie('botuto_terms_accepted');
+        deleteCookie('betty_terms_accepted');
+        deleteCookie('ua3d_terms_accepted');
         set({
           user: null,
           accessToken: null,
@@ -80,6 +87,10 @@ export const useAuthStore = create<AuthState>()(
 
       setUser: (user: User) => {
         setCookie('betty_user_role', user.role, 7);
+        const termsAcceptedStr = String(Boolean(user.termsAccepted));
+        setCookie('botuto_terms_accepted', termsAcceptedStr, 7);
+        setCookie('betty_terms_accepted', termsAcceptedStr, 7);
+        setCookie('ua3d_terms_accepted', termsAcceptedStr, 7);
         set({ user });
       },
 

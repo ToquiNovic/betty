@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useMemo, useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useTranslations } from 'next-intl';
@@ -11,25 +11,30 @@ import { useAuthStore } from '@/stores/auth-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { GoogleAuthButton } from './google-auth-button';
 import { Ua3dAuthButton } from './ua3d-auth-button';
 import { toast } from '@/lib/toast';
 import { Loader2 } from 'lucide-react';
 
-const registerSchema = z
-  .object({
-    name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
-    email: z.string().email(),
-    password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
-    confirmPassword: z.string().min(6),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  });
+const createRegisterSchema = (t: (key: string) => string) =>
+  z
+    .object({
+      name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
+      email: z.string().email(),
+      password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
+      confirmPassword: z.string().min(6),
+      termsAccepted: z.boolean().refine((val) => val === true, {
+        message: t('termsRequired'),
+      }),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: t('passwordsDoNotMatch'),
+      path: ['confirmPassword'],
+    });
 
-type RegisterFormValues = z.infer<typeof registerSchema>;
+type RegisterFormValues = z.infer<ReturnType<typeof createRegisterSchema>>;
 
 export function RegisterForm() {
   const t = useTranslations('auth');
@@ -38,12 +43,18 @@ export function RegisterForm() {
   const { login } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
 
+  const registerSchema = useMemo(() => createRegisterSchema(t), [t]);
+
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
+    defaultValues: {
+      termsAccepted: false,
+    },
   });
 
   const onSubmit = async (data: RegisterFormValues) => {
@@ -53,6 +64,7 @@ export function RegisterForm() {
         name: data.name,
         email: data.email,
         password: data.password,
+        termsAccepted: true,
       });
       login(response);
       toast.success(t('registerSuccess'));
@@ -147,6 +159,41 @@ export function RegisterForm() {
               <p className="text-xs text-destructive">
                 {errors.confirmPassword.message}
               </p>
+            )}
+          </div>
+
+          <div className="space-y-1.5 pt-1">
+            <div className="flex items-start gap-2.5">
+              <Controller
+                name="termsAccepted"
+                control={control}
+                render={({ field }) => (
+                  <Checkbox
+                    id="termsAccepted"
+                    checked={Boolean(field.value)}
+                    onCheckedChange={(checked) => field.onChange(checked === true)}
+                    disabled={isLoading}
+                    className="mt-0.5"
+                  />
+                )}
+              />
+              <label
+                htmlFor="termsAccepted"
+                className="text-xs text-muted-foreground leading-snug cursor-pointer select-none"
+              >
+                {t('termsAcceptLabel')}{' '}
+                <Link
+                  href="/terms"
+                  target="_blank"
+                  className="text-primary underline font-medium hover:text-primary/80"
+                >
+                  {t('termsLink')}
+                </Link>{' '}
+                {t('termsAndPrivacy')}
+              </label>
+            </div>
+            {errors.termsAccepted && (
+              <p className="text-xs text-destructive">{errors.termsAccepted.message}</p>
             )}
           </div>
 
