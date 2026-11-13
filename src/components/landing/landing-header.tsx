@@ -6,7 +6,7 @@ import { Link } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { LocaleSwitcher } from '@/components/layout/locale-switcher';
-import { ArrowRight, LayoutDashboard, Globe, FileCode } from 'lucide-react';
+import { ArrowRight, LayoutDashboard, Globe, FileCode, Radio } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
 import { BotutoLogo } from '@/components/common/botuto-logo';
 
@@ -43,6 +43,13 @@ export function LandingHeader() {
           >
             <Globe className="h-3.5 w-3.5 text-cyan-500" />
             <span>{t('publicDashboards')}</span>
+          </Link>
+          <Link
+            href="/explore/map"
+            className="flex items-center gap-1.5 hover:text-foreground transition-colors hover:bg-muted/40 px-3 py-1.5 rounded-md text-foreground/90"
+          >
+            <Radio className="h-3.5 w-3.5 text-cyan-500" />
+            <span>Mapa LoRa</span>
           </Link>
           <Link
             href="/docs"

@@ -8,7 +8,42 @@ import {
   CreateSensorResponse,
   RotateApiKeyResponse,
   QuerySensorDataDto,
+  LoraNetworkResponse,
+  AdminSensorItem,
 } from '@/types';
+
+export function usePublicLoraNetwork() {
+  const { data, error, isLoading, mutate } = useSWR<LoraNetworkResponse>(
+    '/sensors/public/lora-network',
+    fetcher,
+    {
+      refreshInterval: 0,
+      revalidateOnFocus: true,
+    }
+  );
+  return {
+    network: data,
+    isLoading,
+    isError: !!error,
+    error,
+    mutate,
+  };
+}
+
+export function useAdminSensors(search?: string) {
+  const query = search ? `?search=${encodeURIComponent(search)}` : '';
+  const { data, error, isLoading, mutate } = useSWR<AdminSensorItem[]>(
+    `/sensors/admin/all${query}`,
+    fetcher
+  );
+  return {
+    sensors: data || [],
+    isLoading,
+    isError: !!error,
+    error,
+    mutate,
+  };
+}
 
 export function useSensors() {
   const { data, error, isLoading, mutate } = useSWR<Sensor[]>('/sensors', fetcher);

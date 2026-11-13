@@ -19,8 +19,8 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const { accessToken, isAuthenticated } = useAuthStore();
 
   const socket =
-    typeof window !== 'undefined' && isAuthenticated && accessToken
-      ? getSocket(accessToken)
+    typeof window !== 'undefined'
+      ? getSocket(isAuthenticated && accessToken ? accessToken : undefined)
       : null;
 
   const [isConnected, setIsConnected] = useState(() => Boolean(socket?.connected));

@@ -12,11 +12,13 @@ import { CardGridSkeleton } from '@/components/common/loading-skeleton';
 import { EmptyState } from '@/components/common/empty-state';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Globe, Search, Box, LineChart, Activity, Sparkles } from 'lucide-react';
+import { Globe, Search, Box, LineChart, Activity, Sparkles, Radio, ArrowRight, MapPin, Signal } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Link } from '@/i18n/routing';
 
 export default function ExploreGalleryPage() {
   const common = useTranslations('common');
-  const [activeTab, setActiveTab] = useState<'dashboards' | 'projects'>('projects');
+  const [activeTab, setActiveTab] = useState<'dashboards' | 'projects' | 'lora'>('projects');
   const [search, setSearch] = useState('');
 
   const { dashboards, isLoading: isDashboardsLoading } = usePublicDashboards();
@@ -66,10 +68,10 @@ export default function ExploreGalleryPage() {
 
           <Tabs
             value={activeTab}
-            onValueChange={(val) => setActiveTab(val as 'dashboards' | 'projects')}
+            onValueChange={(val) => setActiveTab(val as 'dashboards' | 'projects' | 'lora')}
             className="w-full sm:w-auto"
           >
-            <TabsList className="grid grid-cols-2 w-full sm:w-72">
+            <TabsList className="grid grid-cols-3 w-full sm:w-[420px]">
               <TabsTrigger value="projects" className="gap-1.5 text-xs font-semibold">
                 <Box className="h-3.5 w-3.5 text-sky-500" />
                 <span>Proyectos IoT</span>
@@ -77,6 +79,10 @@ export default function ExploreGalleryPage() {
               <TabsTrigger value="dashboards" className="gap-1.5 text-xs font-semibold">
                 <LineChart className="h-3.5 w-3.5 text-primary" />
                 <span>Dashboards</span>
+              </TabsTrigger>
+              <TabsTrigger value="lora" className="gap-1.5 text-xs font-semibold">
+                <Radio className="h-3.5 w-3.5 text-cyan-500" />
+                <span>Red LoRa</span>
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -127,6 +133,56 @@ export default function ExploreGalleryPage() {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          {/* 3. LoRa Network Map Tab */}
+          <TabsContent value="lora" className="space-y-6">
+            <div className="rounded-2xl border bg-gradient-to-br from-card via-card to-cyan-500/5 p-6 sm:p-8 space-y-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="space-y-2 max-w-2xl">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 text-xs font-semibold border border-cyan-500/20">
+                    <Radio className="h-3.5 w-3.5" />
+                    <span>Red Inalámbrica LoRa 433 MHz / Ra-02</span>
+                  </div>
+                  <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                    Mapa de Cobertura y Topología en Tiempo Real
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    Visualiza la ubicación geográfica del Gateway ESP32, los nodos de campo Heltec/SX1278, la intensidad de señal (RSSI/SNR), radios de cobertura por Spreading Factor y recepción de telemetría en vivo vía WebSockets.
+                  </p>
+                </div>
+
+                <Button
+                  render={<Link href="/explore/map" />}
+                  size="lg"
+                  className="gap-2 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold shadow-md shrink-0"
+                >
+                  <Signal className="h-4 w-4" />
+                  <span>Abrir Mapa en Pantalla Completa</span>
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                <div className="p-4 rounded-xl border bg-background/60 space-y-1">
+                  <p className="text-xs text-muted-foreground font-medium">Banda de Frecuencia</p>
+                  <p className="text-xl font-bold font-mono text-foreground">433.000 MHz</p>
+                  <p className="text-[11px] text-muted-foreground">Módulos Semtech SX1278 / Ra-02</p>
+                </div>
+
+                <div className="p-4 rounded-xl border bg-background/60 space-y-1">
+                  <p className="text-xs text-muted-foreground font-medium">Spreading Factor</p>
+                  <p className="text-xl font-bold font-mono text-cyan-600 dark:text-cyan-400">SF7 a SF12</p>
+                  <p className="text-[11px] text-muted-foreground">Alcance desde 1.5 km hasta 7.0 km</p>
+                </div>
+
+                <div className="p-4 rounded-xl border bg-background/60 space-y-1">
+                  <p className="text-xs text-muted-foreground font-medium">Ingesta y Puente</p>
+                  <p className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400">HTTPS + WS</p>
+                  <p className="text-[11px] text-muted-foreground">FreeRTOS Async Bridge hacia TimescaleDB</p>
+                </div>
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </main>

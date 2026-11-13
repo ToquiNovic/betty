@@ -22,6 +22,7 @@ import { sensorApi } from '@/lib/api/sensors';
 import { useTeams } from '@/lib/api/teams';
 import { ApiKeyDisplayDialog } from './api-key-display';
 import { LocationPickerMap } from './location-picker-map';
+import { LocationPickerDialog } from './location-picker-dialog';
 import {
   Plus,
   Loader2,
@@ -35,6 +36,7 @@ import {
   Sparkles,
   LocateFixed,
   Map as MapIcon,
+  Maximize2,
   Wifi,
   Share2,
 } from 'lucide-react';
@@ -101,6 +103,7 @@ export function CreateSensorDialog({ onSuccess, trigger }: CreateSensorDialogPro
   const [lat, setLat] = useState<number>(DEFAULT_LAT);
   const [lng, setLng] = useState<number>(DEFAULT_LNG);
   const [showMap, setShowMap] = useState<boolean>(false);
+  const [isBigMapOpen, setIsBigMapOpen] = useState<boolean>(false);
   const [isLocating, setIsLocating] = useState<boolean>(false);
 
   // LoRaWAN specific parameters (aligned with betty-gateway)
@@ -370,7 +373,7 @@ export function CreateSensorDialog({ onSuccess, trigger }: CreateSensorDialogPro
                   <MapPin className="h-3.5 w-3.5 text-emerald-500" />
                   <span>Ubicación y Coordenadas Geográficas</span>
                 </Label>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 flex-wrap">
                   <button
                     type="button"
                     onClick={handleDetectGps}
@@ -387,6 +390,15 @@ export function CreateSensorDialog({ onSuccess, trigger }: CreateSensorDialogPro
                   >
                     <MapIcon className="h-3 w-3" />
                     <span>{showMap ? 'Ocultar Mapa' : 'Ver Mapa'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsBigMapOpen(true)}
+                    className="flex items-center gap-1 px-2 py-1 text-[11px] font-semibold rounded-md bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 transition-all cursor-pointer shadow-2xs"
+                    title="Abrir mapa en pantalla grande para seleccionar ubicación con precisión"
+                  >
+                    <Maximize2 className="h-3 w-3" />
+                    <span>Abrir en Grande</span>
                   </button>
                 </div>
               </div>
@@ -428,7 +440,7 @@ export function CreateSensorDialog({ onSuccess, trigger }: CreateSensorDialogPro
               {/* Interactive Location Picker Map */}
               {(showMap || selectedHardware === 'LoRaWAN') && (
                 <div className="pt-1.5 space-y-1.5 animate-in fade-in-50 duration-200">
-                  <div className="h-48 w-full rounded-xl overflow-hidden border border-border">
+                  <div className="relative h-48 w-full rounded-xl overflow-hidden border border-border group">
                     <LocationPickerMap
                       lat={lat}
                       lng={lng}
@@ -437,6 +449,15 @@ export function CreateSensorDialog({ onSuccess, trigger }: CreateSensorDialogPro
                       coverageRadiusMeters={selectedSfOption.radiusMeters}
                       sensorName={sensorName || 'Nodo Sensor'}
                     />
+                    <button
+                      type="button"
+                      onClick={() => setIsBigMapOpen(true)}
+                      className="absolute top-2 right-2 z-[400] flex items-center gap-1 px-2 py-1 text-[10px] font-semibold rounded-md bg-background/90 hover:bg-background text-foreground shadow-md border border-border/80 backdrop-blur-xs transition-all cursor-pointer"
+                      title="Abrir mapa en pantalla completa"
+                    >
+                      <Maximize2 className="h-3 w-3 text-emerald-500" />
+                      <span>Ampliar Mapa</span>
+                    </button>
                   </div>
                   <div className="flex items-center justify-between text-[10px] text-muted-foreground px-1">
                     <span>💡 Haz clic sobre el mapa para fijar la ubicación del dispositivo.</span>
@@ -689,6 +710,27 @@ export function CreateSensorDialog({ onSuccess, trigger }: CreateSensorDialogPro
           mqttTopic={createdData.mqttTopic}
         />
       )}
+
+      {/* Modal de Mapa en Pantalla Grande */}
+      <LocationPickerDialog
+        open={isBigMapOpen}
+        onOpenChange={setIsBigMapOpen}
+        lat={lat}
+        lng={lng}
+        initialLocationName={watch('location')}
+        onConfirm={(newLat, newLng, newLocation) => {
+          setLat(newLat);
+          setLng(newLng);
+          if (newLocation && !watch('location')) {
+            setValue('location', newLocation);
+          }
+          setShowMap(true);
+          toast.success(`Ubicación actualizada: ${newLat}, ${newLng}`);
+        }}
+        showCoverageCircle={selectedHardware === 'LoRaWAN' && shareOnMap}
+        coverageRadiusMeters={selectedSfOption.radiusMeters}
+        sensorName={sensorName || 'Nodo Sensor'}
+      />
     </>
   );
 }

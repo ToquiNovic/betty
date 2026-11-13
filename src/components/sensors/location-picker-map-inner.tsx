@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { cn } from '@/lib/utils';
 
 // Fix default leaflet marker icon assets in Next.js
 delete (L.Icon.Default.prototype as { _getIconUrl?: unknown })._getIconUrl;
@@ -18,6 +19,23 @@ function RecenterMap({ lat, lng }: { lat: number; lng: number }) {
   useEffect(() => {
     map.setView([lat, lng], map.getZoom());
   }, [lat, lng, map]);
+  return null;
+}
+
+function InvalidateMapSize() {
+  const map = useMap();
+  useEffect(() => {
+    map.invalidateSize();
+    const t1 = setTimeout(() => map.invalidateSize(), 150);
+    const t2 = setTimeout(() => map.invalidateSize(), 400);
+    const handleResize = () => map.invalidateSize();
+    window.addEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [map]);
   return null;
 }
 
@@ -37,6 +55,10 @@ export interface LocationPickerMapInnerProps {
   showCoverageCircle?: boolean;
   coverageRadiusMeters?: number;
   sensorName?: string;
+  scrollWheelZoom?: boolean;
+  zoom?: number;
+  className?: string;
+  draggableMarker?: boolean;
 }
 
 export default function LocationPickerMapInner({
@@ -46,13 +68,17 @@ export default function LocationPickerMapInner({
   showCoverageCircle = false,
   coverageRadiusMeters = 2000,
   sensorName = 'Nodo Sensor',
+  scrollWheelZoom = false,
+  zoom = 14,
+  className,
+  draggableMarker = true,
 }: LocationPickerMapInnerProps) {
   return (
-    <div className="h-full w-full rounded-xl overflow-hidden border border-border/80 shadow-inner relative z-0">
+    <div className={cn("h-full w-full rounded-xl overflow-hidden border border-border/80 shadow-inner relative z-0", className)}>
       <MapContainer
         center={[lat, lng]}
-        zoom={14}
-        scrollWheelZoom={false}
+        zoom={zoom}
+        scrollWheelZoom={scrollWheelZoom}
         className="h-full w-full min-h-[180px]"
       >
         <TileLayer
@@ -74,11 +100,23 @@ export default function LocationPickerMapInner({
           />
         )}
 
-        <Marker position={[lat, lng]}>
+        <Marker
+          position={[lat, lng]}
+          draggable={draggableMarker}
+          eventHandlers={{
+            dragend(e) {
+              const marker = e.target;
+              if (marker != null) {
+                const pos = marker.getLatLng();
+                onChange(pos.lat, pos.lng);
+              }
+            },
+          }}
+        >
           <Popup>
             <div className="text-xs font-semibold">{sensorName}</div>
             <div className="text-[10px] text-muted-foreground font-mono">
-              {lat.toFixed(5)}, {lng.toFixed(5)}
+              {lat.toFixed(6)}, {lng.toFixed(6)}
             </div>
             {showCoverageCircle && (
               <div className="text-[10px] text-emerald-600 font-medium mt-1">
@@ -90,6 +128,7 @@ export default function LocationPickerMapInner({
 
         <MapClickHandler onSelect={onChange} />
         <RecenterMap lat={lat} lng={lng} />
+        <InvalidateMapSize />
       </MapContainer>
     </div>
   );

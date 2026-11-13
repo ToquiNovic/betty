@@ -48,6 +48,22 @@ export interface UpdateTeamDto {
   description?: string;
 }
 
+export interface AdminTeamItem {
+  id: string;
+  name: string;
+  description: string | null;
+  inviteCode: string;
+  owner: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  membersCount: number;
+  sensorsCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface JoinByCodeDto {
   code: string;
 }

@@ -8,7 +8,23 @@ import {
   JoinByCodeDto,
   InviteMemberDto,
   InviteLinkResponse,
+  AdminTeamItem,
 } from '@/types';
+
+export function useAdminTeams(search?: string) {
+  const query = search ? `?search=${encodeURIComponent(search)}` : '';
+  const { data, error, isLoading, mutate } = useSWR<AdminTeamItem[]>(
+    `/teams/admin/all${query}`,
+    fetcher
+  );
+  return {
+    teams: data || [],
+    isLoading,
+    isError: !!error,
+    error,
+    mutate,
+  };
+}
 
 export function useTeams() {
   const { data, error, isLoading, mutate } = useSWR<TeamMembership[]>('/teams', fetcher);
