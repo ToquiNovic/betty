@@ -7,7 +7,7 @@ import { LocationPickerMapInnerProps } from './location-picker-map-inner';
 
 const DynamicLocationPickerMap = dynamic(() => import('./location-picker-map-inner'), {
   ssr: false,
-  loading: () => <Skeleton className="h-full min-h-[180px] w-full rounded-xl" />,
+  loading: () => <Skeleton className="h-full min-h-[220px] w-full rounded-xl" />,
 });
 
 export function LocationPickerMap(props: LocationPickerMapInnerProps) {

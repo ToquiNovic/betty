@@ -300,7 +300,10 @@ export function LocationPickerDialog({
         </div>
 
         {/* Big Leaflet Map Canvas */}
-        <div className="flex-1 w-full min-h-95 sm:min-h-110 max-h-[58vh] rounded-xl overflow-hidden border border-border relative">
+        <div
+          className="w-full rounded-xl overflow-hidden border border-border relative shadow-inner bg-muted/20"
+          style={{ height: '480px', minHeight: '380px', maxHeight: '58vh' }}
+        >
           <LocationPickerMap
             lat={selectedLat}
             lng={selectedLng}
@@ -308,16 +311,16 @@ export function LocationPickerDialog({
             showCoverageCircle={showCoverageCircle}
             coverageRadiusMeters={coverageRadiusMeters}
             sensorName={sensorName}
-            scrollWheelZoom={true}
             draggableMarker={true}
             zoom={15}
             className="h-full w-full"
+            style={{ height: '100%', width: '100%' }}
           />
 
           {/* Map Overlay Floating Tip */}
-          <div className="absolute bottom-2 left-2 z-400 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-background/85 border border-border/80 shadow-sm backdrop-blur-xs text-[11px] text-foreground pointer-events-none">
-            <Info className="h-3 w-3 text-emerald-500 shrink-0" />
-            <span>Haz clic en el mapa o arrastra el pin para moverlo. Usa la rueda del ratón para zoom.</span>
+          <div className="absolute bottom-2 left-2 z-[400] flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-background/90 border border-border/80 shadow-sm backdrop-blur-xs text-[11px] text-foreground pointer-events-none">
+            <Info className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+            <span>💡 Haz clic o arrastra el pin. Presiona <strong className="font-semibold text-emerald-500">Ctrl + desplazamiento</strong> para zoom.</span>
           </div>
         </div>
 

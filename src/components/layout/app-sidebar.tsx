@@ -48,7 +48,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const isAdmin =
     user?.role === 'admin' ||
     user?.email === 'j.toquica@udla.edu.co' ||
-    user?.email === 'danieltoquicadev@gmail.com';
+    user?.email === 'danieltoquicadev@gmail.com' ||
+    user?.email === 'admin@grid.ua3d.local';
 
   const activeSensorsCount = sensors.filter((s) => s.status === 'active').length;
 

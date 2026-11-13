@@ -15,7 +15,8 @@ export default function proxy(request: NextRequest) {
   const isSuperAdmin =
     role === 'admin' ||
     userEmail === 'j.toquica@udla.edu.co' ||
-    userEmail === 'danieltoquicadev@gmail.com';
+    userEmail === 'danieltoquicadev@gmail.com' ||
+    userEmail === 'admin@grid.ua3d.local';
   const termsAccepted =
     request.cookies.get('betty_terms_accepted')?.value === 'true' ||
     request.cookies.get('botuto_terms_accepted')?.value === 'true';

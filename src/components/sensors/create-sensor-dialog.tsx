@@ -440,7 +440,10 @@ export function CreateSensorDialog({ onSuccess, trigger }: CreateSensorDialogPro
               {/* Interactive Location Picker Map */}
               {(showMap || selectedHardware === 'LoRaWAN') && (
                 <div className="pt-1.5 space-y-1.5 animate-in fade-in-50 duration-200">
-                  <div className="relative h-48 w-full rounded-xl overflow-hidden border border-border group">
+                  <div
+                    className="relative w-full rounded-xl overflow-hidden border border-border group"
+                    style={{ height: '220px' }}
+                  >
                     <LocationPickerMap
                       lat={lat}
                       lng={lng}
@@ -448,11 +451,12 @@ export function CreateSensorDialog({ onSuccess, trigger }: CreateSensorDialogPro
                       showCoverageCircle={selectedHardware === 'LoRaWAN' && shareOnMap}
                       coverageRadiusMeters={selectedSfOption.radiusMeters}
                       sensorName={sensorName || 'Nodo Sensor'}
+                      style={{ height: '100%', width: '100%' }}
                     />
                     <button
                       type="button"
                       onClick={() => setIsBigMapOpen(true)}
-                      className="absolute top-2 right-2 z-400 flex items-center gap-1 px-2 py-1 text-[10px] font-semibold rounded-md bg-background/90 hover:bg-background text-foreground shadow-md border border-border/80 backdrop-blur-xs transition-all cursor-pointer"
+                      className="absolute top-2 right-2 z-[400] flex items-center gap-1 px-2 py-1 text-[10px] font-semibold rounded-md bg-background/90 hover:bg-background text-foreground shadow-md border border-border/80 backdrop-blur-xs transition-all cursor-pointer"
                       title="Abrir mapa en pantalla completa"
                     >
                       <Maximize2 className="h-3 w-3 text-emerald-500" />
@@ -460,7 +464,7 @@ export function CreateSensorDialog({ onSuccess, trigger }: CreateSensorDialogPro
                     </button>
                   </div>
                   <div className="flex items-center justify-between text-[10px] text-muted-foreground px-1">
-                    <span>💡 Haz clic sobre el mapa para fijar la ubicación del dispositivo.</span>
+                    <span>💡 Haz clic o arrastra el pin. Presiona <strong className="font-semibold text-emerald-500">Ctrl + desplazamiento</strong> para zoom.</span>
                     {selectedHardware === 'LoRaWAN' && shareOnMap && (
                       <span className="font-mono text-emerald-500 font-semibold">
                         Radio LoRa: {(selectedSfOption.radiusMeters / 1000).toFixed(1)} km

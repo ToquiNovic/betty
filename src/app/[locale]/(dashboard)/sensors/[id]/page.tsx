@@ -243,7 +243,7 @@ export default function SensorDetailPage() {
         </TabsContent>
 
         {/* Settings View */}
-        <TabsContent value="settings" className="space-y-4 max-w-2xl">
+        <TabsContent value="settings" className="space-y-4 max-w-4xl">
           <SensorSettingsForm
             key={`${sensor.id}-${sensor.updatedAt || ''}`}
             sensor={sensor}

@@ -41,7 +41,8 @@ export const useAuthStore = create<AuthState>()(
         const isSuperAdmin =
           response.user.role === 'admin' ||
           response.user.email === 'j.toquica@udla.edu.co' ||
-          response.user.email === 'danieltoquicadev@gmail.com';
+          response.user.email === 'danieltoquicadev@gmail.com' ||
+          response.user.email === 'admin@grid.ua3d.local';
 
         const effectiveRole = isSuperAdmin ? 'admin' : response.user.role;
         const normalizedUser = { ...response.user, role: effectiveRole as 'admin' | 'user' };
