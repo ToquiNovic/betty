@@ -17,6 +17,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from '@/i18n/routing';
 import { PlanoInclinadoVisualizer } from '@/components/projects/plano-inclinado/plano-inclinado-visualizer';
+import { RielNewtonVisualizer } from '@/components/projects/riel-newton/riel-newton-visualizer';
 import { PlanoInclinadoAnatomyFigure } from '@/components/projects/plano-inclinado/anatomy/plano-inclinado-anatomy-figure';
 import { RielNewtonAnatomyFigure } from '@/components/projects/riel-newton/anatomy/riel-newton-anatomy-figure';
 import {
@@ -214,16 +215,15 @@ export default function ProjectDetailPage() {
 
       {/* Main Tabs Container */}
       {(() => {
-        const hasDigitalTwin =
-          project.hasDigitalTwin ||
-          project.id === 'plano-inclinado' ||
-          project.slug === 'plano-inclinado-esp32';
+        const isPlanoInclinado =
+          project.id === 'plano-inclinado' || project.slug === 'plano-inclinado-esp32';
+        const isRielNewton =
+          project.id === 'riel-newton' || project.slug === 'riel-newton-esp32';
 
-        const hasAnatomy =
-          project.id === 'plano-inclinado' ||
-          project.slug === 'plano-inclinado-esp32' ||
-          project.id === 'riel-newton' ||
-          project.slug === 'riel-newton-esp32';
+        const hasDigitalTwin =
+          project.hasDigitalTwin || isPlanoInclinado || isRielNewton;
+
+        const hasAnatomy = isPlanoInclinado || isRielNewton;
 
         const defaultTab = hasDigitalTwin ? 'digital-twin' : hasAnatomy ? 'anatomy' : 'model3d';
 
@@ -276,14 +276,18 @@ export default function ProjectDetailPage() {
             {/* 0. Digital Twin Tab (If Available) */}
             {hasDigitalTwin && (
               <TabsContent value="digital-twin" className="space-y-4">
-                <PlanoInclinadoVisualizer />
+                {isRielNewton ? (
+                  <RielNewtonVisualizer />
+                ) : (
+                  <PlanoInclinadoVisualizer />
+                )}
               </TabsContent>
             )}
 
             {/* Anatomy Skill Tab */}
             {hasAnatomy && (
               <TabsContent value="anatomy" className="space-y-4">
-                {project.id === 'riel-newton' || project.slug === 'riel-newton-esp32' ? (
+                {isRielNewton ? (
                   <RielNewtonAnatomyFigure />
                 ) : (
                   <PlanoInclinadoAnatomyFigure />

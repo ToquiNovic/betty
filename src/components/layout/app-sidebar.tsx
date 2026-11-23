@@ -96,8 +96,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: '/digital-twin',
       icon: Activity,
       isActive: pathname.startsWith('/digital-twin'),
-      badge: 'Plano 2D',
-      badgeColor: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30',
+      badge: 'En Vivo',
+      badgeColor: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30',
     },
   ];
 

@@ -195,7 +195,7 @@ export const DEFAULT_PROJECTS: Project[] = [
     materialsCount: 5,
     hasFirmware: true,
     has3DModel: true,
-    hasDigitalTwin: false,
+    hasDigitalTwin: true,
     creatorName: 'Botuto IoT Lab',
     creatorAvatar: null,
     steps: [
