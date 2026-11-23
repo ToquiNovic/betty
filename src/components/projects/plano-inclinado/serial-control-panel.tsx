@@ -676,7 +676,7 @@ export function SerialControlPanel({
                     title={!canControl ? 'Conecta el ESP32 vía USB para iniciar el experimento' : ''}
                   >
                     <Play className="h-3.5 w-3.5 fill-current" />
-                    <span>Iniciar EXP (20s)</span>
+                    <span>Iniciar EXP (Dinámico)</span>
                   </Button>
                   <Button
                     size="sm"
