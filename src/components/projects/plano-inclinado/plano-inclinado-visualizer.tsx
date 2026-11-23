@@ -230,9 +230,12 @@ export function PlanoInclinadoVisualizer({
       {/* Main 2-Column Workstation Grid */}
       {(() => {
         const hasLiveTelemetry = isWebSocketConnected && !!latestData;
-        const hasConnection = isUsbConnected || hasLiveTelemetry;
-        const connSource: 'usb' | 'cloud' | 'none' = isUsbConnected
-          ? 'usb'
+        const isHardwareConnected = hardwareConnection.connected;
+        const hasConnection = isHardwareConnected || hasLiveTelemetry;
+        const connSource: 'bluetooth' | 'usb' | 'cloud' | 'none' = isHardwareConnected
+          ? hardwareConnection.type === 'bluetooth'
+            ? 'bluetooth'
+            : 'usb'
           : hasLiveTelemetry
           ? 'cloud'
           : 'none';

@@ -16,6 +16,7 @@ import {
   Activity,
   Wifi,
   Usb,
+  Bluetooth,
 } from 'lucide-react';
 
 export interface DigitalTwin3DProps {
@@ -26,7 +27,7 @@ export interface DigitalTwin3DProps {
   sensorCubePresent?: boolean;
   slipAngle?: number;
   isConnected?: boolean;
-  connectionSource?: 'usb' | 'cloud' | 'none';
+  connectionSource?: 'bluetooth' | 'usb' | 'cloud' | 'none';
   onToggle2D?: () => void;
 }
 
@@ -164,6 +165,13 @@ export function DigitalTwin3D({
           <Activity className="h-3.5 w-3.5 text-sky-500 animate-pulse" />
           <span>θ: {actualPlankAngle.toFixed(1)}°</span>
         </Badge>
+
+        {connectionSource === 'bluetooth' && (
+          <Badge className="bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30 gap-1 text-[11px] font-mono">
+            <Bluetooth className="h-3 w-3" />
+            <span>BLE NUS</span>
+          </Badge>
+        )}
 
         {connectionSource === 'usb' && (
           <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 gap-1 text-[11px] font-mono">

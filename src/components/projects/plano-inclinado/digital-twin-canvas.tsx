@@ -10,7 +10,7 @@ export interface DigitalTwinCanvasProps {
   sensorCubePresent?: boolean;
   slipAngle?: number;
   isConnected?: boolean;
-  connectionSource?: 'usb' | 'cloud' | 'none';
+  connectionSource?: 'bluetooth' | 'usb' | 'cloud' | 'none';
 }
 
 export function DigitalTwinCanvas({
@@ -353,7 +353,9 @@ export function DigitalTwinCanvas({
         />
         <span className={isConnected ? 'text-emerald-400' : 'text-amber-400'}>
           {isConnected
-            ? connectionSource === 'usb'
+            ? connectionSource === 'bluetooth'
+              ? 'ESP32 BLE (NUS)'
+              : connectionSource === 'usb'
               ? 'ESP32 USB (115200 baud)'
               : 'ESP32 Betty Cloud'
             : 'Hardware Desconectado'}
