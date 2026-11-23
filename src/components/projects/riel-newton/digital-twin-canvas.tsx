@@ -20,6 +20,9 @@ export interface RielDigitalTwinCanvasProps {
   finalVelocity?: number; // m/s
   transitTime?: number; // segundos
   netForce?: number; // N
+  acceleration?: number; // m/s²
+  kineticEnergy?: number; // J
+  momentum?: number; // N·s
   isConnected?: boolean;
   connectionSource?: 'bluetooth' | 'usb' | 'cloud' | 'none';
 }
@@ -36,6 +39,9 @@ export function DigitalTwinCanvas({
   finalVelocity = 0,
   transitTime = 0,
   netForce = 0,
+  acceleration = 0,
+  kineticEnergy = 0,
+  momentum = 0,
   isConnected = false,
   connectionSource = 'none',
 }: RielDigitalTwinCanvasProps) {
@@ -337,7 +343,99 @@ export function DigitalTwinCanvas({
         );
       }
 
-      // 8. HUD & Overlay de Telemetría Dinámica
+      // 8. Réplica física del Display LCD 1602 montado en la bancada del Riel
+      let cvLine0 = 'Riel de Newton  ';
+      let cvLine1 = 'Sistema Listo   ';
+      let cvTag = 'LCD 1602 (I2C 0x27) · LISTO';
+
+      if (inTransit) {
+        cvLine0 = 'Viajando...     ';
+        cvLine1 = 'Esperando choque';
+        cvTag = 'LCD 1602 · EN TRÁNSITO';
+      } else if (impactDetected || transitTime > 0) {
+        const page = Math.floor(Date.now() / 2500) % 3;
+        if (page === 0) {
+          cvLine0 = `T:${transitTime.toFixed(2)}s V:${(currentVelocity || (finalVelocity / 2)).toFixed(2)}`.padEnd(16, ' ').substring(0, 16);
+          cvLine1 = `Vf:${finalVelocity.toFixed(2)} a:${acceleration.toFixed(2)}`.padEnd(16, ' ').substring(0, 16);
+          cvTag = 'LCD 1602 · 1/3 CINEMÁTICA';
+        } else if (page === 1) {
+          cvLine0 = `F.Neta: ${netForce.toFixed(3)} N`.padEnd(16, ' ').substring(0, 16);
+          cvLine1 = '2da Ley: F=m*a  ';
+          cvTag = 'LCD 1602 · 2/3 DINÁMICA F=m·a';
+        } else {
+          cvLine0 = `Ek: ${kineticEnergy.toFixed(4)} J`.padEnd(16, ' ').substring(0, 16);
+          cvLine1 = `p : ${momentum.toFixed(4)} N*s`.padEnd(16, ' ').substring(0, 16);
+          cvTag = 'LCD 1602 · 3/3 ENERGÍA & IMPULSO';
+        }
+      } else if (clampedLever > 0) {
+        cvLine0 = `Palanca Muesca ${clampedLever}`.padEnd(16, ' ').substring(0, 16);
+        cvLine1 = 'Listo p/disparar';
+        cvTag = 'LCD 1602 · TENSADO';
+      } else if (!isBallPresent) {
+        cvLine0 = 'Esperando carga ';
+        cvLine1 = 'Halar palanca   ';
+        cvTag = 'LCD 1602 · ESPERANDO CARGA';
+      }
+
+      const lcdX = width * 0.5 - 130;
+      const lcdY = railY + 44;
+      const lcdW = 260;
+      const lcdH = 68;
+
+      // PCB verde oscuro del módulo LCD
+      ctx.fillStyle = '#0f3a1e';
+      ctx.beginPath();
+      ctx.roundRect(lcdX - 8, lcdY - 14, lcdW + 16, lcdH + 20, 6);
+      ctx.fill();
+      ctx.strokeStyle = '#238636';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Tornillos dorados en las 4 esquinas
+      const screws = [
+        [lcdX - 3, lcdY - 9],
+        [lcdX + lcdW + 3, lcdY - 9],
+        [lcdX - 3, lcdY + lcdH + 1],
+        [lcdX + lcdW + 3, lcdY + lcdH + 1],
+      ];
+      screws.forEach(([sx, sy]) => {
+        ctx.fillStyle = '#d4af37';
+        ctx.beginPath();
+        ctx.arc(sx, sy, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#5c4300';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      });
+
+      // Título del módulo LCD
+      ctx.fillStyle = '#4ade80';
+      ctx.font = 'bold 8px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(cvTag, lcdX + 2, lcdY - 4);
+
+      // Marco del display LCD
+      ctx.fillStyle = '#161b22';
+      ctx.fillRect(lcdX, lcdY, lcdW, lcdH);
+      ctx.strokeStyle = '#30363d';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(lcdX, lcdY, lcdW, lcdH);
+
+      // Fondo azul retroiluminado activo
+      ctx.fillStyle = '#002b66';
+      ctx.fillRect(lcdX + 6, lcdY + 6, lcdW - 12, lcdH - 12);
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(lcdX + 6, lcdY + 6, lcdW - 12, lcdH - 12);
+
+      // Texto en matriz de caracteres 16x2
+      ctx.fillStyle = '#99ccff';
+      ctx.font = 'bold 13px "Courier New", Courier, monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(cvLine0, lcdX + 16, lcdY + 26);
+      ctx.fillText(cvLine1, lcdX + 16, lcdY + 46);
+
+      // 9. HUD & Overlay de Telemetría Dinámica
       ctx.textAlign = 'left';
       ctx.font = 'bold 11px monospace';
       ctx.fillStyle = '#38bdf8';
@@ -411,7 +509,53 @@ export function DigitalTwinCanvas({
     netForce,
     isConnected,
     connectionSource,
+    acceleration,
+    kineticEnergy,
+    momentum,
   ]);
+
+  // Carrusel cíclico de 3 páginas para la réplica JSX del LCD 1602 (cada 2.5s, igual que DisplayManager.cpp)
+  const [resultsPage, setResultsPage] = React.useState<number>(0);
+  React.useEffect(() => {
+    if (!impactDetected && transitTime <= 0) return;
+    const timer = setInterval(() => {
+      setResultsPage((prev) => (prev + 1) % 3);
+    }, 2500);
+    return () => clearInterval(timer);
+  }, [impactDetected, transitTime]);
+
+  // Generación de textos para el LCD 1602 réplica del firmware real
+  let lcdLine0 = 'Riel de Newton  ';
+  let lcdLine1 = 'Sistema Listo   ';
+  let lcdTag = 'LISTO';
+
+  if (inTransit) {
+    lcdLine0 = 'Viajando...     ';
+    lcdLine1 = 'Esperando choque';
+    lcdTag = 'EN TRÁNSITO';
+  } else if (impactDetected || transitTime > 0) {
+    if (resultsPage === 0) {
+      lcdLine0 = `T:${transitTime.toFixed(2)}s V:${(currentVelocity || (finalVelocity / 2)).toFixed(2)}`.padEnd(16, ' ').substring(0, 16);
+      lcdLine1 = `Vf:${finalVelocity.toFixed(2)} a:${acceleration.toFixed(2)}`.padEnd(16, ' ').substring(0, 16);
+      lcdTag = 'PÁG 1/3: CINEMÁTICA';
+    } else if (resultsPage === 1) {
+      lcdLine0 = `F.Neta: ${netForce.toFixed(3)} N`.padEnd(16, ' ').substring(0, 16);
+      lcdLine1 = '2da Ley: F=m*a  ';
+      lcdTag = 'PÁG 2/3: 2da LEY F=m·a';
+    } else {
+      lcdLine0 = `Ek: ${kineticEnergy.toFixed(4)} J`.padEnd(16, ' ').substring(0, 16);
+      lcdLine1 = `p : ${momentum.toFixed(4)} N*s`.padEnd(16, ' ').substring(0, 16);
+      lcdTag = 'PÁG 3/3: ENERGÍA & IMPULSO';
+    }
+  } else if (leverPosition > 0) {
+    lcdLine0 = `Palanca Muesca ${leverPosition}`.padEnd(16, ' ').substring(0, 16);
+    lcdLine1 = 'Listo p/disparar';
+    lcdTag = 'TENSADO';
+  } else if (!isBallPresent) {
+    lcdLine0 = 'Esperando carga ';
+    lcdLine1 = 'Halar palanca   ';
+    lcdTag = 'ESPERANDO CARGA';
+  }
 
   return (
     <div className="relative w-full overflow-hidden rounded-2xl border border-border/80 bg-background/50 shadow-md">
@@ -421,6 +565,25 @@ export function DigitalTwinCanvas({
         height={320}
         className="w-full h-auto block aspect-[9/4]"
       />
+
+      {/* Réplica de Alta Fidelidad del Display LCD 1602 Físico del Riel */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-4 py-3 bg-[#090d13] border-t border-border/80">
+        <div className="flex items-center gap-2.5">
+          <div className="px-2 py-0.5 rounded bg-sky-500/10 border border-sky-500/30 text-[10px] font-mono font-bold text-sky-400">
+            📟 RÉPLICA LCD 1602 REAL
+          </div>
+          <span className="text-[11px] font-mono text-muted-foreground font-semibold">
+            Modo 16×2 · {lcdTag}
+          </span>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+          <div className="px-3.5 py-1.5 rounded-lg bg-[#001e4d] border-2 border-[#1a365d] shadow-inner font-mono text-xs sm:text-sm font-bold text-[#99ccff] tracking-widest leading-relaxed flex flex-col justify-center">
+            <div className="whitespace-pre">{lcdLine0}</div>
+            <div className="whitespace-pre">{lcdLine1}</div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

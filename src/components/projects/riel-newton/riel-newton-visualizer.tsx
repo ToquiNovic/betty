@@ -277,8 +277,11 @@ export function RielNewtonVisualizer({
             sensorsState={sensorsState}
             currentVelocity={averageVelocity}
             finalVelocity={finalVelocity}
-            transitTime={transitTimeSeconds}
+            acceleration={acceleration}
             netForce={netForce}
+            kineticEnergy={kineticEnergy}
+            momentum={momentum}
+            transitTime={transitTimeSeconds}
             isConnected={hasConnection}
             connectionSource={connSource}
           />
