@@ -9,7 +9,7 @@ import { RealtimeTelemetryChart, TelemetryPoint } from './realtime-telemetry-cha
 import { MathematicalModelCard, EasingType } from './mathematical-model-card';
 import { useSensorRealtime } from '@/hooks/use-sensor-realtime';
 import { Button } from '@/components/ui/button';
-import { Activity, AlertTriangle, Unlock, Wifi, Usb, Box } from 'lucide-react';
+import { Activity, AlertTriangle, Unlock, Wifi, Usb, Bluetooth, Box } from 'lucide-react';
 import { toast } from '@/lib/toast';
 
 const DigitalTwin3DDynamic = dynamic(
@@ -50,8 +50,11 @@ export function PlanoInclinadoVisualizer({
   const [dynamicTime, setDynamicTime] = useState<boolean>(true);
   const [duration, setDuration] = useState<number>(2500);
 
-  // Estado de conexión física por USB
-  const [isUsbConnected, setIsUsbConnected] = useState<boolean>(false);
+  // Estado de enlace físico por hardware (Bluetooth BLE o USB Serial)
+  const [hardwareConnection, setHardwareConnection] = useState<{
+    connected: boolean;
+    type: 'none' | 'bluetooth' | 'usb';
+  }>({ connected: false, type: 'none' });
 
   // Modo de visualización: 3D con GLB o 2D esquemático
   const [viewMode, setViewMode] = useState<'3d' | '2d'>('3d');
@@ -169,10 +172,28 @@ export function PlanoInclinadoVisualizer({
             <span>{isWebSocketConnected ? 'Betty Cloud WebSocket' : 'WebSocket Desconectado'}</span>
           </div>
 
-          {/* Badge USB Web Serial */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 text-xs font-mono font-bold border border-sky-500/30">
-            <Usb className="h-3.5 w-3.5" />
-            <span>Web Serial (115200)</span>
+          {/* Badge Hardware Enlace (Bluetooth BLE / USB) */}
+          <div
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono font-bold border transition-colors ${
+              hardwareConnection.connected
+                ? hardwareConnection.type === 'bluetooth'
+                  ? 'bg-blue-500/10 text-blue-400 border-blue-500/30'
+                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                : 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30'
+            }`}
+          >
+            {hardwareConnection.type === 'bluetooth' ? (
+              <Bluetooth className="h-3.5 w-3.5 text-blue-400" />
+            ) : (
+              <Usb className="h-3.5 w-3.5" />
+            )}
+            <span>
+              {hardwareConnection.connected
+                ? hardwareConnection.type === 'bluetooth'
+                  ? 'BLE Conectado (NUS)'
+                  : 'Web Serial (115200)'
+                : 'BLE / USB Enlace'}
+            </span>
           </div>
         </div>
       </div>
@@ -286,7 +307,12 @@ export function PlanoInclinadoVisualizer({
                 onDynamicTimeToggle={(val) => setDynamicTime(val)}
                 onDurationChange={(ms) => setDuration(ms)}
                 onTelemetryPacket={handleTelemetryPacket}
-                onConnectionChange={setIsUsbConnected}
+                onConnectionChange={(connected, type) =>
+                  setHardwareConnection({
+                    connected,
+                    type: type || (connected ? 'bluetooth' : 'none'),
+                  })
+                }
                 sensorId={sensorId}
               />
             </div>

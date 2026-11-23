@@ -11,6 +11,9 @@ import { EasingType } from './mathematical-model-card';
 import { ESP32ConfigDialog, type ESP32Config } from './esp32-config-dialog';
 import {
   Usb,
+  Bluetooth,
+  BluetoothConnected,
+  BluetoothOff,
   Send,
   Zap,
   Terminal,
@@ -30,6 +33,11 @@ import {
   Trash2,
 } from 'lucide-react';
 import { toast } from '@/lib/toast';
+
+// Nordic UART Service (NUS) standard BLE UUIDs (ESP32 BotutoBleUart)
+const NUS_SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+const NUS_RX_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e'; // Web -> ESP32 (Write)
+const NUS_TX_UUID = '6e400003-b5a3-f393-e0a9-e50e24dcca9e'; // ESP32 -> Web (Notify)
 
 export interface TelemetryPacketData {
   servo1: number;
@@ -62,7 +70,7 @@ export interface SerialControlPanelProps {
   onDurationChange: (val: number) => void;
   onTelemetryPacket: (data: TelemetryPacketData) => void;
   onLogMessage?: (msg: string) => void;
-  onConnectionChange?: (connected: boolean) => void;
+  onConnectionChange?: (connected: boolean, type?: 'bluetooth' | 'usb') => void;
   sensorId?: string;
   // Compatibilidad hacia atrás
   currentAngle?: number;
@@ -95,16 +103,29 @@ export function SerialControlPanel({
   const [manualDurationVal, setManualDurationVal] = useState<number>(duration || 2500);
 
   const [logs, setLogs] = useState<string[]>([
-    '[Sistema listo. Conecta tu ESP32 por USB Serial (115200 baudios) para operar la maqueta física]',
+    '[Sistema listo. Enlaza tu ESP32 por Bluetooth BLE o USB Serial para operar la maqueta física]',
   ]);
 
-  // Web Serial state
+  // Selección de canal y estado de conexión
+  const [preferredMethod, setPreferredMethod] = useState<'bluetooth' | 'usb'>('bluetooth');
+  const [connectionType, setConnectionType] = useState<'none' | 'bluetooth' | 'usb'>('none');
   const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [connectedDeviceName, setConnectedDeviceName] = useState<string>('');
   const [allowDemoSimulation, setAllowDemoSimulation] = useState<boolean>(false);
+
+  // Web Serial refs
   const portRef = useRef<any>(null);
   const writerRef = useRef<any>(null);
   const readerRef = useRef<any>(null);
   const keepReadingRef = useRef<boolean>(false);
+
+  // Web Bluetooth (Nordic UART Service) refs
+  const bleDeviceRef = useRef<any>(null);
+  const bleServerRef = useRef<any>(null);
+  const bleRxCharRef = useRef<any>(null);
+  const bleTxCharRef = useRef<any>(null);
+  const bleDisconnectListenerRef = useRef<any>(null);
+  const bleNotificationListenerRef = useRef<any>(null);
 
   // Betty IoT Platform Sync state
   const [isBettySyncActive, setIsBettySyncActive] = useState<boolean>(false);
@@ -134,7 +155,7 @@ export function SerialControlPanel({
     }
   }, [logs]);
 
-  // Cleanup serial y temporizadores al desmontar
+  // Cleanup serial, bluetooth y temporizadores al desmontar
   useEffect(() => {
     return () => {
       if (simTimerRef.current) clearInterval(simTimerRef.current);
@@ -144,6 +165,15 @@ export function SerialControlPanel({
           if (readerRef.current) readerRef.current.cancel();
           if (writerRef.current) writerRef.current.close();
           if (portRef.current) portRef.current.close();
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      if (bleDeviceRef.current) {
+        try {
+          if (bleDeviceRef.current.gatt?.connected) {
+            bleDeviceRef.current.gatt.disconnect();
+          }
         } catch (e) {
           console.error(e);
         }
@@ -283,12 +313,41 @@ export function SerialControlPanel({
     }
   };
 
-  // Envío de comando (físico por USB o simulación local)
+  // Envío de comandos segmentados vía Bluetooth BLE (fragmentos de 20 bytes para respetar MTU BLE)
+  const sendBleCommand = async (cmdStr: string): Promise<boolean> => {
+    if (!bleRxCharRef.current) return false;
+    try {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(cmdStr + '\n');
+      const CHUNK_SIZE = 20;
+
+      for (let i = 0; i < data.length; i += CHUNK_SIZE) {
+        const chunk = data.slice(i, i + CHUNK_SIZE);
+        if (bleRxCharRef.current.writeValueWithoutResponse) {
+          await bleRxCharRef.current.writeValueWithoutResponse(chunk);
+        } else {
+          await bleRxCharRef.current.writeValue(chunk);
+        }
+        if (data.length > CHUNK_SIZE) {
+          await new Promise((resolve) => setTimeout(resolve, 15));
+        }
+      }
+      return true;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      addLog(`❌ Error enviando por Bluetooth: ${msg}`);
+      return false;
+    }
+  };
+
+  // Envío de comando (físico por Bluetooth BLE, USB Serial o simulación local)
   const sendCommand = async (cmdStr: string): Promise<boolean> => {
     cmdStr = cmdStr.trim();
     addLog(`→ ${cmdStr}`);
 
-    if (writerRef.current) {
+    if (connectionType === 'bluetooth' && bleRxCharRef.current) {
+      return await sendBleCommand(cmdStr);
+    } else if (connectionType === 'usb' && writerRef.current) {
       try {
         const encoder = new TextEncoder();
         await writerRef.current.write(encoder.encode(cmdStr + '\n'));
@@ -321,8 +380,9 @@ export function SerialControlPanel({
       return true;
     } else {
       // No hay hardware físico conectado y no se activó modo demo: BLOQUEADO
-      toast.warning('Dispositivo no conectado. Conecta el ESP32 vía USB para operar la maqueta.');
-      addLog('⚠️ [BLOQUEADO]: Conecta el cable USB del ESP32 para mover el plano inclinado.');
+      const canalStr = preferredMethod === 'bluetooth' ? 'Bluetooth (BLE)' : 'cable USB';
+      toast.warning(`Dispositivo no conectado. Conecta el ESP32 vía ${canalStr} para operar la maqueta.`);
+      addLog(`⚠️ [BLOQUEADO]: Conecta el ESP32 vía ${canalStr} para mover el plano inclinado.`);
       return false;
     }
   };
@@ -418,49 +478,202 @@ export function SerialControlPanel({
     }, 30);
   };
 
-  // Conexión Web Serial por navegador
-  const toggleWebSerial = async () => {
-    if (isConnected) {
-      keepReadingRef.current = false;
-      try {
-        if (readerRef.current) await readerRef.current.cancel();
-        if (writerRef.current) await writerRef.current.close();
-        if (portRef.current) await portRef.current.close();
-      } catch (e) {
-        console.error(e);
+  // Desconexión limpia de Bluetooth BLE
+  const disconnectBluetooth = async () => {
+    try {
+      if (bleTxCharRef.current && bleNotificationListenerRef.current) {
+        try {
+          bleTxCharRef.current.removeEventListener(
+            'characteristicvaluechanged',
+            bleNotificationListenerRef.current
+          );
+          await bleTxCharRef.current.stopNotifications();
+        } catch (e) {
+          console.warn('Error al detener notificaciones BLE:', e);
+        }
       }
-      portRef.current = null;
-      readerRef.current = null;
-      writerRef.current = null;
+      if (bleDeviceRef.current) {
+        if (bleDisconnectListenerRef.current) {
+          bleDeviceRef.current.removeEventListener(
+            'gattserverdisconnected',
+            bleDisconnectListenerRef.current
+          );
+        }
+        if (bleDeviceRef.current.gatt?.connected) {
+          bleDeviceRef.current.gatt.disconnect();
+        }
+      }
+    } catch (e) {
+      console.error('Error al desconectar BLE:', e);
+    } finally {
+      bleDeviceRef.current = null;
+      bleServerRef.current = null;
+      bleRxCharRef.current = null;
+      bleTxCharRef.current = null;
+      bleDisconnectListenerRef.current = null;
+      bleNotificationListenerRef.current = null;
       setIsConnected(false);
-      onConnectionChange?.(false);
-      addLog('[Puerto USB Serial desconectado]');
-      toast.info('Puerto USB desconectado');
-    } else {
-      if (typeof navigator === 'undefined' || !('serial' in navigator)) {
-        toast.error('Tu navegador no soporta Web Serial API. Usa Google Chrome o Microsoft Edge.');
+      setConnectionType('none');
+      setConnectedDeviceName('');
+      onConnectionChange?.(false, 'none' as any);
+      addLog('[Dispositivo Bluetooth desconectado]');
+      toast.info('Bluetooth desconectado');
+    }
+  };
+
+  // Conexión Web Bluetooth API (Nordic UART Service - NUS)
+  const connectBluetooth = async () => {
+    if (typeof navigator === 'undefined' || !('bluetooth' in navigator)) {
+      toast.error('Tu navegador no soporta Web Bluetooth API. Usa Google Chrome o Microsoft Edge.');
+      addLog('❌ [ERROR]: Web Bluetooth API no está disponible en este navegador.');
+      return;
+    }
+
+    try {
+      addLog('🔍 [BLUETOOTH]: Buscando periférico ESP32 (Botuto-Plano con Nordic UART Service)...');
+
+      const device = await (navigator as any).bluetooth.requestDevice({
+        filters: [
+          { services: [NUS_SERVICE_UUID] },
+          { namePrefix: 'Botuto' },
+          { namePrefix: 'ESP32' },
+          { namePrefix: 'Plano' },
+        ],
+        optionalServices: [NUS_SERVICE_UUID],
+      });
+
+      addLog(`📡 [BLUETOOTH]: Conectando con "${device.name || 'ESP32'}"...`);
+      const server = await device.gatt.connect();
+
+      addLog('📡 [BLUETOOTH]: Negociando servicio Nordic UART (NUS)...');
+      const service = await server.getPrimaryService(NUS_SERVICE_UUID);
+      const rxChar = await service.getCharacteristic(NUS_RX_UUID);
+      const txChar = await service.getCharacteristic(NUS_TX_UUID);
+
+      await txChar.startNotifications();
+
+      let bleIncomingBuffer = '';
+      const handleBleNotification = (event: any) => {
+        const value = event.target.value;
+        if (!value) return;
+        const chunk = new TextDecoder().decode(value);
+        bleIncomingBuffer += chunk;
+        const lines = bleIncomingBuffer.split('\n');
+        bleIncomingBuffer = lines.pop() || '';
+
+        for (const line of lines) {
+          handleIncomingLine(line);
+        }
+      };
+
+      const handleBleDisconnect = () => {
+        bleDeviceRef.current = null;
+        bleServerRef.current = null;
+        bleRxCharRef.current = null;
+        bleTxCharRef.current = null;
+        bleDisconnectListenerRef.current = null;
+        bleNotificationListenerRef.current = null;
+        setIsConnected(false);
+        setConnectionType('none');
+        setConnectedDeviceName('');
+        onConnectionChange?.(false, 'none' as any);
+        addLog('🔌 [BLUETOOTH]: Enlace inalámbrico desconectado.');
+        toast.info('ESP32 Bluetooth desconectado');
+      };
+
+      txChar.addEventListener('characteristicvaluechanged', handleBleNotification);
+      device.addEventListener('gattserverdisconnected', handleBleDisconnect);
+
+      bleDeviceRef.current = device;
+      bleServerRef.current = server;
+      bleRxCharRef.current = rxChar;
+      bleTxCharRef.current = txChar;
+      bleDisconnectListenerRef.current = handleBleDisconnect;
+      bleNotificationListenerRef.current = handleBleNotification;
+
+      setIsConnected(true);
+      setConnectionType('bluetooth');
+      setConnectedDeviceName(device.name || 'Botuto-Plano');
+      onConnectionChange?.(true, 'bluetooth');
+
+      addLog(`✅ [ESP32 Enlazado exitosamente por Bluetooth BLE ("${device.name || 'Botuto-Plano'}")]`);
+      toast.success(`ESP32 Conectado por Bluetooth ("${device.name || 'Botuto-Plano'}")`);
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === 'NotFoundError') {
+        addLog('ℹ️ [BLUETOOTH]: Búsqueda cancelada por el usuario o no se seleccionó dispositivo.');
         return;
       }
+      const msg = err instanceof Error ? err.message : String(err);
+      addLog(`❌ Error al conectar Bluetooth: ${msg}`);
+      toast.error(`Error al conectar Bluetooth: ${msg}`);
+    }
+  };
 
-      try {
-        const port = await (navigator as any).serial.requestPort();
-        await port.open({ baudRate: 115200 });
+  // Desconexión limpia de Web Serial (USB)
+  const disconnectWebSerial = async () => {
+    keepReadingRef.current = false;
+    try {
+      if (readerRef.current) await readerRef.current.cancel();
+      if (writerRef.current) await writerRef.current.close();
+      if (portRef.current) await portRef.current.close();
+    } catch (e) {
+      console.error(e);
+    }
+    portRef.current = null;
+    readerRef.current = null;
+    writerRef.current = null;
+    setIsConnected(false);
+    setConnectionType('none');
+    setConnectedDeviceName('');
+    onConnectionChange?.(false, 'none' as any);
+    addLog('[Puerto USB Serial desconectado]');
+    toast.info('Puerto USB desconectado');
+  };
 
-        portRef.current = port;
-        writerRef.current = port.writable.getWriter();
-        keepReadingRef.current = true;
-        setIsConnected(true);
-        onConnectionChange?.(true);
+  // Conexión Web Serial por navegador (USB)
+  const connectWebSerial = async () => {
+    if (typeof navigator === 'undefined' || !('serial' in navigator)) {
+      toast.error('Tu navegador no soporta Web Serial API. Usa Google Chrome o Microsoft Edge.');
+      return;
+    }
 
-        addLog('✅ [ESP32 Conectado exitosamente por USB a 115200 baudios]');
-        toast.success('ESP32 Conectado por USB a 115200 baudios');
+    try {
+      const port = await (navigator as any).serial.requestPort();
+      await port.open({ baudRate: 115200 });
 
-        // Bucle de lectura
-        readSerialLoop(port);
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        addLog(`❌ Error al conectar USB: ${msg}`);
-        toast.error(`Error al conectar USB: ${msg}`);
+      portRef.current = port;
+      writerRef.current = port.writable.getWriter();
+      keepReadingRef.current = true;
+      setIsConnected(true);
+      setConnectionType('usb');
+      setConnectedDeviceName('ESP32 USB');
+      onConnectionChange?.(true, 'usb');
+
+      addLog('✅ [ESP32 Conectado exitosamente por USB a 115200 baudios]');
+      toast.success('ESP32 Conectado por USB a 115200 baudios');
+
+      // Bucle de lectura
+      readSerialLoop(port);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      addLog(`❌ Error al conectar USB: ${msg}`);
+      toast.error(`Error al conectar USB: ${msg}`);
+    }
+  };
+
+  // Toggle general de enlace según el canal preferido
+  const toggleConnection = async () => {
+    if (isConnected) {
+      if (connectionType === 'bluetooth') {
+        await disconnectBluetooth();
+      } else {
+        await disconnectWebSerial();
+      }
+    } else {
+      if (preferredMethod === 'bluetooth') {
+        await connectBluetooth();
+      } else {
+        await connectWebSerial();
       }
     }
   };
@@ -531,7 +744,9 @@ export function SerialControlPanel({
             variant="outline"
             className={`text-[10px] font-mono shrink-0 px-2 py-0.5 ${
               isConnected
-                ? 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10'
+                ? connectionType === 'bluetooth'
+                  ? 'border-blue-500/40 text-blue-400 bg-blue-500/10'
+                  : 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10'
                 : allowDemoSimulation
                 ? 'border-sky-500/40 text-sky-400 bg-sky-500/10'
                 : 'border-zinc-700/80 text-zinc-400 bg-zinc-800/40'
@@ -540,36 +755,101 @@ export function SerialControlPanel({
             <span
               className={`h-1.5 w-1.5 rounded-full mr-1.5 inline-block ${
                 isConnected
-                  ? 'bg-emerald-400 animate-pulse'
+                  ? connectionType === 'bluetooth'
+                    ? 'bg-blue-400 animate-pulse'
+                    : 'bg-emerald-400 animate-pulse'
                   : allowDemoSimulation
                   ? 'bg-sky-400'
                   : 'bg-zinc-500'
               }`}
             />
             {isConnected
-              ? 'USB Conectado'
+              ? connectionType === 'bluetooth'
+                ? `BLE: ${connectedDeviceName || 'Conectado'}`
+                : 'USB Conectado'
               : allowDemoSimulation
               ? 'Demo Virtual'
               : 'Sin Dispositivo'}
           </Badge>
         </div>
 
+        {/* Fila 1.5: Selector de Canal de Enlace (Bluetooth BLE vs USB Serial) */}
+        <div className="flex items-center justify-between text-[11px] bg-muted/30 px-2.5 py-1 rounded-lg border border-border/50">
+          <span className="text-muted-foreground font-medium flex items-center gap-1.5">
+            <Radio className="h-3 w-3 text-sky-400" /> Canal de Enlace:
+          </span>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              disabled={isConnected}
+              onClick={() => setPreferredMethod('bluetooth')}
+              className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all flex items-center gap-1 ${
+                preferredMethod === 'bluetooth'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
+              } ${isConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
+              title="Conexión inalámbrica BLE vía Nordic UART Service (NUS)"
+            >
+              <Bluetooth className="h-3 w-3" /> Bluetooth (BLE)
+            </button>
+            <button
+              type="button"
+              disabled={isConnected}
+              onClick={() => setPreferredMethod('usb')}
+              className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all flex items-center gap-1 ${
+                preferredMethod === 'usb'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
+              } ${isConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
+              title="Conexión cableada por Web Serial API (115200 baudios)"
+            >
+              <Usb className="h-3 w-3" /> USB Serial
+            </button>
+          </div>
+        </div>
+
         {/* Fila 2: Barra de Herramientas (Grid 3 columnas simétrico) */}
         <div className="grid grid-cols-3 gap-2">
-          {/* 1. Conexión USB */}
+          {/* 1. Conexión Hardware (Bluetooth o USB) */}
           <Button
             size="sm"
             variant={isConnected ? 'outline' : 'default'}
-            onClick={toggleWebSerial}
+            onClick={toggleConnection}
             className={`h-8 text-xs font-semibold gap-1.5 shadow-xs transition-all ${
               isConnected
-                ? 'border-emerald-500/50 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20'
+                ? connectionType === 'bluetooth'
+                  ? 'border-blue-500/50 text-blue-400 bg-blue-500/10 hover:bg-blue-500/20'
+                  : 'border-emerald-500/50 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20'
+                : preferredMethod === 'bluetooth'
+                ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-950/20'
                 : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-950/20'
             }`}
-            title={isConnected ? 'Desconectar puerto USB Serial' : 'Conectar ESP32 por USB Serial'}
+            title={
+              isConnected
+                ? 'Desconectar hardware físico'
+                : preferredMethod === 'bluetooth'
+                ? 'Conectar ESP32 por Bluetooth BLE (NUS)'
+                : 'Conectar ESP32 por USB Serial'
+            }
           >
-            <Usb className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">{isConnected ? 'Desconectar' : 'Conectar USB'}</span>
+            {isConnected ? (
+              connectionType === 'bluetooth' ? (
+                <BluetoothConnected className="h-3.5 w-3.5 shrink-0" />
+              ) : (
+                <Usb className="h-3.5 w-3.5 shrink-0" />
+              )
+            ) : preferredMethod === 'bluetooth' ? (
+              <Bluetooth className="h-3.5 w-3.5 shrink-0" />
+            ) : (
+              <Usb className="h-3.5 w-3.5 shrink-0" />
+            )}
+            <span className="truncate">
+              {isConnected
+                ? 'Desconectar'
+                : preferredMethod === 'bluetooth'
+                ? 'Conectar BLE'
+                : 'Conectar USB'}
+            </span>
           </Button>
 
           {/* 2. Sincronización en la Nube Betty IoT Platform */}
@@ -642,6 +922,8 @@ export function SerialControlPanel({
                     <p className="text-[11px] text-muted-foreground leading-relaxed">
                       {allowDemoSimulation
                         ? 'Estás interactuando en modo virtual local. Los movimientos visuales son de prueba y no afectan a ningún dispositivo físico.'
+                        : preferredMethod === 'bluetooth'
+                        ? 'Para operar la maqueta real, enciende tu ESP32 con Bluetooth activo y pulsa "Conectar BLE" para enlazarlo de forma inalámbrica mediante Web Bluetooth. Sin hardware enlazado, los controles permanecen bloqueados para evitar movimientos falsos.'
                         : 'Para operar la maqueta real, conecta el ESP32 por cable USB a tu ordenador y pulsa "Conectar USB". Sin hardware enlazado, los controles permanecen bloqueados para evitar movimientos falsos.'}
                     </p>
                   </div>
@@ -673,7 +955,13 @@ export function SerialControlPanel({
                     disabled={!canControl}
                     onClick={() => sendCommand('EXP')}
                     className="flex-1 h-8 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold gap-1.5 shadow-xs"
-                    title={!canControl ? 'Conecta el ESP32 vía USB para iniciar el experimento' : ''}
+                    title={
+                      !canControl
+                        ? preferredMethod === 'bluetooth'
+                          ? 'Conecta el ESP32 vía Bluetooth para iniciar el experimento'
+                          : 'Conecta el ESP32 vía USB para iniciar el experimento'
+                        : ''
+                    }
                   >
                     <Play className="h-3.5 w-3.5 fill-current" />
                     <span>Iniciar EXP (Dinámico)</span>
@@ -938,16 +1226,19 @@ export function SerialControlPanel({
           </div>
         )}
 
-        {/* 7. Consola Serial Interactiva */}
+        {/* 7. Consola Interactiva (Bluetooth / Serial) */}
         <div className="space-y-1.5 pt-1">
           <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground">
             <span className="flex items-center gap-1.5 font-semibold text-foreground">
-              <Terminal className="h-3.5 w-3.5 text-emerald-400" /> Consola Serial:
+              <Terminal className="h-3.5 w-3.5 text-emerald-400" />
+              {connectionType === 'bluetooth' ? 'Consola Bluetooth (BLE NUS):' : 'Consola Serial:'}
             </span>
             <div className="flex items-center gap-2">
               <span className="text-[10px]">
                 {isConnected
-                  ? 'USB 115200 baud'
+                  ? connectionType === 'bluetooth'
+                    ? `BLE (${connectedDeviceName || 'NUS'})`
+                    : 'USB 115200 baud'
                   : allowDemoSimulation
                   ? 'Demo Virtual'
                   : 'Desconectado'}
@@ -956,7 +1247,7 @@ export function SerialControlPanel({
                 type="button"
                 onClick={() => setLogs(['[Consola limpiada]'])}
                 className="text-muted-foreground hover:text-foreground p-0.5 rounded transition-colors"
-                title="Limpiar consola serial"
+                title="Limpiar consola"
               >
                 <Trash2 className="h-3 w-3" />
               </button>
@@ -979,6 +1270,8 @@ export function SerialControlPanel({
               placeholder={
                 canControl
                   ? 'Comando libre (ej: EXP, BOTH,45 o SENSOR)'
+                  : preferredMethod === 'bluetooth'
+                  ? 'Conecta el ESP32 por Bluetooth para enviar comandos...'
                   : 'Conecta el ESP32 por USB para enviar comandos...'
               }
               value={customCmd}

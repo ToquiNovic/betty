@@ -65,6 +65,6 @@ export const teamApi = {
     apiPost<InviteLinkResponse>(`/teams/${teamId}/invitations/link`),
   inviteByEmail: (teamId: string, data: InviteMemberDto) =>
     apiPost<{ message: string; email: string }>(`/teams/${teamId}/invitations/email`, data),
-  removeMember: (teamId: string, memberId: string) =>
-    apiDelete<{ message: string }>(`/teams/${teamId}/members/${memberId}`),
+  removeMember: (teamId: string, userId: string) =>
+    apiDelete<{ message: string }>(`/teams/${teamId}/members/user/${userId}`),
 };

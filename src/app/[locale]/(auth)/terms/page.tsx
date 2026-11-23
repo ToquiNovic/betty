@@ -179,18 +179,23 @@ export default function TermsPage() {
               <p>
                 <strong>Población objetivo:</strong> Representantes de instituciones de educación superior y centros de investigación, entidades públicas, empresas, unidades productivas, organizaciones sociales y comunitarias con actividad en Florencia o su área de influencia.
               </p>
-              <div className="p-2.5 rounded-xl bg-emerald-500/5 border border-emerald-500/20 text-[11px] space-y-1 mt-1 text-emerald-900 dark:text-emerald-200">
-                <p>
-                  <strong>Responsable del estudio:</strong> Freylen Rodolfo Ceballes Paloma (UNADE • <a href="https://unade.edu.mx/" target="_blank" rel="noopener noreferrer" className="text-emerald-500 hover:underline">https://unade.edu.mx/</a>).
-                </p>
-                <p className="flex items-center gap-3 flex-wrap">
-                  <span className="flex items-center gap-1">
-                    <Mail className="w-3 h-3 text-emerald-500" /> f.ceballes@udla.edu.co
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Phone className="w-3 h-3 text-emerald-500" /> 3217282646
-                  </span>
-                </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                <div className="p-2.5 rounded-xl bg-emerald-500/5 border border-emerald-500/20 text-[11px] space-y-1 text-emerald-900 dark:text-emerald-200">
+                  <p>
+                    <strong>Investigador Principal:</strong> Lubeimar Eduardo Gallego Ruiz (UNADE / UDLA).
+                  </p>
+                  <p className="flex items-center gap-1">
+                    <Mail className="w-3 h-3 text-emerald-500" /> lu.gallego@udla.edu.co
+                  </p>
+                </div>
+                <div className="p-2.5 rounded-xl bg-sky-500/5 border border-sky-500/20 text-[11px] space-y-1 text-sky-900 dark:text-sky-200">
+                  <p>
+                    <strong>Profesor de Física:</strong> José Antonio Marin (Universidad de la Amazonia).
+                  </p>
+                  <p className="flex items-center gap-1">
+                    <Mail className="w-3 h-3 text-sky-500" /> jo.marin@udla.edu.co
+                  </p>
+                </div>
               </div>
             </section>
 

@@ -164,8 +164,12 @@ export default function BettyConsentCertificatePage() {
           <header className="border-b-2 border-emerald-600 pb-6 mb-6">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-emerald-700 text-white flex items-center justify-center font-black text-lg shadow-md">
-                  UNADE
+                <div className="h-16 w-auto flex items-center justify-center p-1 bg-white rounded-xl border border-slate-100 shadow-xs">
+                  <img
+                    src="/unade-logo.png"
+                    alt="UNADE - Acreditación Institucional"
+                    className="h-14 w-auto object-contain"
+                  />
                 </div>
                 <div>
                   <h1 className="text-xl font-black uppercase tracking-tight text-emerald-950">
@@ -238,7 +242,10 @@ export default function BettyConsentCertificatePage() {
               <strong>Nombre del Estudio:</strong> Áreas estratégicas y oportunidades de desarrollo tecnológico en Florencia, Piedemonte Amazónico.
             </p>
             <p>
-              <strong>Investigador Responsable:</strong> Freylen Rodolfo Ceballes Paloma, estudiante de la Universidad de la Amazonia, Ingeniería de Sistemas (Contacto: f.ceballes@udla.edu.co | Tel: 3217282646).
+              <strong>Investigador Principal:</strong> Lubeimar Eduardo Gallego Ruiz (UNADE / Universidad de la Amazonia • Contacto: lu.gallego@udla.edu.co).
+            </p>
+            <p>
+              <strong>Profesor de Física:</strong> José Antonio Marin (Universidad de la Amazonia • Contacto: jo.marin@udla.edu.co).
             </p>
             <p>
               <strong>Propósito:</strong> Determinar las áreas estratégicas de desarrollo tecnológico para Florencia (Caquetá) en el contexto del Piedemonte Amazónico (IA, Transformación Digital, EdTech, Bioeconomía, Turismo de Naturaleza, Agro Inteligente, Biodiversidad, Energías Sostenibles e IoT).
@@ -305,7 +312,7 @@ export default function BettyConsentCertificatePage() {
 
           {/* Signatures & Certification */}
           <section className="pt-6 border-t border-slate-200">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 text-center">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
               <div className="space-y-2">
                 <div className="h-14 flex items-end justify-center">
                   <span className="font-serif italic text-slate-400 text-sm">
@@ -321,12 +328,24 @@ export default function BettyConsentCertificatePage() {
               <div className="space-y-2">
                 <div className="h-14 flex items-end justify-center">
                   <span className="font-serif italic text-emerald-700 text-sm font-bold">
-                    Freylen Rodolfo Ceballes Paloma
+                    Lubeimar Eduardo Gallego Ruiz
                   </span>
                 </div>
                 <div className="border-t border-slate-300 pt-2">
-                  <p className="text-xs font-bold text-slate-800">Investigador Responsable</p>
-                  <p className="text-[10px] text-slate-400">UNADE • Universidad Americana de Europa (https://unade.edu.mx/)</p>
+                  <p className="text-xs font-bold text-slate-800">Investigador Principal</p>
+                  <p className="text-[10px] text-slate-400">UNADE & Universidad de la Amazonia</p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="h-14 flex items-end justify-center">
+                  <span className="font-serif italic text-sky-700 text-sm font-bold">
+                    José Antonio Marin
+                  </span>
+                </div>
+                <div className="border-t border-slate-300 pt-2">
+                  <p className="text-xs font-bold text-slate-800">Profesor de Física</p>
+                  <p className="text-[10px] text-slate-400">Universidad de la Amazonia</p>
                 </div>
               </div>
             </div>

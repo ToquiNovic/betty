@@ -104,7 +104,7 @@ export function ESP32ConfigDialog({
 
   const handleReadConfig = async () => {
     if (!isConnected) {
-      toast.error('Conecta primero el ESP32 por USB Serial');
+      toast.error('Conecta primero el ESP32 por Bluetooth o USB');
       return;
     }
     setIsReading(true);
@@ -118,7 +118,7 @@ export function ESP32ConfigDialog({
 
   const handleSaveConfig = async () => {
     if (!isConnected) {
-      toast.error('Conecta primero el ESP32 por USB Serial');
+      toast.error('Conecta primero el ESP32 por Bluetooth o USB');
       return;
     }
 
@@ -161,7 +161,7 @@ export function ESP32ConfigDialog({
 
   const handleReboot = async () => {
     if (!isConnected) {
-      toast.error('Conecta primero el ESP32 por USB Serial');
+      toast.error('Conecta primero el ESP32 por Bluetooth o USB');
       return;
     }
     await sendCommand('REBOOT');
@@ -195,7 +195,7 @@ export function ESP32ConfigDialog({
                   : 'border-rose-500/50 text-rose-400 bg-rose-500/10'
               }
             >
-              {isConnected ? 'USB Conectado' : 'USB Desconectado'}
+              {isConnected ? 'Hardware Enlazado' : 'Hardware Desconectado'}
             </Badge>
           </div>
           <DialogDescription className="text-xs text-muted-foreground mt-1">

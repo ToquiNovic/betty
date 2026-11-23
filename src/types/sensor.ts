@@ -36,6 +36,7 @@ export interface UpdateSensorDto {
   name?: string;
   description?: string;
   metadata?: Record<string, unknown>;
+  teamId?: string | null;
 }
 
 export interface CreateSensorResponse extends Sensor {

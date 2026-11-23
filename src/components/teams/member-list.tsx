@@ -41,7 +41,7 @@ export function MemberList({
   const handleRemove = async () => {
     if (!selectedMember) return;
     try {
-      await teamApi.removeMember(teamId, selectedMember.id);
+      await teamApi.removeMember(teamId, selectedMember.userId);
       toast.success('Miembro removido del equipo');
       onMemberRemoved();
     } catch (err: unknown) {
