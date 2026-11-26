@@ -15,6 +15,10 @@ interface PlanoInclinadoVisualizerProps {
   sensorId?: string;
 }
 
+const DEFAULT_MAX_PLANK_ANGLE = 30.0;
+const DEFAULT_EASING_TYPE: EasingType = 'CUBIC';
+const DEFAULT_DURATION_MS = 2500;
+
 export function PlanoInclinadoVisualizer({
   sensorId = 'e290f30a-201e-482c-ac7e-a9d02583068d',
 }: PlanoInclinadoVisualizerProps) {
@@ -22,19 +26,12 @@ export function PlanoInclinadoVisualizer({
   const [currentServoAngle, setCurrentServoAngle] = useState<number>(0.0);
   const [targetServoAngle, setTargetServoAngle] = useState<number>(0.0);
   const [currentPlankAngle, setCurrentPlankAngle] = useState<number>(0.0);
-  const [maxPlankAngle, setMaxPlankAngle] = useState<number>(30.0);
 
   // Estado del sensor óptico y fricción
   const [sensorCubePresent, setSensorCubePresent] = useState<boolean>(true);
   const [slipAngle, setSlipAngle] = useState<number>(0.0);
   const [frictionCoeff, setFrictionCoeff] = useState<number>(0.0);
   const [angularVelocity, setAngularVelocity] = useState<number>(0.0);
-
-  // Parámetros de control
-  const [easingType, setEasingType] = useState<EasingType>('CUBIC');
-  const [autoStop, setAutoStop] = useState<boolean>(true);
-  const [dynamicTime, setDynamicTime] = useState<boolean>(true);
-  const [duration, setDuration] = useState<number>(2500);
 
   // Estado de enlace físico por hardware (Bluetooth BLE o USB Serial)
   const [hardwareConnection, setHardwareConnection] = useState<{
@@ -58,11 +55,11 @@ export function PlanoInclinadoVisualizer({
   // Procesar telemetría entrante de Betty WebSocket
   useEffect(() => {
     if (!latestData || !latestData.payload) return;
-    const p = latestData.payload as Record<string, any>;
+    const p = latestData.payload as Record<string, unknown>;
 
     if (p.plank_angle !== undefined) {
       const plank = Number(p.plank_angle);
-      const s1 = Number(p.servo1 ?? (plank / maxPlankAngle) * 180);
+      const s1 = Number(p.servo1 ?? (plank / DEFAULT_MAX_PLANK_ANGLE) * 180);
       const cube = p.cube_detected !== undefined ? Boolean(p.cube_detected) : true;
       const sAngle = Number(p.slip_angle ?? 0);
       const mu = Number(p.mu_s ?? (sAngle > 0 ? Math.tan((sAngle * Math.PI) / 180) : 0));
@@ -81,7 +78,7 @@ export function PlanoInclinadoVisualizer({
         return next;
       });
     }
-  }, [latestData, maxPlankAngle]);
+  }, [latestData]);
 
   // Manejar paquetes desde Web Serial o simulador local
   const handleTelemetryPacket = useCallback(
@@ -124,6 +121,13 @@ export function PlanoInclinadoVisualizer({
     setFrictionCoeff(0);
     setSensorCubePresent(true);
     toast.info('Estado de deslizamiento restablecido (CLEAR)');
+  };
+
+  const handleResetToZero = () => {
+    setSlipAngle(0);
+    setFrictionCoeff(0);
+    setSensorCubePresent(true);
+    setTargetServoAngle(0);
   };
 
   return (
@@ -253,19 +257,11 @@ export function PlanoInclinadoVisualizer({
             <div className="lg:col-span-5">
               <SerialControlPanel
                 currentServoAngle={currentServoAngle}
-                targetServoAngle={targetServoAngle}
                 currentPlankAngle={currentPlankAngle}
-                maxPlankAngle={maxPlankAngle}
-                easingType={easingType}
-                autoStop={autoStop}
-                dynamicTime={dynamicTime}
-                duration={duration}
+                maxPlankAngle={DEFAULT_MAX_PLANK_ANGLE}
+                duration={DEFAULT_DURATION_MS}
                 onAngleChange={(ang) => setTargetServoAngle(ang)}
-                onEasingChange={(type) => setEasingType(type)}
-                onMaxPlankAngleChange={(val) => setMaxPlankAngle(val)}
-                onAutoStopToggle={(val) => setAutoStop(val)}
-                onDynamicTimeToggle={(val) => setDynamicTime(val)}
-                onDurationChange={(ms) => setDuration(ms)}
+                onResetToZero={handleResetToZero}
                 onTelemetryPacket={handleTelemetryPacket}
                 onConnectionChange={(connected, type) =>
                   setHardwareConnection({
@@ -285,7 +281,7 @@ export function PlanoInclinadoVisualizer({
 
       {/* Modelo Matemático KaTeX */}
       <MathematicalModelCard
-        easingType={easingType}
+        easingType={DEFAULT_EASING_TYPE}
         plankAngle={currentPlankAngle}
         slipAngle={slipAngle}
       />

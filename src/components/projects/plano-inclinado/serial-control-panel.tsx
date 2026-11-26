@@ -3,34 +3,22 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { EasingType } from './mathematical-model-card';
 import { ESP32ConfigDialog, type ESP32Config } from './esp32-config-dialog';
 import {
   Usb,
   Bluetooth,
   BluetoothConnected,
-  BluetoothOff,
-  Send,
-  Zap,
-  Terminal,
-  Clock,
   Play,
-  CheckCircle2,
   AlertCircle,
-  RotateCw,
   Sliders,
-  Shield,
   Radio,
   Flame,
   Cloud,
-  Wifi,
   Settings,
   Square,
-  Trash2,
+  RotateCcw,
 } from 'lucide-react';
 import { toast } from '@/lib/toast';
 
@@ -38,6 +26,57 @@ import { toast } from '@/lib/toast';
 const NUS_SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
 const NUS_RX_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e'; // Web -> ESP32 (Write)
 const NUS_TX_UUID = '6e400003-b5a3-f393-e0a9-e50e24dcca9e'; // ESP32 -> Web (Notify)
+
+const MAX_SERVO_ANGLE = 150;
+const ANGLE_PRESETS = [0, 30, 60, 90, 120, 150] as const;
+
+function clampServoAngle(angle: number): number {
+  if (!Number.isFinite(angle)) return 0;
+  return Math.max(0, Math.min(MAX_SERVO_ANGLE, Math.round(angle)));
+}
+
+interface SerialPortLike {
+  open(options: { baudRate: number }): Promise<void>;
+  close(): Promise<void>;
+  readable: ReadableStream<Uint8Array> | null;
+  writable: WritableStream<Uint8Array> | null;
+}
+
+interface BleNotificationEventLike {
+  target: { value?: DataView | null };
+}
+
+interface BleCharacteristicLike {
+  writeValueWithoutResponse?(data: BufferSource): Promise<void>;
+  writeValue(data: BufferSource): Promise<void>;
+  startNotifications(): Promise<void>;
+  stopNotifications(): Promise<void>;
+  addEventListener(type: string, listener: (event: BleNotificationEventLike) => void): void;
+  removeEventListener(type: string, listener: (event: BleNotificationEventLike) => void): void;
+}
+
+interface BleServiceLike {
+  getCharacteristic(uuid: string): Promise<BleCharacteristicLike>;
+}
+
+interface BleServerLike {
+  connected?: boolean;
+  connect(): Promise<BleServerLike>;
+  disconnect(): void;
+  getPrimaryService(uuid: string): Promise<BleServiceLike>;
+}
+
+interface BleDeviceLike {
+  name?: string;
+  gatt?: BleServerLike;
+  addEventListener(type: string, listener: () => void): void;
+  removeEventListener(type: string, listener: () => void): void;
+}
+
+interface NavigatorWithHardware {
+  bluetooth?: { requestDevice(options: unknown): Promise<BleDeviceLike> };
+  serial?: { requestPort(): Promise<SerialPortLike> };
+}
 
 export interface TelemetryPacketData {
   servo1: number;
@@ -55,56 +94,28 @@ export interface TelemetryPacketData {
 
 export interface SerialControlPanelProps {
   currentServoAngle: number;
-  targetServoAngle: number;
   currentPlankAngle: number;
   maxPlankAngle: number;
-  easingType: EasingType;
-  autoStop: boolean;
-  dynamicTime: boolean;
   duration: number;
   onAngleChange: (angle: number) => void;
-  onEasingChange: (type: EasingType) => void;
-  onMaxPlankAngleChange: (val: number) => void;
-  onAutoStopToggle: (val: boolean) => void;
-  onDynamicTimeToggle: (val: boolean) => void;
-  onDurationChange: (val: number) => void;
+  onResetToZero?: () => void;
   onTelemetryPacket: (data: TelemetryPacketData) => void;
-  onLogMessage?: (msg: string) => void;
   onConnectionChange?: (connected: boolean, type?: 'bluetooth' | 'usb') => void;
   sensorId?: string;
-  // Compatibilidad hacia atrás
-  currentAngle?: number;
-  targetAngle?: number;
 }
 
 export function SerialControlPanel({
   currentServoAngle,
-  targetServoAngle,
   currentPlankAngle,
   maxPlankAngle,
-  easingType,
-  autoStop,
-  dynamicTime,
   duration,
   onAngleChange,
-  onEasingChange,
-  onMaxPlankAngleChange,
-  onAutoStopToggle,
-  onDynamicTimeToggle,
-  onDurationChange,
+  onResetToZero,
   onTelemetryPacket,
-  onLogMessage,
   onConnectionChange,
   sensorId = 'e290f30a-201e-482c-ac7e-a9d02583068d',
 }: SerialControlPanelProps) {
   const [sliderVal, setSliderVal] = useState<number>(45);
-  const [customCmd, setCustomCmd] = useState<string>('');
-  const [calibVal, setCalibVal] = useState<number>(maxPlankAngle || 30);
-  const [manualDurationVal, setManualDurationVal] = useState<number>(duration || 2500);
-
-  const [logs, setLogs] = useState<string[]>([
-    '[Sistema listo. Enlaza tu ESP32 por Bluetooth BLE o USB Serial para operar la maqueta física]',
-  ]);
 
   // Selección de canal y estado de conexión
   const [preferredMethod, setPreferredMethod] = useState<'bluetooth' | 'usb'>('bluetooth');
@@ -114,46 +125,29 @@ export function SerialControlPanel({
   const [allowDemoSimulation, setAllowDemoSimulation] = useState<boolean>(false);
 
   // Web Serial refs
-  const portRef = useRef<any>(null);
-  const writerRef = useRef<any>(null);
-  const readerRef = useRef<any>(null);
+  const portRef = useRef<SerialPortLike | null>(null);
+  const writerRef = useRef<WritableStreamDefaultWriter<Uint8Array> | null>(null);
+  const readerRef = useRef<ReadableStreamDefaultReader<Uint8Array> | null>(null);
   const keepReadingRef = useRef<boolean>(false);
 
   // Web Bluetooth (Nordic UART Service) refs
-  const bleDeviceRef = useRef<any>(null);
-  const bleServerRef = useRef<any>(null);
-  const bleRxCharRef = useRef<any>(null);
-  const bleTxCharRef = useRef<any>(null);
-  const bleDisconnectListenerRef = useRef<any>(null);
-  const bleNotificationListenerRef = useRef<any>(null);
+  const bleDeviceRef = useRef<BleDeviceLike | null>(null);
+  const bleServerRef = useRef<BleServerLike | null>(null);
+  const bleRxCharRef = useRef<BleCharacteristicLike | null>(null);
+  const bleTxCharRef = useRef<BleCharacteristicLike | null>(null);
+  const bleDisconnectListenerRef = useRef<(() => void) | null>(null);
+  const bleNotificationListenerRef = useRef<((event: BleNotificationEventLike) => void) | null>(null);
 
   // Betty IoT Platform Sync state
   const [isBettySyncActive, setIsBettySyncActive] = useState<boolean>(false);
-  const [bettyPacketsCount, setBettyPacketsCount] = useState<number>(0);
-  const [bettySyncStatus, setBettySyncStatus] = useState<string>('Inactivo');
+  const [, setBettyPacketsCount] = useState<number>(0);
   const lastBettyPostTimeRef = useRef<number>(0);
 
   // ESP32 NVS Config state
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState<boolean>(false);
   const [esp32Config, setEsp32Config] = useState<ESP32Config | null>(null);
 
-  const logBoxRef = useRef<HTMLDivElement | null>(null);
   const simTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  const addLog = (msg: string) => {
-    setLogs((prev) => {
-      const next = [...prev, msg];
-      if (next.length > 60) next.shift();
-      return next;
-    });
-    if (onLogMessage) onLogMessage(msg);
-  };
-
-  useEffect(() => {
-    if (logBoxRef.current) {
-      logBoxRef.current.scrollTop = logBoxRef.current.scrollHeight;
-    }
-  }, [logs]);
 
   // Cleanup serial, bluetooth y temporizadores al desmontar
   useEffect(() => {
@@ -254,13 +248,9 @@ export function SerialControlPanel({
         const jsonStr = line.substring(4);
         const parsedCfg = JSON.parse(jsonStr) as ESP32Config;
         setEsp32Config(parsedCfg);
-        addLog(`⚙️ [CONFIG ESP32]: SSID="${parsedCfg.ssid || '(vacio)'}", Sensor="${parsedCfg.sensor_id || 'N/A'}", WiFi=${parsedCfg.wifi_connected ? 'OK' : 'OFF'}`);
       } catch (e) {
         console.error('Error parseando CFG JSON:', e);
-        addLog(`← ${line}`);
       }
-    } else {
-      addLog(`← ${line}`);
     }
   };
 
@@ -306,10 +296,9 @@ export function SerialControlPanel({
 
       if (res.ok) {
         setBettyPacketsCount((c) => c + 1);
-        setBettySyncStatus(`Sincronizado (${bettyPacketsCount + 1})`);
       }
     } catch {
-      setBettySyncStatus('Error de conexión');
+      // Silenciar fallo transitorio de red en telemetría continua
     }
   };
 
@@ -335,7 +324,7 @@ export function SerialControlPanel({
       return true;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      addLog(`❌ Error enviando por Bluetooth: ${msg}`);
+      toast.error(`Error enviando por Bluetooth: ${msg}`);
       return false;
     }
   };
@@ -343,7 +332,6 @@ export function SerialControlPanel({
   // Envío de comando (físico por Bluetooth BLE, USB Serial o simulación local)
   const sendCommand = async (cmdStr: string): Promise<boolean> => {
     cmdStr = cmdStr.trim();
-    addLog(`→ ${cmdStr}`);
 
     if (connectionType === 'bluetooth' && bleRxCharRef.current) {
       return await sendBleCommand(cmdStr);
@@ -354,14 +342,13 @@ export function SerialControlPanel({
         return true;
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
-        addLog(`❌ Error enviando por USB: ${msg}`);
+        toast.error(`Error enviando por USB: ${msg}`);
         return false;
       }
     } else if (allowDemoSimulation) {
       // Modo Simulación Local Interactiva (solo si el usuario lo activó explícitamente)
-      addLog(`⚡ [MODO DEMO]: ${cmdStr}`);
       if (cmdStr.startsWith('BOTH,')) {
-        const deg = parseFloat(cmdStr.substring(5)) || 0;
+        const deg = clampServoAngle(parseFloat(cmdStr.substring(5)));
         simulateLocalMovement(deg);
       } else if (cmdStr === 'EXP') {
         simulateAutomatedExperiment();
@@ -379,53 +366,42 @@ export function SerialControlPanel({
       }
       return true;
     } else {
-      // No hay hardware físico conectado y no se activó modo demo: BLOQUEADO
       const canalStr = preferredMethod === 'bluetooth' ? 'Bluetooth (BLE)' : 'cable USB';
       toast.warning(`Dispositivo no conectado. Conecta el ESP32 vía ${canalStr} para operar la maqueta.`);
-      addLog(`⚠️ [BLOQUEADO]: Conecta el ESP32 vía ${canalStr} para mover el plano inclinado.`);
       return false;
     }
   };
 
-  // Motor de simulación local cinemática
+  // Motor de simulación local cinemática (curva cúbica fija, máximo 150°)
   const simulateLocalMovement = (destServo: number) => {
     if (simTimerRef.current) clearInterval(simTimerRef.current);
+    const clampedDest = clampServoAngle(destServo);
     const startServo = currentServoAngle;
     const startTime = Date.now();
     const dur = duration || 2500;
-    onAngleChange(destServo);
+    onAngleChange(clampedDest);
 
     simTimerRef.current = setInterval(() => {
       const elapsed = Date.now() - startTime;
       const t = Math.min(1.0, elapsed / dur);
+      const k = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
-      let k = t;
-      if (easingType === 'CUBIC') {
-        k = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-      } else if (easingType === 'SMOOTHERSTEP') {
-        k = t * t * t * (t * (t * 6 - 15) + 10);
-      } else if (easingType === 'SINE') {
-        k = 0.5 * (1 - Math.cos(Math.PI * t));
-      } else if (easingType === 'QUAD') {
-        k = 3 * t * t - 2 * t * t * t;
-      }
-
-      const curServo = startServo + (destServo - startServo) * k;
+      const curServo = startServo + (clampedDest - startServo) * k;
       const curPlank = (curServo / 180.0) * maxPlankAngle;
 
       onTelemetryPacket({
         servo1: curServo,
         servo2: 180 - curServo,
-        target: destServo,
+        target: clampedDest,
         progress: k,
         sensorCubePresent: true,
         slipAngle: 0,
         plankAngle: curPlank,
-        angularVelocity: Math.abs((destServo - startServo) / (dur / 1000)),
+        angularVelocity: Math.abs((clampedDest - startServo) / (dur / 1000)),
       });
 
-      if (t >= 1.0) {
-        if (simTimerRef.current) clearInterval(simTimerRef.current);
+      if (t >= 1.0 && simTimerRef.current) {
+        clearInterval(simTimerRef.current);
       }
     }, 25);
   };
@@ -433,12 +409,11 @@ export function SerialControlPanel({
   // Simulación del experimento de fricción (0 a 90° en 20s con disparo a 18.5°)
   const simulateAutomatedExperiment = () => {
     if (simTimerRef.current) clearInterval(simTimerRef.current);
-    const simCriticalPlank = 18.5; // Ángulo crítico de la madera en simulación
+    const simCriticalPlank = 18.5;
     const startServo = currentServoAngle;
     const targetServo = 90.0;
     const startTime = Date.now();
     const dur = 20000;
-    addLog('>> 🧪 [SIMULACIÓN]: Iniciando barrido lento de plano inclinado (20s)...');
 
     simTimerRef.current = setInterval(() => {
       const elapsed = Date.now() - startTime;
@@ -450,7 +425,6 @@ export function SerialControlPanel({
       if (curPlank >= simCriticalPlank) {
         if (simTimerRef.current) clearInterval(simTimerRef.current);
         const mu_s = Math.tan((simCriticalPlank * Math.PI) / 180);
-        addLog(`>> 🛑 [SLIP DETECTADO]: Cubo resbaló a θ = ${simCriticalPlank.toFixed(1)}° (μs = ${mu_s.toFixed(4)})`);
         toast.error(`¡Deslizamiento Detectado a ${simCriticalPlank}°! μs = ${mu_s.toFixed(4)}`);
 
         onTelemetryPacket({
@@ -476,6 +450,23 @@ export function SerialControlPanel({
         });
       }
     }, 30);
+  };
+
+  const applyManualAngle = (rawDeg: number) => {
+    const clamped = clampServoAngle(rawDeg);
+    setSliderVal(clamped);
+    onAngleChange(clamped);
+    void sendCommand(`BOTH,${clamped}`);
+  };
+
+  const handleResetToZero = async () => {
+    setSliderVal(0);
+    onAngleChange(0);
+    onResetToZero?.();
+    const cleared = await sendCommand('CLEAR');
+    if (cleared) {
+      await sendCommand('BOTH,0');
+    }
   };
 
   // Desconexión limpia de Bluetooth BLE
@@ -515,24 +506,21 @@ export function SerialControlPanel({
       setIsConnected(false);
       setConnectionType('none');
       setConnectedDeviceName('');
-      onConnectionChange?.(false, 'none' as any);
-      addLog('[Dispositivo Bluetooth desconectado]');
+      onConnectionChange?.(false);
       toast.info('Bluetooth desconectado');
     }
   };
 
   // Conexión Web Bluetooth API (Nordic UART Service - NUS)
   const connectBluetooth = async () => {
-    if (typeof navigator === 'undefined' || !('bluetooth' in navigator)) {
+    const nav = typeof navigator !== 'undefined' ? (navigator as unknown as NavigatorWithHardware) : undefined;
+    if (!nav?.bluetooth) {
       toast.error('Tu navegador no soporta Web Bluetooth API. Usa Google Chrome o Microsoft Edge.');
-      addLog('❌ [ERROR]: Web Bluetooth API no está disponible en este navegador.');
       return;
     }
 
     try {
-      addLog('🔍 [BLUETOOTH]: Buscando periférico ESP32 (Botuto-Plano con Nordic UART Service)...');
-
-      const device = await (navigator as any).bluetooth.requestDevice({
+      const device = await nav.bluetooth.requestDevice({
         filters: [
           { services: [NUS_SERVICE_UUID] },
           { namePrefix: 'Botuto' },
@@ -542,10 +530,11 @@ export function SerialControlPanel({
         optionalServices: [NUS_SERVICE_UUID],
       });
 
-      addLog(`📡 [BLUETOOTH]: Conectando con "${device.name || 'ESP32'}"...`);
-      const server = await device.gatt.connect();
+      if (!device.gatt) {
+        throw new Error('Dispositivo sin interfaz GATT disponible');
+      }
 
-      addLog('📡 [BLUETOOTH]: Negociando servicio Nordic UART (NUS)...');
+      const server = await device.gatt.connect();
       const service = await server.getPrimaryService(NUS_SERVICE_UUID);
       const rxChar = await service.getCharacteristic(NUS_RX_UUID);
       const txChar = await service.getCharacteristic(NUS_TX_UUID);
@@ -553,7 +542,7 @@ export function SerialControlPanel({
       await txChar.startNotifications();
 
       let bleIncomingBuffer = '';
-      const handleBleNotification = (event: any) => {
+      const handleBleNotification = (event: BleNotificationEventLike) => {
         const value = event.target.value;
         if (!value) return;
         const chunk = new TextDecoder().decode(value);
@@ -576,8 +565,7 @@ export function SerialControlPanel({
         setIsConnected(false);
         setConnectionType('none');
         setConnectedDeviceName('');
-        onConnectionChange?.(false, 'none' as any);
-        addLog('🔌 [BLUETOOTH]: Enlace inalámbrico desconectado.');
+        onConnectionChange?.(false);
         toast.info('ESP32 Bluetooth desconectado');
       };
 
@@ -595,16 +583,12 @@ export function SerialControlPanel({
       setConnectionType('bluetooth');
       setConnectedDeviceName(device.name || 'Botuto-Plano');
       onConnectionChange?.(true, 'bluetooth');
-
-      addLog(`✅ [ESP32 Enlazado exitosamente por Bluetooth BLE ("${device.name || 'Botuto-Plano'}")]`);
       toast.success(`ESP32 Conectado por Bluetooth ("${device.name || 'Botuto-Plano'}")`);
     } catch (err: unknown) {
       if (err instanceof Error && err.name === 'NotFoundError') {
-        addLog('ℹ️ [BLUETOOTH]: Búsqueda cancelada por el usuario o no se seleccionó dispositivo.');
         return;
       }
       const msg = err instanceof Error ? err.message : String(err);
-      addLog(`❌ Error al conectar Bluetooth: ${msg}`);
       toast.error(`Error al conectar Bluetooth: ${msg}`);
     }
   };
@@ -625,21 +609,24 @@ export function SerialControlPanel({
     setIsConnected(false);
     setConnectionType('none');
     setConnectedDeviceName('');
-    onConnectionChange?.(false, 'none' as any);
-    addLog('[Puerto USB Serial desconectado]');
+    onConnectionChange?.(false);
     toast.info('Puerto USB desconectado');
   };
 
   // Conexión Web Serial por navegador (USB)
   const connectWebSerial = async () => {
-    if (typeof navigator === 'undefined' || !('serial' in navigator)) {
+    const nav = typeof navigator !== 'undefined' ? (navigator as unknown as NavigatorWithHardware) : undefined;
+    if (!nav?.serial) {
       toast.error('Tu navegador no soporta Web Serial API. Usa Google Chrome o Microsoft Edge.');
       return;
     }
 
     try {
-      const port = await (navigator as any).serial.requestPort();
+      const port = await nav.serial.requestPort();
       await port.open({ baudRate: 115200 });
+      if (!port.writable) {
+        throw new Error('Puerto serial sin canal de escritura');
+      }
 
       portRef.current = port;
       writerRef.current = port.writable.getWriter();
@@ -649,14 +636,10 @@ export function SerialControlPanel({
       setConnectedDeviceName('ESP32 USB');
       onConnectionChange?.(true, 'usb');
 
-      addLog('✅ [ESP32 Conectado exitosamente por USB a 115200 baudios]');
       toast.success('ESP32 Conectado por USB a 115200 baudios');
-
-      // Bucle de lectura
       readSerialLoop(port);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      addLog(`❌ Error al conectar USB: ${msg}`);
       toast.error(`Error al conectar USB: ${msg}`);
     }
   };
@@ -678,7 +661,7 @@ export function SerialControlPanel({
     }
   };
 
-  const readSerialLoop = async (port: any) => {
+  const readSerialLoop = async (port: SerialPortLike) => {
     let buffer = '';
     while (port && port.readable && keepReadingRef.current) {
       const reader = port.readable.getReader();
@@ -710,11 +693,9 @@ export function SerialControlPanel({
     setIsBettySyncActive((active) => {
       const next = !active;
       if (next) {
-        addLog('☁️ [BETTY IOT]: Sincronización en vivo hacia la nube activada');
         toast.success('Betty Cloud Sync Activado');
       } else {
-        addLog('☁️ [BETTY IOT]: Sincronización en vivo pausada');
-        setBettySyncStatus('Inactivo');
+        toast.info('Betty Cloud Sync Pausado');
       }
       return next;
     });
@@ -723,597 +704,348 @@ export function SerialControlPanel({
   return (
     <>
       <Card className="border border-border/80 bg-card/80 backdrop-blur-xs shadow-sm overflow-hidden flex flex-col h-full">
-      <CardHeader className="p-4 pb-3.5 border-b border-border/60 space-y-3">
-        {/* Fila 1: Título Principal, Icono e Indicador de Conexión */}
-        <div className="flex items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="p-2 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 shrink-0">
-              <Sliders className="h-4 w-4" />
+        <CardHeader className="p-4 pb-3.5 border-b border-border/60 space-y-3">
+          {/* Fila 1: Título Principal, Icono e Indicador de Conexión */}
+          <div className="flex items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="p-2 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 shrink-0">
+                <Sliders className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <CardTitle className="text-sm font-bold tracking-tight text-foreground truncate">
+                  Panel de Control Físico
+                </CardTitle>
+                <p className="text-[11px] text-muted-foreground truncate">
+                  Control experimental y enlace ESP32
+                </p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <CardTitle className="text-sm font-bold tracking-tight text-foreground truncate">
-                Panel de Control Físico
-              </CardTitle>
-              <p className="text-[11px] text-muted-foreground truncate">
-                Cinemática, calibración y enlace ESP32
-              </p>
-            </div>
-          </div>
 
-          <Badge
-            variant="outline"
-            className={`text-[10px] font-mono shrink-0 px-2 py-0.5 ${
-              isConnected
-                ? connectionType === 'bluetooth'
-                  ? 'border-blue-500/40 text-blue-400 bg-blue-500/10'
-                  : 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10'
-                : allowDemoSimulation
-                ? 'border-sky-500/40 text-sky-400 bg-sky-500/10'
-                : 'border-zinc-700/80 text-zinc-400 bg-zinc-800/40'
-            }`}
-          >
-            <span
-              className={`h-1.5 w-1.5 rounded-full mr-1.5 inline-block ${
+            <Badge
+              variant="outline"
+              className={`text-[10px] font-mono shrink-0 px-2 py-0.5 ${
                 isConnected
                   ? connectionType === 'bluetooth'
-                    ? 'bg-blue-400 animate-pulse'
-                    : 'bg-emerald-400 animate-pulse'
+                    ? 'border-blue-500/40 text-blue-400 bg-blue-500/10'
+                    : 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10'
                   : allowDemoSimulation
-                  ? 'bg-sky-400'
-                  : 'bg-zinc-500'
+                  ? 'border-sky-500/40 text-sky-400 bg-sky-500/10'
+                  : 'border-zinc-700/80 text-zinc-400 bg-zinc-800/40'
               }`}
-            />
-            {isConnected
-              ? connectionType === 'bluetooth'
-                ? `BLE: ${connectedDeviceName || 'Conectado'}`
-                : 'USB Conectado'
-              : allowDemoSimulation
-              ? 'Demo Virtual'
-              : 'Sin Dispositivo'}
-          </Badge>
-        </div>
-
-        {/* Fila 1.5: Selector de Canal de Enlace (Bluetooth BLE vs USB Serial) */}
-        <div className="flex items-center justify-between text-[11px] bg-muted/30 px-2.5 py-1 rounded-lg border border-border/50">
-          <span className="text-muted-foreground font-medium flex items-center gap-1.5">
-            <Radio className="h-3 w-3 text-sky-400" /> Canal de Enlace:
-          </span>
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              disabled={isConnected}
-              onClick={() => setPreferredMethod('bluetooth')}
-              className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all flex items-center gap-1 ${
-                preferredMethod === 'bluetooth'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-muted-foreground hover:text-foreground'
-              } ${isConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
-              title="Conexión inalámbrica BLE vía Nordic UART Service (NUS)"
             >
-              <Bluetooth className="h-3 w-3" /> Bluetooth (BLE)
-            </button>
-            <button
-              type="button"
-              disabled={isConnected}
-              onClick={() => setPreferredMethod('usb')}
-              className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all flex items-center gap-1 ${
-                preferredMethod === 'usb'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-muted-foreground hover:text-foreground'
-              } ${isConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
-              title="Conexión cableada por Web Serial API (115200 baudios)"
-            >
-              <Usb className="h-3 w-3" /> USB Serial
-            </button>
-          </div>
-        </div>
-
-        {/* Fila 2: Barra de Herramientas (Grid 3 columnas simétrico) */}
-        <div className="grid grid-cols-3 gap-2">
-          {/* 1. Conexión Hardware (Bluetooth o USB) */}
-          <Button
-            size="sm"
-            variant={isConnected ? 'outline' : 'default'}
-            onClick={toggleConnection}
-            className={`h-8 text-xs font-semibold gap-1.5 shadow-xs transition-all ${
-              isConnected
-                ? connectionType === 'bluetooth'
-                  ? 'border-blue-500/50 text-blue-400 bg-blue-500/10 hover:bg-blue-500/20'
-                  : 'border-emerald-500/50 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20'
-                : preferredMethod === 'bluetooth'
-                ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-950/20'
-                : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-950/20'
-            }`}
-            title={
-              isConnected
-                ? 'Desconectar hardware físico'
-                : preferredMethod === 'bluetooth'
-                ? 'Conectar ESP32 por Bluetooth BLE (NUS)'
-                : 'Conectar ESP32 por USB Serial'
-            }
-          >
-            {isConnected ? (
-              connectionType === 'bluetooth' ? (
-                <BluetoothConnected className="h-3.5 w-3.5 shrink-0" />
-              ) : (
-                <Usb className="h-3.5 w-3.5 shrink-0" />
-              )
-            ) : preferredMethod === 'bluetooth' ? (
-              <Bluetooth className="h-3.5 w-3.5 shrink-0" />
-            ) : (
-              <Usb className="h-3.5 w-3.5 shrink-0" />
-            )}
-            <span className="truncate">
-              {isConnected
-                ? 'Desconectar'
-                : preferredMethod === 'bluetooth'
-                ? 'Conectar BLE'
-                : 'Conectar USB'}
-            </span>
-          </Button>
-
-          {/* 2. Sincronización en la Nube Betty IoT Platform */}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={toggleBettySync}
-            className={`h-8 text-xs font-medium gap-1.5 border-border/80 transition-all ${
-              isBettySyncActive
-                ? 'border-purple-500/50 text-purple-300 bg-purple-500/15 font-semibold'
-                : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
-            }`}
-            title="Sincronizar telemetría con Betty IoT Platform en la nube vía Webhook"
-          >
-            <Cloud className={`h-3.5 w-3.5 shrink-0 ${isBettySyncActive ? 'text-purple-400 animate-pulse' : ''}`} />
-            <span className="truncate">Betty Sync</span>
-            {isBettySyncActive && (
-              <span className="h-1.5 w-1.5 rounded-full bg-purple-400 shrink-0" />
-            )}
-          </Button>
-
-          {/* 3. Configuración NVS ESP32 */}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setIsConfigDialogOpen(true)}
-            className="h-8 text-xs font-medium gap-1.5 border-border/80 text-muted-foreground hover:text-foreground hover:border-sky-500/50 hover:text-sky-400 hover:bg-sky-500/10 transition-all"
-            title="Configurar credenciales de WiFi y Betty IoT Platform en Flash NVS"
-          >
-            <Settings className="h-3.5 w-3.5 shrink-0 text-sky-400" />
-            <span className="truncate">Config ESP32</span>
-          </Button>
-        </div>
-      </CardHeader>
-
-      <CardContent className="p-4 space-y-4 text-xs flex-1 flex flex-col justify-between">
-        {(() => {
-          const canControl = isConnected || allowDemoSimulation;
-
-          return (
-            <>
-              {/* Banner de Estado de Conexión de Hardware */}
-              {!isConnected && (
-                <div
-                  className={`p-3 rounded-xl border flex items-start gap-2.5 transition-colors ${
-                    allowDemoSimulation
-                      ? 'bg-sky-500/10 border-sky-500/30 text-sky-400'
-                      : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-                  }`}
-                >
-                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-xs">
-                        {allowDemoSimulation
-                          ? 'Modo Simulación Demo Activo'
-                          : 'Hardware Desconectado'}
-                      </span>
-                      <Badge
-                        variant="outline"
-                        className={`text-[10px] font-mono ${
-                          allowDemoSimulation
-                            ? 'border-sky-500/40 text-sky-400'
-                            : 'border-amber-500/40 text-amber-400'
-                        }`}
-                      >
-                        {allowDemoSimulation ? 'Demo Virtual' : 'Sin Dispositivo'}
-                      </Badge>
-                    </div>
-                    <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      {allowDemoSimulation
-                        ? 'Estás interactuando en modo virtual local. Los movimientos visuales son de prueba y no afectan a ningún dispositivo físico.'
-                        : preferredMethod === 'bluetooth'
-                        ? 'Para operar la maqueta real, enciende tu ESP32 con Bluetooth activo y pulsa "Conectar BLE" para enlazarlo de forma inalámbrica mediante Web Bluetooth. Sin hardware enlazado, los controles permanecen bloqueados para evitar movimientos falsos.'
-                        : 'Para operar la maqueta real, conecta el ESP32 por cable USB a tu ordenador y pulsa "Conectar USB". Sin hardware enlazado, los controles permanecen bloqueados para evitar movimientos falsos.'}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* 1. Experimento Automático de Fricción (EXP) */}
-              <div className="p-3 rounded-xl border border-purple-500/40 bg-purple-500/5 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 font-bold text-purple-400 text-xs">
-                    <Flame className="h-3.5 w-3.5" />
-                    <span>Experimento de Plano Inclinado & Fricción</span>
-                  </div>
-                  <Badge
-                    variant="outline"
-                    className="text-[10px] font-mono border-purple-500/30 text-purple-400"
-                  >
-                    Máx 90° | 20s
-                  </Badge>
-                </div>
-
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Eleva la rampa suave y lentamente hasta que el sensor TCRT5000 detecta que el cubo resbala, congelando los motores y calculando μs = tan(θc).
-                </p>
-
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    disabled={!canControl}
-                    onClick={() => sendCommand('EXP')}
-                    className="flex-1 h-8 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold gap-1.5 shadow-xs"
-                    title={
-                      !canControl
-                        ? preferredMethod === 'bluetooth'
-                          ? 'Conecta el ESP32 vía Bluetooth para iniciar el experimento'
-                          : 'Conecta el ESP32 vía USB para iniciar el experimento'
-                        : ''
-                    }
-                  >
-                    <Play className="h-3.5 w-3.5 fill-current" />
-                    <span>Iniciar EXP (Dinámico)</span>
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    disabled={!canControl}
-                    onClick={() => sendCommand('STOP')}
-                    className="w-24 h-8 font-semibold disabled:opacity-40 disabled:cursor-not-allowed gap-1"
-                  >
-                    <Square className="h-3 w-3 fill-current" />
-                    <span>STOP</span>
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={!canControl}
-                    onClick={() => sendCommand('CLEAR')}
-                    className="w-24 h-8 border-border/80 disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    🔓 CLEAR
-                  </Button>
-                </div>
-              </div>
-
-              {/* 2. Control Manual de Ángulo y Presets */}
-              <div className="space-y-2 p-3 rounded-xl border border-border/70 bg-background/50">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-foreground">Ángulo Manual:</span>
-                  <span className="font-mono font-bold text-sky-400 text-sm">{sliderVal}°</span>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <input
-                    type="range"
-                    min="0"
-                    max="180"
-                    value={sliderVal}
-                    disabled={!canControl}
-                    onChange={(e) => setSliderVal(parseInt(e.target.value) || 0)}
-                    className={`flex-1 accent-sky-500 h-1.5 bg-muted rounded-lg ${
-                      !canControl ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'
-                    }`}
-                  />
-                  <Button
-                    size="sm"
-                    disabled={!canControl}
-                    onClick={() => {
-                      onAngleChange(sliderVal);
-                      sendCommand(`BOTH,${sliderVal}`);
-                    }}
-                    className="h-7 px-3 text-xs bg-sky-600 hover:bg-sky-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold"
-                  >
-                    Enviar
-                  </Button>
-                </div>
-
-                {/* Botones Presets */}
-                <div className="grid grid-cols-5 gap-1.5 pt-1">
-                  {[0, 45, 90, 135, 180].map((deg) => (
-                    <Button
-                      key={deg}
-                      size="sm"
-                      variant="outline"
-                      disabled={!canControl}
-                      onClick={() => {
-                        setSliderVal(deg);
-                        onAngleChange(deg);
-                        sendCommand(`BOTH,${deg}`);
-                      }}
-                      className={`h-7 px-1 text-[11px] font-mono transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
-                        sliderVal === deg
-                          ? 'border-sky-500/70 bg-sky-500/20 text-sky-300 font-bold shadow-xs'
-                          : 'border-border/70 hover:border-sky-500/40 text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      {deg}° {deg === 0 ? 'Reposo' : deg === 180 ? 'Máx' : ''}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-        {/* 3. Toggles de Auto-Stop y Tiempo Dinámico */}
-        <div className="grid grid-cols-2 gap-2.5">
-          <div className="p-2.5 rounded-lg border border-border/70 bg-background/50 flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label className="text-[11px] font-semibold text-emerald-400 flex items-center gap-1">
-                <Shield className="h-3 w-3" /> Auto-Stop Sensor
-              </Label>
-              <p className="text-[10px] text-muted-foreground">Congelar al deslizar</p>
-            </div>
-            <Switch
-              checked={autoStop}
-              disabled={!canControl}
-              onCheckedChange={(val) => {
-                onAutoStopToggle(val);
-                sendCommand(val ? 'AUTO_STOP ON' : 'AUTO_STOP OFF');
-              }}
-            />
-          </div>
-
-          <div className="p-2.5 rounded-lg border border-border/70 bg-background/50 flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label className="text-[11px] font-semibold text-sky-400 flex items-center gap-1">
-                <Zap className="h-3 w-3" /> Tiempo Dinámico
-              </Label>
-              <p className="text-[10px] text-muted-foreground">Torque por gravedad</p>
-            </div>
-            <Switch
-              checked={dynamicTime}
-              disabled={!canControl}
-              onCheckedChange={(val) => {
-                onDynamicTimeToggle(val);
-                sendCommand(val ? 'AUTO_DUR ON' : 'AUTO_DUR OFF');
-              }}
-            />
-          </div>
-        </div>
-
-        {/* 4. Calibración Cinemática (Horn -> Madera) */}
-        <div className="p-2.5 rounded-lg border border-border/70 bg-background/50 flex items-center justify-between gap-3">
-          <div className="space-y-0.5">
-            <span className="text-[11px] font-semibold text-sky-400">Calibración Cinemática:</span>
-            <p className="text-[10px] text-muted-foreground">Ángulo tabla real a 180° servo:</p>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Input
-              type="number"
-              min="5"
-              max="90"
-              value={calibVal}
-              disabled={!canControl}
-              onChange={(e) => setCalibVal(parseFloat(e.target.value) || 30)}
-              className="h-7 w-16 text-center font-mono text-xs disabled:opacity-40 disabled:cursor-not-allowed"
-            />
-            <span className="font-mono text-xs text-muted-foreground">°</span>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={!canControl}
-              onClick={() => {
-                onMaxPlankAngleChange(calibVal);
-                sendCommand(`CALIB ${calibVal}`);
-                toast.success(`Calibración aplicada: ${calibVal}° máx`);
-              }}
-              className="h-7 px-2 text-xs disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Fijar
-            </Button>
-          </div>
-        </div>
-
-        {/* 5. Selector de Curva de Easing y Duración Manual */}
-        <div className="grid grid-cols-2 gap-2.5">
-          <div className="space-y-1">
-            <Label className="text-[11px] font-semibold text-muted-foreground">Curva de Easing:</Label>
-            <select
-              value={easingType}
-              disabled={!canControl}
-              onChange={(e) => {
-                const nextType = e.target.value as EasingType;
-                onEasingChange(nextType);
-                sendCommand(`EASING ${nextType}`);
-              }}
-              className="w-full h-8 px-2 rounded-md border border-border/80 bg-background text-xs font-medium focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <option value="CUBIC">Cubic (Recomendada)</option>
-              <option value="SMOOTHERSTEP">SmootherStep (Quíntica)</option>
-              <option value="SINE">Sinusoidal</option>
-              <option value="QUAD">Smoothstep (Cuadrática)</option>
-              <option value="LINEAR">Lineal (Constante)</option>
-            </select>
-          </div>
-
-          <div className="space-y-1">
-            <Label className="text-[11px] font-semibold text-muted-foreground">Duración Fija (ms):</Label>
-            <div className="flex gap-1.5">
-              <Input
-                type="number"
-                min="450"
-                max="10000"
-                step="250"
-                value={manualDurationVal}
-                disabled={!canControl}
-                onChange={(e) => setManualDurationVal(parseInt(e.target.value) || 2500)}
-                className="h-8 text-xs font-mono disabled:opacity-40 disabled:cursor-not-allowed"
+              <span
+                className={`h-1.5 w-1.5 rounded-full mr-1.5 inline-block ${
+                  isConnected
+                    ? connectionType === 'bluetooth'
+                      ? 'bg-blue-400 animate-pulse'
+                      : 'bg-emerald-400 animate-pulse'
+                    : allowDemoSimulation
+                    ? 'bg-sky-400'
+                    : 'bg-zinc-500'
+                }`}
               />
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={!canControl}
-                onClick={() => {
-                  onDurationChange(manualDurationVal);
-                  onDynamicTimeToggle(false);
-                  sendCommand(`DUR ${manualDurationVal}`);
-                  toast.success(`Duración fijada a ${manualDurationVal} ms`);
-                }}
-                className="h-8 px-2 text-xs shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                Fijar
-              </Button>
-            </div>
+              {isConnected
+                ? connectionType === 'bluetooth'
+                  ? `BLE: ${connectedDeviceName || 'Conectado'}`
+                  : 'USB Conectado'
+                : allowDemoSimulation
+                ? 'Demo Virtual'
+                : 'Sin Dispositivo'}
+            </Badge>
           </div>
-        </div>
 
-        {/* 6. Botones de Diagnóstico del Sensor & Portal Cautivo */}
-        <div className="flex flex-wrap gap-1.5 pt-0.5">
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={!canControl}
-            onClick={() => sendCommand('INVERT_SENSOR')}
-            className="h-6 px-2 text-[10px] font-mono border-border/70 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            🔄 Invertir Polaridad DO
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={!canControl}
-            onClick={() => sendCommand('SENSOR')}
-            className="h-6 px-2 text-[10px] font-mono border-border/70 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            🔍 Test Sensor IR
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={!canControl}
-            onClick={() => sendCommand('PORTAL')}
-            className="h-6 px-2 text-[10px] font-mono border-amber-500/50 text-amber-400 bg-amber-500/10 disabled:opacity-40 disabled:cursor-not-allowed"
-            title="Levanta la red WiFi de configuración PlanoInclinado-Setup"
-          >
-            <Wifi className="h-3 w-3 mr-1" /> Portal WiFi
-          </Button>
-        </div>
-
-        {/* 6.5 Toggle para pruebas sin hardware (Demo) */}
-        {!isConnected && (
-          <div className="flex items-center justify-between p-2.5 rounded-lg border border-border/70 bg-muted/20 text-[11px]">
-            <div className="space-y-0.5">
-              <span className="font-semibold text-sky-400 flex items-center gap-1.5">
-                <Sliders className="h-3.5 w-3.5" /> Simulación Virtual (Solo Demo)
-              </span>
-              <p className="text-[10px] text-muted-foreground">
-                Habilitar controles sin hardware para pruebas visuales
-              </p>
-            </div>
-            <Switch
-              checked={allowDemoSimulation}
-              onCheckedChange={(checked) => {
-                setAllowDemoSimulation(checked);
-                if (checked) {
-                  toast.info('Modo simulación demo activado (sin hardware físico)');
-                  addLog('⚡ [SIMULADOR]: Controles virtuales habilitados.');
-                } else {
-                  addLog('🔒 [SIMULADOR]: Controles bloqueados. Esperando hardware real.');
-                }
-              }}
-            />
-          </div>
-        )}
-
-        {/* 7. Consola Interactiva (Bluetooth / Serial) */}
-        <div className="space-y-1.5 pt-1">
-          <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground">
-            <span className="flex items-center gap-1.5 font-semibold text-foreground">
-              <Terminal className="h-3.5 w-3.5 text-emerald-400" />
-              {connectionType === 'bluetooth' ? 'Consola Bluetooth (BLE NUS):' : 'Consola Serial:'}
+          {/* Fila 1.5: Selector de Canal de Enlace (Bluetooth BLE vs USB Serial) */}
+          <div className="flex items-center justify-between text-[11px] bg-muted/30 px-2.5 py-1 rounded-lg border border-border/50">
+            <span className="text-muted-foreground font-medium flex items-center gap-1.5">
+              <Radio className="h-3 w-3 text-sky-400" /> Canal de Enlace:
             </span>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px]">
-                {isConnected
-                  ? connectionType === 'bluetooth'
-                    ? `BLE (${connectedDeviceName || 'NUS'})`
-                    : 'USB 115200 baud'
-                  : allowDemoSimulation
-                  ? 'Demo Virtual'
-                  : 'Desconectado'}
-              </span>
+            <div className="flex items-center gap-1">
               <button
                 type="button"
-                onClick={() => setLogs(['[Consola limpiada]'])}
-                className="text-muted-foreground hover:text-foreground p-0.5 rounded transition-colors"
-                title="Limpiar consola"
+                disabled={isConnected}
+                onClick={() => setPreferredMethod('bluetooth')}
+                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all flex items-center gap-1 ${
+                  preferredMethod === 'bluetooth'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground'
+                } ${isConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                title="Conexión inalámbrica BLE vía Nordic UART Service (NUS)"
               >
-                <Trash2 className="h-3 w-3" />
+                <Bluetooth className="h-3 w-3" /> Bluetooth (BLE)
+              </button>
+              <button
+                type="button"
+                disabled={isConnected}
+                onClick={() => setPreferredMethod('usb')}
+                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all flex items-center gap-1 ${
+                  preferredMethod === 'usb'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground'
+                } ${isConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                title="Conexión cableada por Web Serial API (115200 baudios)"
+              >
+                <Usb className="h-3 w-3" /> USB Serial
               </button>
             </div>
           </div>
 
-          <div
-            ref={logBoxRef}
-            className="h-28 p-2.5 rounded-lg border border-border/80 bg-slate-950/90 font-mono text-[11px] text-emerald-400 overflow-y-auto space-y-0.5 select-text"
-          >
-            {logs.map((line, i) => (
-              <div key={i} className="leading-tight">
-                {line}
-              </div>
-            ))}
-          </div>
-
-          <div className="flex gap-2">
-            <Input
-              placeholder={
-                canControl
-                  ? 'Comando libre (ej: EXP, BOTH,45 o SENSOR)'
-                  : preferredMethod === 'bluetooth'
-                  ? 'Conecta el ESP32 por Bluetooth para enviar comandos...'
-                  : 'Conecta el ESP32 por USB para enviar comandos...'
-              }
-              value={customCmd}
-              disabled={!canControl}
-              onChange={(e) => setCustomCmd(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && customCmd.trim()) {
-                  sendCommand(customCmd);
-                  setCustomCmd('');
-                }
-              }}
-              className="h-8 text-xs font-mono disabled:opacity-40 disabled:cursor-not-allowed"
-            />
+          {/* Fila 2: Barra de Herramientas (Grid 3 columnas simétrico) */}
+          <div className="grid grid-cols-3 gap-2">
+            {/* 1. Conexión Hardware (Bluetooth o USB) */}
             <Button
               size="sm"
-              disabled={!canControl}
-              onClick={() => {
-                if (customCmd.trim()) {
-                  sendCommand(customCmd);
-                  setCustomCmd('');
-                }
-              }}
-              className="h-8 px-3 text-xs shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+              variant={isConnected ? 'outline' : 'default'}
+              onClick={toggleConnection}
+              className={`h-8 text-xs font-semibold gap-1.5 shadow-xs transition-all ${
+                isConnected
+                  ? connectionType === 'bluetooth'
+                    ? 'border-blue-500/50 text-blue-400 bg-blue-500/10 hover:bg-blue-500/20'
+                    : 'border-emerald-500/50 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20'
+                  : preferredMethod === 'bluetooth'
+                  ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-950/20'
+                  : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-950/20'
+              }`}
             >
-              <Send className="h-3.5 w-3.5" />
+              {isConnected ? (
+                connectionType === 'bluetooth' ? (
+                  <BluetoothConnected className="h-3.5 w-3.5 shrink-0" />
+                ) : (
+                  <Usb className="h-3.5 w-3.5 shrink-0" />
+                )
+              ) : preferredMethod === 'bluetooth' ? (
+                <Bluetooth className="h-3.5 w-3.5 shrink-0" />
+              ) : (
+                <Usb className="h-3.5 w-3.5 shrink-0" />
+              )}
+              <span className="truncate">
+                {isConnected
+                  ? 'Desconectar'
+                  : preferredMethod === 'bluetooth'
+                  ? 'Conectar BLE'
+                  : 'Conectar USB'}
+              </span>
+            </Button>
+
+            {/* 2. Sincronización en la Nube Betty IoT Platform */}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={toggleBettySync}
+              className={`h-8 text-xs font-medium gap-1.5 border-border/80 transition-all ${
+                isBettySyncActive
+                  ? 'border-purple-500/50 text-purple-300 bg-purple-500/15 font-semibold'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
+              }`}
+              title="Sincronizar telemetría con Betty IoT Platform en la nube vía Webhook"
+            >
+              <Cloud className={`h-3.5 w-3.5 shrink-0 ${isBettySyncActive ? 'text-purple-400 animate-pulse' : ''}`} />
+              <span className="truncate">Betty Sync</span>
+              {isBettySyncActive && (
+                <span className="h-1.5 w-1.5 rounded-full bg-purple-400 shrink-0" />
+              )}
+            </Button>
+
+            {/* 3. Configuración NVS ESP32 */}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setIsConfigDialogOpen(true)}
+              className="h-8 text-xs font-medium gap-1.5 border-border/80 text-muted-foreground hover:text-foreground hover:border-sky-500/50 hover:text-sky-400 hover:bg-sky-500/10 transition-all"
+              title="Configurar credenciales de WiFi y Betty IoT Platform en Flash NVS"
+            >
+              <Settings className="h-3.5 w-3.5 shrink-0 text-sky-400" />
+              <span className="truncate">Config ESP32</span>
             </Button>
           </div>
-        </div>
-      </>
-    );
-  })()}
-</CardContent>
-    </Card>
+        </CardHeader>
 
-    <ESP32ConfigDialog
-      open={isConfigDialogOpen}
-      onOpenChange={setIsConfigDialogOpen}
-      isConnected={isConnected}
-      sendCommand={sendCommand}
-      lastReportedConfig={esp32Config}
-      defaultSensorId={sensorId}
-    />
-  </>
-);
+        <CardContent className="p-4 space-y-4 text-xs flex-1 flex flex-col justify-between">
+          {(() => {
+            const canControl = isConnected || allowDemoSimulation;
+
+            return (
+              <div className="space-y-4">
+                {/* Banner de Estado de Conexión de Hardware */}
+                {!isConnected && (
+                  <div
+                    className={`p-3 rounded-xl border flex items-start gap-2.5 transition-colors ${
+                      allowDemoSimulation
+                        ? 'bg-sky-500/10 border-sky-500/30 text-sky-400'
+                        : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                    }`}
+                  >
+                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-xs">
+                          {allowDemoSimulation
+                            ? 'Modo Simulación Demo Activo'
+                            : 'Hardware Desconectado'}
+                        </span>
+                        <Badge
+                          variant="outline"
+                          className={`text-[10px] font-mono ${
+                            allowDemoSimulation
+                              ? 'border-sky-500/40 text-sky-400'
+                              : 'border-amber-500/40 text-amber-400'
+                          }`}
+                        >
+                          {allowDemoSimulation ? 'Demo Virtual' : 'Sin Dispositivo'}
+                        </Badge>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">
+                        {allowDemoSimulation
+                          ? 'Estás operando en modo virtual local. Los movimientos son de prueba y no afectan a ningún dispositivo físico.'
+                          : preferredMethod === 'bluetooth'
+                          ? 'Enciende tu ESP32 con Bluetooth activo y pulsa "Conectar BLE" para enlazarlo, o activa la simulación demo abajo.'
+                          : 'Conecta el ESP32 por USB y pulsa "Conectar USB", o activa la simulación demo abajo.'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* 1. Experimento Automático de Fricción (EXP) */}
+                <div className="p-3 rounded-xl border border-purple-500/40 bg-purple-500/5 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 font-bold text-purple-400 text-xs">
+                      <Flame className="h-3.5 w-3.5" />
+                      <span>Experimento de Plano Inclinado & Fricción</span>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] font-mono border-purple-500/30 text-purple-400"
+                    >
+                      Máx 90° | 20s
+                    </Badge>
+                  </div>
+
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    Eleva la rampa suavemente hasta que el sensor TCRT5000 detecta deslizamiento y calcula μs = tan(θc).
+                  </p>
+
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      disabled={!canControl}
+                      onClick={() => void sendCommand('EXP')}
+                      className="flex-1 h-8 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold gap-1.5 shadow-xs"
+                    >
+                      <Play className="h-3.5 w-3.5 fill-current" />
+                      <span>Iniciar EXP</span>
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      disabled={!canControl}
+                      onClick={() => void sendCommand('STOP')}
+                      className="w-24 h-8 font-semibold disabled:opacity-40 disabled:cursor-not-allowed gap-1"
+                    >
+                      <Square className="h-3 w-3 fill-current" />
+                      <span>STOP</span>
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={!canControl}
+                      onClick={() => void handleResetToZero()}
+                      className="w-24 h-8 border-border/80 disabled:opacity-40 disabled:cursor-not-allowed gap-1"
+                      title="Desbloquear y regresar la rampa a 0°"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                      <span>Ir a 0°</span>
+                    </Button>
+                  </div>
+                </div>
+
+                {/* 2. Control Manual de Ángulo (0° - 150°) */}
+                <div className="space-y-2.5 p-3 rounded-xl border border-border/70 bg-background/50">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-foreground">Ángulo Manual (0–150°):</span>
+                    <span className="font-mono font-bold text-sky-400 text-sm">{sliderVal}°</span>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min={0}
+                      max={MAX_SERVO_ANGLE}
+                      value={sliderVal}
+                      disabled={!canControl}
+                      onChange={(e) => setSliderVal(clampServoAngle(parseInt(e.target.value, 10)))}
+                      className={`flex-1 accent-sky-500 h-1.5 bg-muted rounded-lg ${
+                        !canControl ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'
+                      }`}
+                    />
+                    <Button
+                      size="sm"
+                      disabled={!canControl}
+                      onClick={() => applyManualAngle(sliderVal)}
+                      className="h-7 px-3 text-xs bg-sky-600 hover:bg-sky-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold"
+                    >
+                      Enviar
+                    </Button>
+                  </div>
+
+                  {/* Presets rápidos hasta 150° */}
+                  <div className="grid grid-cols-6 gap-1.5 pt-1">
+                    {ANGLE_PRESETS.map((deg) => (
+                      <Button
+                        key={deg}
+                        size="sm"
+                        variant="outline"
+                        disabled={!canControl}
+                        onClick={() => applyManualAngle(deg)}
+                        className={`h-7 px-1 text-[11px] font-mono transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+                          sliderVal === deg
+                            ? 'border-sky-500/70 bg-sky-500/20 text-sky-300 font-bold shadow-xs'
+                            : 'border-border/70 hover:border-sky-500/40 text-muted-foreground hover:text-foreground'
+                        }`}
+                        title={deg === 0 ? '0° Reposo' : deg === 150 ? '150° Máximo' : `${deg}°`}
+                      >
+                        {deg}°
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 3. Toggle para pruebas sin hardware (Demo) */}
+                {!isConnected && (
+                  <div className="flex items-center justify-between p-2.5 rounded-lg border border-border/70 bg-muted/20 text-[11px]">
+                    <div className="space-y-0.5">
+                      <span className="font-semibold text-sky-400 flex items-center gap-1.5">
+                        <Sliders className="h-3.5 w-3.5" /> Simulación Virtual (Solo Demo)
+                      </span>
+                      <p className="text-[10px] text-muted-foreground">
+                        Habilitar controles sin hardware para pruebas visuales
+                      </p>
+                    </div>
+                    <Switch
+                      checked={allowDemoSimulation}
+                      onCheckedChange={(checked) => {
+                        setAllowDemoSimulation(checked);
+                        if (checked) {
+                          toast.info('Modo simulación demo activado (sin hardware físico)');
+                        } else {
+                          toast.info('Modo simulación demo desactivado');
+                        }
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+        </CardContent>
+      </Card>
+
+      <ESP32ConfigDialog
+        open={isConfigDialogOpen}
+        onOpenChange={setIsConfigDialogOpen}
+        isConnected={isConnected}
+        sendCommand={sendCommand}
+        lastReportedConfig={esp32Config}
+        defaultSensorId={sensorId}
+      />
+    </>
+  );
 }

@@ -72,7 +72,7 @@ export function TelemetryMetricsGrid({
             <div className="text-2xl font-black font-mono tracking-tight text-purple-400">
               {actualServo.toFixed(0)}°
             </div>
-            <span className="text-[10px] text-muted-foreground/80">Eje físico MG996R (0-180°)</span>
+            <span className="text-[10px] text-muted-foreground/80">Eje físico MG996R (0-150°)</span>
           </CardContent>
         </Card>
 
