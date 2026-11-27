@@ -124,3 +124,23 @@ export interface LoraNetworkResponse {
     frequency: string;
   };
 }
+
+export interface CreateEmbedTokenDto {
+  expiresIn?: string;
+  publicEmbed?: boolean;
+}
+
+export interface EmbedTokenResponse {
+  sensorId: string;
+  embedToken: string;
+  publicEmbed: boolean;
+  expiresIn: string;
+}
+
+export interface PublicLatestSensorResponse {
+  sensorId: string;
+  name: string;
+  twinState: Record<string, unknown> | null;
+  latestReading: SensorData | null;
+  history: SensorData[];
+}
