@@ -13,13 +13,41 @@ import {
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { LoraGatewayInfo, LoraNetworkNode } from '@/types';
-import { Radio, Wifi, Zap, Activity } from 'lucide-react';
+import { Radio } from 'lucide-react';
 
-function RecenterMap({ lat, lng }: { lat: number; lng: number }) {
+export interface MapFocusTarget {
+  lat: number;
+  lng: number;
+  nonce: number;
+}
+
+function FocusMapController({
+  target,
+  gatewayLat,
+  gatewayLng,
+}: {
+  target?: MapFocusTarget | null;
+  gatewayLat: number;
+  gatewayLng: number;
+}) {
   const map = useMap();
+  const prevInitialCoordsRef = React.useRef<string>(`${gatewayLat},${gatewayLng}`);
+
   useEffect(() => {
-    map.setView([lat, lng], map.getZoom());
-  }, [lat, lng, map]);
+    const nextKey = `${gatewayLat},${gatewayLng}`;
+    if (nextKey !== prevInitialCoordsRef.current && !target) {
+      prevInitialCoordsRef.current = nextKey;
+      map.setView([gatewayLat, gatewayLng], map.getZoom());
+    }
+  }, [gatewayLat, gatewayLng, target, map]);
+
+  useEffect(() => {
+    if (!target) return;
+    map.flyTo([target.lat, target.lng], Math.max(map.getZoom(), 14), {
+      duration: 0.5,
+    });
+  }, [target, map]);
+
   return null;
 }
 
@@ -28,9 +56,9 @@ const createGatewayIcon = () =>
     className: 'custom-gateway-icon',
     html: `
       <div style="position:relative; width:56px; height:56px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-        <span style="position:absolute; width:52px; height:52px; border-radius:50%; background:rgba(6,182,212,0.25); animation:ping 2.5s cubic-bezier(0,0,0.2,1) infinite;"></span>
-        <span style="position:absolute; width:40px; height:40px; border-radius:50%; background:rgba(6,182,212,0.4); animation:pulse 2s cubic-bezier(0.4,0,0.6,1) infinite;"></span>
-        <div style="width:36px; height:36px; border-radius:50%; background:#0891b2; border:3px solid #ffffff; box-shadow:0 0 16px rgba(6,182,212,0.9); display:flex; align-items:center; justify-content:center; color:#ffffff; z-index:2;">
+        <span style="position:absolute; width:52px; height:52px; border-radius:50%; background:rgba(6,182,212,0.22); animation:ping 2.5s cubic-bezier(0,0,0.2,1) infinite;"></span>
+        <span style="position:absolute; width:40px; height:40px; border-radius:50%; background:rgba(6,182,212,0.36); animation:pulse 2s cubic-bezier(0.4,0,0.6,1) infinite;"></span>
+        <div style="width:36px; height:36px; border-radius:50%; background:#0891b2; border:3px solid #ffffff; box-shadow:0 0 16px rgba(6,182,212,0.85); display:flex; align-items:center; justify-content:center; color:#ffffff; z-index:2;">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></svg>
         </div>
         <div style="position:absolute; bottom:-14px; background:#042f2e; color:#2dd4bf; font-family:ui-monospace, monospace; font-size:8.5px; font-weight:800; padding:1px 6px; border-radius:999px; border:1px solid #14b8a6; white-space:nowrap; box-shadow:0 2px 8px rgba(0,0,0,0.6); letter-spacing:0.04em; z-index:5;">
@@ -46,7 +74,7 @@ const createNodeIcon = (status: string, rssi: number, isSelected: boolean) => {
   const isOnline = status === 'active';
   const color = !isOnline ? '#94a3b8' : rssi > -85 ? '#10b981' : rssi > -105 ? '#f59e0b' : '#ef4444';
   const glow = isSelected ? `0 0 18px ${color}` : `0 0 8px ${color}80`;
-  const scale = isSelected ? 'transform: scale(1.2);' : '';
+  const scale = isSelected ? 'transform: scale(1.22);' : '';
 
   return L.divIcon({
     className: 'custom-node-icon',
@@ -69,6 +97,7 @@ export interface LoraMapInnerProps {
   selectedNodeId?: string | null;
   onSelectNode: (node: LoraNetworkNode | null) => void;
   showCoverageAura?: boolean;
+  focusTarget?: MapFocusTarget | null;
 }
 
 export default function LoraMapInner({
@@ -77,25 +106,25 @@ export default function LoraMapInner({
   selectedNodeId,
   onSelectNode,
   showCoverageAura = true,
+  focusTarget,
 }: LoraMapInnerProps) {
   const gatewayIcon = useMemo(() => createGatewayIcon(), []);
-
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
 
   return (
-    <div className="h-full w-full relative z-0">
+    <div className="relative z-0 h-full w-full">
       <MapContainer
         center={[gateway.lat, gateway.lng]}
         zoom={14}
         scrollWheelZoom={true}
-        className="h-full w-full min-h-[500px]"
+        className="h-full min-h-[460px] w-full"
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {/* 1. Gateway Coverage Radius (Ra-02 433MHz) */}
+        {/* Gateway Coverage Radius */}
         {showCoverageAura && (
           <Circle
             center={[gateway.lat, gateway.lng]}
@@ -110,7 +139,7 @@ export default function LoraMapInner({
           />
         )}
 
-        {/* 2. Selected Node Specific Coverage (Spreading Factor radius) */}
+        {/* Selected Node Coverage Radius */}
         {selectedNode && selectedNode.loraConfig?.coverage_radius_meters && (
           <Circle
             center={[selectedNode.lat, selectedNode.lng]}
@@ -124,7 +153,7 @@ export default function LoraMapInner({
           />
         )}
 
-        {/* 3. RF Polylines linking Gateway to Nodes */}
+        {/* RF Polylines linking Gateway to Nodes */}
         {nodes.map((node) => {
           const isSelected = node.id === selectedNodeId;
           const isOnline = node.status === 'active';
@@ -156,7 +185,7 @@ export default function LoraMapInner({
           );
         })}
 
-        {/* 4. Central Gateway Marker */}
+        {/* Central Gateway Marker */}
         <Marker
           position={[gateway.lat, gateway.lng]}
           icon={gatewayIcon}
@@ -165,48 +194,31 @@ export default function LoraMapInner({
           }}
         >
           <Popup className="lora-gateway-popup">
-            <div className="space-y-1.5 p-1 min-w-[210px] text-slate-900">
-              <div className="flex items-center justify-between gap-1.5 font-bold text-cyan-800 text-xs border-b pb-1.5 border-slate-200">
-                <div className="flex items-center gap-1.5">
-                  <Radio className="h-4 w-4 text-cyan-600" />
+            <div className="min-w-[200px] space-y-2 p-1 text-slate-900">
+              <div className="flex items-center justify-between gap-2 border-b border-slate-200 pb-1.5">
+                <span className="flex items-center gap-1.5 truncate text-xs font-bold text-slate-900">
+                  <Radio className="size-3.5 shrink-0 text-cyan-700" />
                   <span className="truncate">{gateway.name}</span>
-                </div>
-                <span className="text-[9px] bg-cyan-100 text-cyan-800 font-mono font-bold px-1.5 py-0.5 rounded-full">
-                  GATEWAY BASE
+                </span>
+                <span className="shrink-0 rounded-full bg-cyan-100 px-1.5 py-0.5 font-mono text-[9px] font-bold text-cyan-800">
+                  BASE
                 </span>
               </div>
-              <p className="text-[11px] text-slate-600 font-medium">{gateway.model}</p>
-              <div className="pt-1 space-y-0.5 text-[10px] text-slate-700">
-                <p>
-                  <strong className="text-slate-900">ID Hardware:</strong>{' '}
-                  <span className="font-mono text-[9px]">{gateway.id}</span>
-                </p>
-                <p>
-                  <strong className="text-slate-900">Frecuencia:</strong> {gateway.frequency}
-                </p>
-                <p>
-                  <strong className="text-slate-900">Radio Cobertura:</strong> {gateway.coverageRadiusMeters} m
-                </p>
-                <p>
-                  <strong className="text-slate-900">Nodos Vinculados:</strong> {nodes.length}
-                </p>
-                <p>
-                  <strong className="text-slate-900">Coordenadas:</strong> {gateway.lat.toFixed(4)}, {gateway.lng.toFixed(4)}
-                </p>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[10px] text-slate-700">
+                <span className="text-slate-500">Frecuencia</span>
+                <strong className="text-right font-mono text-slate-900">{gateway.frequency}</strong>
+                <span className="text-slate-500">Cobertura</span>
+                <strong className="text-right font-mono text-slate-900">
+                  {gateway.coverageRadiusMeters} m
+                </strong>
+                <span className="text-slate-500">Nodos</span>
+                <strong className="text-right font-mono text-slate-900">{nodes.length}</strong>
               </div>
-
-              <button
-                type="button"
-                onClick={() => onSelectNode(null)}
-                className="mt-2 w-full py-1 px-2 rounded-md bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-[10px] text-center transition-colors cursor-pointer border-none"
-              >
-                Ver Telemetría en el Panel
-              </button>
             </div>
           </Popup>
         </Marker>
 
-        {/* 5. LoRa Node Markers */}
+        {/* LoRa Node Markers */}
         {nodes.map((node) => {
           const isSelected = node.id === selectedNodeId;
           const icon = createNodeIcon(node.status, node.rssi, isSelected);
@@ -221,48 +233,44 @@ export default function LoraMapInner({
               }}
             >
               <Popup className="lora-node-popup">
-                <div className="space-y-2 p-1 min-w-[190px] text-slate-900">
-                  <div className="flex items-center justify-between gap-2 border-b pb-1.5 border-slate-200">
-                    <span className="font-bold text-slate-900 text-xs truncate">{node.name}</span>
+                <div className="min-w-[180px] space-y-2 p-1 text-slate-900">
+                  <div className="flex items-center justify-between gap-2 border-b border-slate-200 pb-1.5">
+                    <span className="truncate text-xs font-bold text-slate-900">{node.name}</span>
                     <span
-                      className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                      className={`shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${
                         node.status === 'active'
-                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                          : 'bg-slate-100 text-slate-600 border border-slate-300'
+                          ? 'border border-emerald-300 bg-emerald-100 text-emerald-800'
+                          : 'border border-slate-300 bg-slate-100 text-slate-600'
                       }`}
                     >
                       {node.status}
                     </span>
                   </div>
-                  <div className="text-[11px] space-y-1 text-slate-700">
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-600">RSSI (Señal):</span>
-                      <strong className="font-mono text-emerald-700 font-bold">{node.rssi} dBm</strong>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-600">SNR:</span>
-                      <strong className="font-mono text-cyan-700 font-bold">{node.snr} dB</strong>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-600">Spreading Factor:</span>
-                      <strong className="font-mono text-slate-900 font-bold">
-                        SF{node.loraConfig?.spreading_factor || 7}
-                      </strong>
-                    </div>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-slate-700">
+                    <span className="text-slate-500">RSSI</span>
+                    <strong className="text-right font-mono font-bold text-emerald-700">
+                      {node.rssi} dBm
+                    </strong>
+                    <span className="text-slate-500">SNR</span>
+                    <strong className="text-right font-mono font-bold text-cyan-700">
+                      {node.snr} dB
+                    </strong>
+                    <span className="text-slate-500">Factor</span>
+                    <strong className="text-right font-mono font-bold text-slate-900">
+                      SF{node.loraConfig?.spreading_factor || 7}
+                    </strong>
                   </div>
-                  <button
-                    onClick={() => onSelectNode(node)}
-                    className="w-full mt-1.5 py-1 px-2 text-[10px] font-bold rounded bg-cyan-700 hover:bg-cyan-800 text-white text-center transition-colors shadow-xs"
-                  >
-                    Ver Telemetría en Vivo
-                  </button>
                 </div>
               </Popup>
             </Marker>
           );
         })}
 
-        <RecenterMap lat={gateway.lat} lng={gateway.lng} />
+        <FocusMapController
+          target={focusTarget}
+          gatewayLat={gateway.lat}
+          gatewayLng={gateway.lng}
+        />
       </MapContainer>
     </div>
   );

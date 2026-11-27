@@ -288,38 +288,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        {/* Realtime Connection Status */}
-        <div className="mt-auto px-1 pt-2 group-data-[collapsible=icon]:hidden">
-          <div className="flex flex-col gap-1.5 rounded-xl border border-sidebar-border bg-sidebar-accent/40 px-3 py-2.5">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 text-xs font-medium text-foreground">
-                <span className="relative flex size-2 shrink-0">
-                  {isConnected && (
-                    <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                  )}
-                  <span
-                    className={cn(
-                      'relative inline-flex size-2 rounded-full',
-                      isConnected ? 'bg-emerald-500' : 'bg-amber-500'
-                    )}
-                  />
-                </span>
-                <span className="truncate">
-                  {isConnected ? 'Telemetría en vivo' : 'Reconectando...'}
-                </span>
-              </div>
-              <span className="font-mono text-[10px] text-muted-foreground">
-                {isConnected ? 'WS' : 'OFF'}
-              </span>
-            </div>
-            {isAdmin && (
-              <p className="truncate font-mono text-[10px] text-muted-foreground">
-                EMQX · TimescaleDB · Dragonfly
-              </p>
-            )}
-          </div>
-        </div>
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border/80 p-2">

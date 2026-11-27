@@ -1,31 +1,27 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePublicLoraNetwork } from '@/lib/api/sensors';
 import { useSocket } from '@/components/providers/socket-provider';
 import { LandingHeader } from '@/components/landing/landing-header';
 import { LandingFooter } from '@/components/landing/landing-footer';
 import { LoraNetworkMap } from '@/components/map/lora-network-map';
-import { LoraNetworkNode, LoraGatewayInfo } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import type { MapFocusTarget } from '@/components/map/lora-map-inner';
+import { LoraGatewayInfo, LoraNetworkNode } from '@/types';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 import {
-  Radio,
-  Wifi,
   Activity,
-  Layers,
-  Thermometer,
-  Droplets,
-  BatteryCharging,
-  Clock,
-  Signal,
-  Cpu,
-  RefreshCw,
-  Info,
   ChevronRight,
-  Maximize2,
+  Crosshair,
+  Layers,
+  Radio,
+  RefreshCw,
+  Search,
   Terminal,
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -34,54 +30,105 @@ import { es } from 'date-fns/locale';
 interface LivePacketEntry {
   id: string;
   sensorId: string;
-  sensorName?: string;
+  sensorName: string;
   rssi?: number;
   snr?: number;
-  payload: Record<string, any>;
+  payload: Record<string, unknown>;
   receivedAt: Date;
+}
+
+const DEFAULT_GATEWAY: LoraGatewayInfo = {
+  id: '8e779657-48bf-4e9c-8e7d-1a586756392e',
+  name: 'LoRa-Gateway',
+  model: 'ESP32 DevKit + SX1278 (Ra-02)',
+  frequency: '433 MHz',
+  lat: 1.6144,
+  lng: -75.6062,
+  coverageRadiusMeters: 3500,
+  status: 'online',
+  connectedNodesCount: 0,
+  rssi: -80,
+  snr: 8.5,
+};
+
+function getRssiSignalClass(status: string, rssi: number): string {
+  if (status !== 'active') return 'text-muted-foreground';
+  if (rssi > -85) return 'text-emerald-600 dark:text-emerald-400';
+  if (rssi > -105) return 'text-amber-600 dark:text-amber-400';
+  return 'text-rose-600 dark:text-rose-400';
+}
+
+function getRssiDotClass(status: string, rssi: number): string {
+  if (status !== 'active') return 'bg-muted-foreground';
+  if (rssi > -85) return 'bg-emerald-500';
+  if (rssi > -105) return 'bg-amber-500';
+  return 'bg-rose-500';
+}
+
+function formatTelemetryValue(value: unknown): string {
+  if (typeof value === 'number') {
+    return Number.isInteger(value) ? String(value) : value.toFixed(2);
+  }
+  if (value !== null && typeof value === 'object') {
+    return JSON.stringify(value);
+  }
+  return String(value ?? '—');
 }
 
 export default function PublicLoraMapPage() {
   const { network, isLoading, mutate } = usePublicLoraNetwork();
   const { socket, isConnected } = useSocket();
 
-  const [nodes, setNodes] = useState<LoraNetworkNode[]>([]);
-  const [selectedNode, setSelectedNode] = useState<LoraNetworkNode | null>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>('inspector');
+  const [nodeSearch, setNodeSearch] = useState('');
   const [showCoverage, setShowCoverage] = useState(true);
   const [livePackets, setLivePackets] = useState<LivePacketEntry[]>([]);
-  const [lastPacketTime, setLastPacketTime] = useState<Date | null>(null);
-  const [gateway, setGateway] = useState<LoraGatewayInfo>({
-    id: '8e779657-48bf-4e9c-8e7d-1a586756392e',
-    name: 'LoRa-Gateway',
-    model: 'ESP32 DevKit + SX1278 (Ra-02)',
-    frequency: '433.000 MHz (Ra-02)',
-    lat: 1.6144,
-    lng: -75.6062,
-    coverageRadiusMeters: 3500,
-    status: 'online',
-    connectedNodesCount: 0,
-    rssi: -80,
-    snr: 8.5,
-  });
+  const [liveGatewayPatch, setLiveGatewayPatch] = useState<Partial<LoraGatewayInfo> | null>(null);
+  const [liveNodePatches, setLiveNodePatches] = useState<
+    Record<string, Partial<LoraNetworkNode>>
+  >({});
+  const [focusTarget, setFocusTarget] = useState<MapFocusTarget | null>(null);
 
-  // Sync initial network nodes & gateway from REST API
+  const gateway = useMemo<LoraGatewayInfo>(
+    () => ({
+      ...(network?.gateway ?? DEFAULT_GATEWAY),
+      ...liveGatewayPatch,
+    }),
+    [network?.gateway, liveGatewayPatch]
+  );
+
+  const nodes = useMemo<LoraNetworkNode[]>(
+    () =>
+      (network?.nodes ?? []).map((node) => {
+        const patch = liveNodePatches[node.id];
+        return patch ? { ...node, ...patch } : node;
+      }),
+    [network?.nodes, liveNodePatches]
+  );
+
+  const selectedNode = useMemo(
+    () => (selectedNodeId ? nodes.find((n) => n.id === selectedNodeId) ?? null : null),
+    [nodes, selectedNodeId]
+  );
+
+  const nodesRef = useRef<LoraNetworkNode[]>(nodes);
+  const gatewayRef = useRef<LoraGatewayInfo>(gateway);
+
   useEffect(() => {
-    if (network?.gateway) {
-      setGateway(network.gateway);
-    }
-    if (network?.nodes) {
-      setNodes(network.nodes);
-    }
-  }, [network]);
+    nodesRef.current = nodes;
+  }, [nodes]);
 
-  // Subscribe to live public LoRa network events via WebSockets
+  useEffect(() => {
+    gatewayRef.current = gateway;
+  }, [gateway]);
+
+  // Subscribe once per socket instance to public LoRa network events
   useEffect(() => {
     if (!socket) return;
 
     const joinPublicRoom = () => {
-      socket.emit('subscribe:public-network', {}, (res: any) => {
-        console.log('[LoRa Map] Joined public-network room:', res);
-      });
+      socket.emit('subscribe:public-network', {});
     };
 
     if (socket.connected) {
@@ -89,65 +136,69 @@ export default function PublicLoraMapPage() {
     }
     socket.on('connect', joinPublicRoom);
 
-    // Listen to real-time sensor packets
-    const onSensorData = (data: any) => {
-      if (!data || !data.sensorId) return;
+    const onSensorData = (data: {
+      sensorId?: string;
+      payload?: Record<string, unknown>;
+    }) => {
+      if (!data?.sensorId) return;
 
+      const sensorId = data.sensorId;
       const now = new Date();
-      setLastPacketTime(now);
-
       const packetPayload = data.payload || {};
-      const rssi = packetPayload.rssi;
-      const snr = packetPayload.snr;
-      const metrics = packetPayload.metrics || packetPayload;
+      const rssi = typeof packetPayload.rssi === 'number' ? packetPayload.rssi : undefined;
+      const snr = typeof packetPayload.snr === 'number' ? packetPayload.snr : undefined;
+      const rawMetrics = packetPayload.metrics;
+      const metrics: Record<string, unknown> =
+        rawMetrics !== null && typeof rawMetrics === 'object' && !Array.isArray(rawMetrics)
+          ? (rawMetrics as Record<string, unknown>)
+          : packetPayload;
 
-      // Update gateway state if packet belongs to base gateway
-      if (data.sensorId === gateway.id) {
-        setGateway((prev: LoraGatewayInfo) => ({
-          ...prev,
+      const currentGateway = gatewayRef.current;
+
+      if (sensorId === currentGateway.id) {
+        setLiveGatewayPatch((prev) => ({
           status: 'online',
-          latestTelemetry: { ...prev.latestTelemetry, ...metrics },
-          rssi: typeof rssi === 'number' ? rssi : prev.rssi,
-          snr: typeof snr === 'number' ? snr : prev.snr,
+          latestTelemetry: {
+            ...(prev?.latestTelemetry ?? currentGateway.latestTelemetry),
+            ...metrics,
+          },
+          rssi: rssi ?? prev?.rssi ?? currentGateway.rssi,
+          snr: snr ?? prev?.snr ?? currentGateway.snr,
           lastSeen: now.toISOString(),
         }));
       }
 
-      // Update node in state
-      setNodes((prevNodes) =>
-        prevNodes.map((n) => {
-          if (n.id === data.sensorId) {
-            const updated = {
-              ...n,
-              status: 'active' as const,
-              rssi: typeof rssi === 'number' ? rssi : n.rssi,
-              snr: typeof snr === 'number' ? snr : n.snr,
-              lastSeen: now.toISOString(),
-              latestTelemetry: { ...n.latestTelemetry, ...metrics },
-            };
-            // Also update selectedNode if it's the one receiving data
-            setSelectedNode((curr) => (curr?.id === n.id ? updated : curr));
-            return updated;
-          }
-          return n;
-        })
-      );
-
-      // Append to live rolling packet log (keep last 12)
-      setLivePackets((prev) => {
-        const foundNode = nodes.find((n) => n.id === data.sensorId);
-        const isGw = data.sensorId === gateway.id;
-        const newEntry: LivePacketEntry = {
-          id: `${data.sensorId}-${now.getTime()}`,
-          sensorId: data.sensorId,
-          sensorName: isGw ? `[Base] ${gateway.name}` : (foundNode?.name || 'Nodo LoRa'),
-          rssi,
-          snr,
-          payload: metrics,
-          receivedAt: now,
+      setLiveNodePatches((prev) => {
+        const baseNode = nodesRef.current.find((n) => n.id === sensorId);
+        if (!baseNode) return prev;
+        const prevPatch = prev[sensorId];
+        return {
+          ...prev,
+          [sensorId]: {
+            status: 'active',
+            rssi: rssi ?? prevPatch?.rssi ?? baseNode.rssi,
+            snr: snr ?? prevPatch?.snr ?? baseNode.snr,
+            lastSeen: now.toISOString(),
+            latestTelemetry: {
+              ...(prevPatch?.latestTelemetry ?? baseNode.latestTelemetry),
+              ...metrics,
+            },
+          },
         };
-        return [newEntry, ...prev.slice(0, 11)];
       });
+
+      const foundNode = nodesRef.current.find((n) => n.id === sensorId);
+      const isGw = sensorId === currentGateway.id;
+      const newEntry: LivePacketEntry = {
+        id: `${sensorId}-${now.getTime()}`,
+        sensorId,
+        sensorName: isGw ? `[Base] ${currentGateway.name}` : foundNode?.name || 'Nodo LoRa',
+        rssi,
+        snr,
+        payload: metrics,
+        receivedAt: now,
+      };
+      setLivePackets((prev) => [newEntry, ...prev.slice(0, 19)]);
     };
 
     socket.on('sensor:data', onSensorData);
@@ -157,74 +208,126 @@ export default function PublicLoraMapPage() {
       socket.off('sensor:data', onSensorData);
       socket.emit('unsubscribe:public-network');
     };
-  }, [socket, nodes, gateway.id, gateway.name]);
+  }, [socket]);
 
-  const activeNodesCount = nodes.filter((n) => n.status === 'active').length;
-  const avgRssi =
-    nodes.length > 0
-      ? Math.round(nodes.reduce((acc, curr) => acc + curr.rssi, 0) / nodes.length)
-      : -75;
+  const activeNodesCount = useMemo(
+    () => nodes.filter((n) => n.status === 'active').length,
+    [nodes]
+  );
+
+  const avgRssi = useMemo(() => {
+    const valid = nodes.filter((n) => typeof n.rssi === 'number' && Number.isFinite(n.rssi));
+    if (valid.length === 0) return -75;
+    return Math.round(valid.reduce((acc, curr) => acc + curr.rssi, 0) / valid.length);
+  }, [nodes]);
+
+  const filteredNodes = useMemo(() => {
+    const query = nodeSearch.trim().toLowerCase();
+    if (!query) return nodes;
+    return nodes.filter(
+      (node) =>
+        node.name.toLowerCase().includes(query) ||
+        node.id.toLowerCase().includes(query) ||
+        node.hardware?.toLowerCase().includes(query)
+    );
+  }, [nodes, nodeSearch]);
+
+  const focusOnCoords = useCallback((lat: number, lng: number) => {
+    setFocusTarget({ lat, lng, nonce: Date.now() });
+  }, []);
+
+  const handleSelectFromMap = useCallback((node: LoraNetworkNode | null) => {
+    setSelectedNodeId(node?.id ?? null);
+    setActiveTab('inspector');
+  }, []);
+
+  const handleSelectNodeFromList = useCallback(
+    (node: LoraNetworkNode, openInspector = false) => {
+      setSelectedNodeId(node.id);
+      focusOnCoords(node.lat, node.lng);
+      if (openInspector) {
+        setActiveTab('inspector');
+      }
+    },
+    [focusOnCoords]
+  );
+
+  const handleFocusGateway = useCallback(() => {
+    setSelectedNodeId(null);
+    focusOnCoords(gateway.lat, gateway.lng);
+  }, [focusOnCoords, gateway.lat, gateway.lng]);
+
+  const inspectedTelemetryEntries = useMemo(() => {
+    const source = selectedNode ? selectedNode.latestTelemetry : gateway.latestTelemetry;
+    if (!source) return [];
+    return Object.entries(source);
+  }, [selectedNode, gateway.latestTelemetry]);
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <LandingHeader />
 
-      <main className="flex-1 flex flex-col">
-        {/* Top Header & Metrics Bar */}
-        <div className="border-b bg-card/60 backdrop-blur-md px-4 sm:px-6 lg:px-8 py-4">
-          <div className="container mx-auto max-w-7xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-500 text-xs font-semibold border border-cyan-500/20">
-                  <Radio className="h-3.5 w-3.5" />
-                  <span>Red LoRa Local 433 MHz</span>
-                </span>
-
-                <span
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+      <main className="flex flex-1 flex-col">
+        {/* Top Header & KPI Strip */}
+        <div className="border-b bg-card/60 px-4 py-4 backdrop-blur-md sm:px-6 lg:px-8">
+          <div className="container mx-auto flex max-w-7xl flex-col justify-between gap-4 lg:flex-row lg:items-center">
+            <div className="flex flex-col gap-1.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="outline" className="gap-1.5 font-mono text-xs">
+                  <Radio className="size-3 text-primary" />
+                  Red LoRa {gateway.frequency || '433 MHz'}
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    'gap-1.5 text-xs',
                     isConnected
-                      ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
-                      : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
-                  }`}
+                      ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                      : 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                  )}
                 >
                   <span
-                    className={`h-2 w-2 rounded-full ${
+                    className={cn(
+                      'size-2 rounded-full',
                       isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
-                    }`}
+                    )}
                   />
-                  <span>{isConnected ? 'Telemetría en Vivo' : 'Reconectando WS...'}</span>
-                </span>
+                  {isConnected ? 'Telemetría en Vivo' : 'Reconectando WS...'}
+                </Badge>
               </div>
 
-              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground">
+              <h1 className="text-xl font-extrabold tracking-tight text-foreground sm:text-2xl">
                 Topología de Red LoRa & Telemetría en Tiempo Real
               </h1>
               <p className="text-xs text-muted-foreground">
-                Monitoreo geográfico de paquetes de radiofrecuencia (Ra-02 / SX1278) recibidos por el Gateway ESP32.
+                Monitoreo geográfico de paquetes de radiofrecuencia recibidos por el Gateway central.
               </p>
             </div>
 
-            {/* Quick KPI Indicators */}
-            <div className="flex items-center gap-3">
-              <div className="px-3 py-2 rounded-lg bg-card border text-center min-w-[90px]">
-                <p className="text-[10px] text-muted-foreground uppercase font-semibold">Nodos</p>
-                <p className="text-lg font-bold font-mono text-foreground">
-                  <span className="text-emerald-500">{activeNodesCount}</span>
-                  <span className="text-muted-foreground text-xs font-normal"> / {nodes.length}</span>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div className="min-w-22 rounded-lg border bg-card px-3 py-2 text-center">
+                <p className="text-[10px] font-semibold uppercase text-muted-foreground">Nodos</p>
+                <p className="font-mono text-lg font-bold text-foreground">
+                  <span className="text-emerald-600 dark:text-emerald-400">{activeNodesCount}</span>
+                  <span className="text-xs font-normal text-muted-foreground"> / {nodes.length}</span>
                 </p>
               </div>
 
-              <div className="px-3 py-2 rounded-lg bg-card border text-center min-w-[90px]">
-                <p className="text-[10px] text-muted-foreground uppercase font-semibold">RSSI Prom.</p>
-                <p className="text-lg font-bold font-mono text-cyan-600 dark:text-cyan-400">
-                  {avgRssi} <span className="text-[10px] font-normal">dBm</span>
+              <div className="min-w-24 rounded-lg border bg-card px-3 py-2 text-center">
+                <p className="text-[10px] font-semibold uppercase text-muted-foreground">
+                  RSSI Prom.
+                </p>
+                <p className="font-mono text-lg font-bold text-primary">
+                  {avgRssi} <span className="text-[10px] font-normal text-muted-foreground">dBm</span>
                 </p>
               </div>
 
-              <div className="px-3 py-2 rounded-lg bg-card border text-center min-w-[90px]">
-                <p className="text-[10px] text-muted-foreground uppercase font-semibold">Frecuencia</p>
-                <p className="text-lg font-bold font-mono text-foreground">
-                  433 <span className="text-[10px] font-normal">MHz</span>
+              <div className="min-w-24 rounded-lg border bg-card px-3 py-2 text-center">
+                <p className="text-[10px] font-semibold uppercase text-muted-foreground">
+                  Frecuencia
+                </p>
+                <p className="font-mono text-lg font-bold text-foreground">
+                  {gateway.frequency || '433 MHz'}
                 </p>
               </div>
 
@@ -232,309 +335,393 @@ export default function PublicLoraMapPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => mutate()}
-                className="h-10 px-3 gap-1.5 text-xs"
+                className="h-10 px-3 text-xs"
                 title="Actualizar datos del mapa"
               >
-                <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  data-icon="inline-start"
+                  className={isLoading ? 'animate-spin' : undefined}
+                />
                 <span className="hidden sm:inline">Actualizar</span>
               </Button>
             </div>
           </div>
         </div>
 
-        {/* Interactive Map & Side Inspector Grid */}
-        <div className="flex-1 container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[720px]">
-            {/* Map Area (8 Columns on desktop) */}
-            <div className="lg:col-span-8 flex flex-col rounded-xl border overflow-hidden shadow-sm relative bg-card">
-              {/* Map Floating Controls Header */}
-              <div className="absolute top-3 left-3 z-[1000] flex items-center gap-2">
+        {/* Interactive Map & Tabbed Inspector */}
+        <div className="container mx-auto flex-1 max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 gap-6 lg:h-[calc(100vh-14rem)] lg:min-h-[600px] lg:grid-cols-12">
+            {/* Map Area */}
+            <div className="relative flex min-h-[480px] flex-col overflow-hidden rounded-xl border bg-card shadow-sm lg:col-span-8 lg:h-full">
+              <div className="absolute top-3 left-3 z-[400] flex flex-wrap items-center gap-2">
                 <Button
                   variant="secondary"
                   size="sm"
                   onClick={() => setShowCoverage(!showCoverage)}
-                  className="h-8 text-xs gap-1.5 shadow-md bg-card/90 backdrop-blur-md border"
+                  className="h-8 border bg-card/90 text-xs shadow-md backdrop-blur-md"
                 >
-                  <Layers className="h-3.5 w-3.5 text-primary" />
-                  <span>{showCoverage ? 'Ocultar Cobertura' : 'Ver Cobertura RF'}</span>
+                  <Layers data-icon="inline-start" className="text-primary" />
+                  {showCoverage ? 'Ocultar Cobertura' : 'Ver Cobertura RF'}
+                </Button>
+
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleFocusGateway}
+                  className="h-8 border bg-card/90 text-xs shadow-md backdrop-blur-md"
+                >
+                  <Crosshair data-icon="inline-start" className="text-primary" />
+                  Centrar Gateway
                 </Button>
               </div>
 
-              <div className="flex-1 w-full h-full">
+              <div className="flex-1 w-full">
                 <LoraNetworkMap
                   gateway={gateway}
                   nodes={nodes}
                   selectedNodeId={selectedNode?.id}
-                  onSelectNode={(node) => setSelectedNode(node)}
+                  onSelectNode={handleSelectFromMap}
                   showCoverageAura={showCoverage}
+                  focusTarget={focusTarget}
                 />
               </div>
 
-              {/* Map Footnote Legend */}
-              <div className="p-2.5 px-4 bg-card/90 border-t backdrop-blur-sm flex flex-wrap items-center justify-between gap-3 text-[11px] text-muted-foreground">
-                <div className="flex items-center gap-4">
+              {/* Map Legend */}
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t bg-card/95 px-4 py-2.5 text-[11px] text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
                   <span className="flex items-center gap-1.5">
-                    <span className="h-2.5 w-2.5 rounded-full bg-cyan-500" />
-                    Gateway Base (Ra-02)
+                    <span className="size-2.5 rounded-full bg-cyan-500" />
+                    Gateway Base
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                    <span className="size-2.5 rounded-full bg-emerald-500" />
                     Señal Fuerte (&gt; -85 dBm)
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+                    <span className="size-2.5 rounded-full bg-amber-500" />
                     Señal Media (-85 a -105 dBm)
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <span className="h-2.5 w-2.5 rounded-full bg-rose-500" />
+                    <span className="size-2.5 rounded-full bg-rose-500" />
                     Señal Débil (&lt; -105 dBm)
                   </span>
                 </div>
-                <span>Haz clic en cualquier nodo para ver telemetría</span>
+                <span className="hidden sm:inline">
+                  Seleccioná un marcador o usá la pestaña Nodos
+                </span>
               </div>
             </div>
 
-            {/* Side Telemetry & Live Frame Inspector (4 Columns on desktop) */}
-            <div className="lg:col-span-4 flex flex-col gap-4 h-full overflow-hidden">
-              {/* Node / Gateway Inspector Card */}
-              <Card className="border shadow-sm flex flex-col shrink-0">
-                <CardHeader className="p-4 pb-3 border-b flex flex-row items-center justify-between">
-                  <div className="space-y-0.5">
-                    <CardTitle className="text-sm font-bold flex items-center gap-1.5 text-foreground">
-                      {selectedNode ? (
-                        <>
-                          <Radio className="h-4 w-4 text-emerald-500" />
-                          <span>{selectedNode.name}</span>
-                        </>
-                      ) : (
-                        <>
-                          <Radio className="h-4 w-4 text-cyan-500" />
-                          <span>{gateway.name}</span>
-                        </>
-                      )}
-                    </CardTitle>
-                    <p className="text-[11px] text-muted-foreground font-mono">
-                      {selectedNode ? `ID: ${selectedNode.id}` : `ID Base: ${gateway.id}`}
-                    </p>
-                  </div>
+            {/* Right Tabbed Telemetry Panel */}
+            <Card className="flex min-h-[520px] flex-col overflow-hidden border shadow-sm lg:col-span-4 lg:h-full">
+              <Tabs
+                value={activeTab}
+                onValueChange={setActiveTab}
+                className="flex h-full flex-col gap-0"
+              >
+                <div className="border-b bg-muted/25 px-3 py-2.5">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="inspector" className="text-xs">
+                      <Radio data-icon="inline-start" />
+                      Inspector
+                    </TabsTrigger>
+                    <TabsTrigger value="nodes" className="text-xs">
+                      <Activity data-icon="inline-start" />
+                      Nodos ({nodes.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="frames" className="text-xs">
+                      <Terminal data-icon="inline-start" />
+                      Tramas ({livePackets.length})
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
 
-                  <div className="flex items-center gap-1.5">
-                    {!selectedNode && (
-                      <Badge variant="outline" className="text-[9px] bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/30">
-                        GATEWAY BASE
-                      </Badge>
-                    )}
-                    <Badge
-                      variant={selectedNode?.status === 'active' || !selectedNode ? 'default' : 'secondary'}
-                      className="text-[10px]"
-                    >
-                      {selectedNode ? selectedNode.status : gateway.status.toUpperCase()}
-                    </Badge>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="p-4 space-y-4">
-                  {selectedNode ? (
-                    <>
-                      {/* RF Signal Metrics */}
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="p-2.5 rounded-lg bg-muted/40 border space-y-0.5">
-                          <p className="text-[10px] text-muted-foreground">Potencia RSSI</p>
-                          <p className="text-base font-extrabold font-mono text-emerald-600 dark:text-emerald-400">
-                            {selectedNode.rssi} <span className="text-xs font-normal">dBm</span>
-                          </p>
-                        </div>
-
-                        <div className="p-2.5 rounded-lg bg-muted/40 border space-y-0.5">
-                          <p className="text-[10px] text-muted-foreground">Relación SNR</p>
-                          <p className="text-base font-extrabold font-mono text-cyan-600 dark:text-cyan-400">
-                            {selectedNode.snr} <span className="text-xs font-normal">dB</span>
-                          </p>
-                        </div>
+                {/* Tab 1: Node / Gateway Inspector */}
+                <TabsContent
+                  value="inspector"
+                  className="flex flex-1 flex-col overflow-y-auto p-4 data-[hidden]:hidden"
+                >
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-start justify-between gap-2 border-b pb-3">
+                      <div className="min-w-0 flex flex-col gap-0.5">
+                        <h2 className="flex items-center gap-1.5 truncate text-sm font-bold text-foreground">
+                          <Radio className="size-4 shrink-0 text-primary" />
+                          <span className="truncate">
+                            {selectedNode ? selectedNode.name : gateway.name}
+                          </span>
+                        </h2>
+                        <p className="truncate font-mono text-[11px] text-muted-foreground">
+                          {selectedNode ? selectedNode.id : `Base: ${gateway.id}`}
+                        </p>
                       </div>
 
-                      {/* LoRa Config Details */}
-                      <div className="text-xs space-y-1.5 text-muted-foreground border-t pt-3">
-                        <div className="flex justify-between">
-                          <span>Spreading Factor:</span>
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        {!selectedNode && (
+                          <Badge variant="outline" className="font-mono text-[10px]">
+                            GATEWAY BASE
+                          </Badge>
+                        )}
+                        <Badge
+                          variant={
+                            selectedNode?.status === 'active' || !selectedNode
+                              ? 'default'
+                              : 'secondary'
+                          }
+                          className="text-[10px] uppercase"
+                        >
+                          {selectedNode ? selectedNode.status : gateway.status}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    {/* RF Metrics */}
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div className="flex flex-col gap-0.5 rounded-lg border bg-muted/35 p-3">
+                        <span className="text-[11px] text-muted-foreground">Potencia RSSI</span>
+                        <span
+                          className={cn(
+                            'font-mono text-base font-extrabold',
+                            selectedNode
+                              ? getRssiSignalClass(selectedNode.status, selectedNode.rssi)
+                              : 'text-emerald-600 dark:text-emerald-400'
+                          )}
+                        >
+                          {selectedNode ? selectedNode.rssi : gateway.rssi ?? -80}{' '}
+                          <span className="text-xs font-normal text-muted-foreground">dBm</span>
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col gap-0.5 rounded-lg border bg-muted/35 p-3">
+                        <span className="text-[11px] text-muted-foreground">Relación SNR</span>
+                        <span className="font-mono text-base font-extrabold text-primary">
+                          {selectedNode ? selectedNode.snr : gateway.snr ?? 8.5}{' '}
+                          <span className="text-xs font-normal text-muted-foreground">dB</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Technical Specs */}
+                    {selectedNode ? (
+                      <div className="flex flex-col gap-2 border-t pt-3 text-xs text-muted-foreground">
+                        <div className="flex items-center justify-between gap-2">
+                          <span>Spreading Factor</span>
                           <strong className="font-mono text-foreground">
                             SF{selectedNode.loraConfig?.spreading_factor || 7}
                           </strong>
                         </div>
-                        <div className="flex justify-between">
-                          <span>Ancho de Banda:</span>
+                        <div className="flex items-center justify-between gap-2">
+                          <span>Ancho de Banda</span>
                           <strong className="font-mono text-foreground">
                             {selectedNode.loraConfig?.bandwidth || '125 kHz'}
                           </strong>
                         </div>
-                        <div className="flex justify-between">
-                          <span>Radio Cobertura Teórico:</span>
+                        <div className="flex items-center justify-between gap-2">
+                          <span>Radio Cobertura</span>
                           <strong className="font-mono text-foreground">
                             {selectedNode.loraConfig?.coverage_radius_meters || 2000} m
                           </strong>
                         </div>
-                        <div className="flex justify-between">
-                          <span>Última Comunicación:</span>
-                          <strong className="text-foreground">
-                            {format(new Date(selectedNode.lastSeen), 'HH:mm:ss', { locale: es })}
+                        <div className="flex items-center justify-between gap-2">
+                          <span>Última Comunicación</span>
+                          <strong className="font-mono text-foreground">
+                            {selectedNode.lastSeen
+                              ? format(new Date(selectedNode.lastSeen), 'HH:mm:ss', { locale: es })
+                              : '—'}
                           </strong>
                         </div>
                       </div>
-
-                      {/* Latest Readings / Telemetry Payload */}
-                      {selectedNode.latestTelemetry && Object.keys(selectedNode.latestTelemetry).length > 0 && (
-                        <div className="border-t pt-3 space-y-2">
-                          <p className="text-[11px] font-semibold text-foreground uppercase tracking-wider">
-                            Telemetría Decodificada
-                          </p>
-                          <div className="grid grid-cols-2 gap-2">
-                            {Object.entries(selectedNode.latestTelemetry).map(([key, val]) => (
-                              <div
-                                key={key}
-                                className="p-2 rounded bg-card border text-[11px] font-mono flex flex-col justify-between"
-                              >
-                                <span className="text-muted-foreground text-[10px] capitalize">{key}:</span>
-                                <span className="font-bold text-foreground">
-                                  {typeof val === 'number' ? val.toFixed(2) : String(val)}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
+                    ) : (
+                      <div className="flex flex-col gap-2 border-t pt-3 text-xs text-muted-foreground">
+                        <div className="flex items-center justify-between gap-2">
+                          <span>Hardware Base</span>
+                          <strong className="truncate text-foreground">{gateway.model}</strong>
                         </div>
-                      )}
-
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSelectedNode(null)}
-                        className="w-full text-xs h-8 border-cyan-500/30 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-500/10 cursor-pointer"
-                      >
-                        Ver Gateway Base
-                      </Button>
-                    </>
-                  ) : (
-                    /* Gateway Overview Details */
-                    <div className="space-y-4 text-xs">
-                      {/* Gateway RF Metrics */}
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="p-2.5 rounded-lg bg-muted/40 border space-y-0.5">
-                          <p className="text-[10px] text-muted-foreground">Potencia RSSI</p>
-                          <p className="text-base font-extrabold font-mono text-emerald-600 dark:text-emerald-400">
-                            {gateway.rssi ?? -80} <span className="text-xs font-normal">dBm</span>
-                          </p>
-                        </div>
-
-                        <div className="p-2.5 rounded-lg bg-muted/40 border space-y-0.5">
-                          <p className="text-[10px] text-muted-foreground">Relación SNR</p>
-                          <p className="text-base font-extrabold font-mono text-cyan-600 dark:text-cyan-400">
-                            {gateway.snr ?? 8.5} <span className="text-xs font-normal">dB</span>
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-700 dark:text-cyan-300 space-y-1">
-                        <p className="font-semibold text-xs flex items-center gap-1.5">
-                          <Radio className="h-3.5 w-3.5" />
-                          <span>Módulo SX1278 (Ra-02 433 MHz)</span>
-                        </p>
-                        <p className="text-[11px]">
-                          Estación Gateway central de borde conectada al broker MQTT y WebSocket. Recibe y decodifica las tramas de radiofrecuencia de los nodos periféricos.
-                        </p>
-                      </div>
-
-                      <div className="space-y-2 text-muted-foreground border-t pt-3">
-                        <div className="flex justify-between">
-                          <span>Placa Base / Hardware:</span>
-                          <strong className="text-foreground">{gateway.model}</strong>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Frecuencia Central:</span>
+                        <div className="flex items-center justify-between gap-2">
+                          <span>Frecuencia Central</span>
                           <strong className="font-mono text-foreground">{gateway.frequency}</strong>
                         </div>
-                        <div className="flex justify-between">
-                          <span>Radio Cobertura Máx:</span>
-                          <strong className="font-mono text-foreground">{gateway.coverageRadiusMeters} m</strong>
+                        <div className="flex items-center justify-between gap-2">
+                          <span>Radio Cobertura Máx.</span>
+                          <strong className="font-mono text-foreground">
+                            {gateway.coverageRadiusMeters} m
+                          </strong>
                         </div>
-                        <div className="flex justify-between">
-                          <span>Nodos Vinculados:</span>
+                        <div className="flex items-center justify-between gap-2">
+                          <span>Nodos Vinculados</span>
                           <strong className="font-mono text-foreground">{nodes.length} nodos</strong>
                         </div>
-                        <div className="flex justify-between">
-                          <span>Ubicación GPS:</span>
+                        <div className="flex items-center justify-between gap-2">
+                          <span>Ubicación GPS</span>
                           <strong className="font-mono text-foreground">
                             {gateway.lat.toFixed(4)}, {gateway.lng.toFixed(4)}
                           </strong>
                         </div>
                       </div>
+                    )}
 
-                      {/* Decoded Telemetry of Base Gateway */}
-                      {gateway.latestTelemetry && Object.keys(gateway.latestTelemetry).length > 0 && (
-                        <div className="border-t pt-3 space-y-2">
-                          <p className="text-[11px] font-semibold text-foreground uppercase tracking-wider">
-                            Telemetría Decodificada del Gateway
-                          </p>
-                          <div className="grid grid-cols-2 gap-2">
-                            {Object.entries(gateway.latestTelemetry).map(([key, val]) => (
-                              <div
-                                key={key}
-                                className="p-2 rounded bg-card border text-[11px] font-mono flex flex-col justify-between"
+                    {/* Decoded Telemetry */}
+                    {inspectedTelemetryEntries.length > 0 && (
+                      <div className="flex flex-col gap-2 border-t pt-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          Telemetría Decodificada
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {inspectedTelemetryEntries.map(([key, val]) => (
+                            <div
+                              key={key}
+                              className="flex min-w-0 flex-col gap-0.5 rounded-lg border bg-muted/25 p-2.5 font-mono"
+                            >
+                              <span
+                                className="truncate text-[10px] text-muted-foreground"
+                                title={key}
                               >
-                                <span className="text-muted-foreground text-[10px] capitalize">{key}:</span>
-                                <span className="font-bold text-foreground">
-                                  {typeof val === 'number' ? val.toFixed(2) : String(val)}
+                                {key}
+                              </span>
+                              <span className="truncate text-xs font-bold text-foreground">
+                                {formatTelemetryValue(val)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedNode && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleFocusGateway}
+                        className="w-full text-xs"
+                      >
+                        <Crosshair data-icon="inline-start" />
+                        Volver al Gateway Base
+                      </Button>
+                    )}
+                  </div>
+                </TabsContent>
+
+                {/* Tab 2: Searchable Nodes List */}
+                <TabsContent
+                  value="nodes"
+                  className="flex flex-1 flex-col gap-3 overflow-hidden p-4 data-[hidden]:hidden"
+                >
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute top-2.5 left-2.5 size-3.5 text-muted-foreground" />
+                    <Input
+                      value={nodeSearch}
+                      onChange={(e) => setNodeSearch(e.target.value)}
+                      placeholder="Buscar nodo por nombre o ID..."
+                      className="h-8 pl-8 text-xs"
+                    />
+                  </div>
+
+                  <div className="flex flex-1 flex-col gap-2 overflow-y-auto pr-1">
+                    {filteredNodes.length === 0 ? (
+                      <div className="flex flex-1 items-center justify-center p-6 text-center text-xs text-muted-foreground">
+                        {nodes.length === 0
+                          ? 'No hay nodos LoRa compartidos en el mapa todavía.'
+                          : 'Ningún nodo coincide con la búsqueda.'}
+                      </div>
+                    ) : (
+                      filteredNodes.map((node) => {
+                        const isSelected = selectedNode?.id === node.id;
+                        return (
+                          <div
+                            key={node.id}
+                            className={cn(
+                              'flex items-center justify-between gap-2 rounded-lg border p-2.5 transition-colors',
+                              isSelected
+                                ? 'border-primary bg-primary/10'
+                                : 'bg-card hover:bg-muted/40'
+                            )}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => handleSelectNodeFromList(node, false)}
+                              className="flex min-w-0 flex-1 cursor-pointer flex-col gap-1 text-left"
+                            >
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className={cn(
+                                    'size-2 shrink-0 rounded-full',
+                                    getRssiDotClass(node.status, node.rssi)
+                                  )}
+                                />
+                                <span className="truncate text-xs font-semibold text-foreground">
+                                  {node.name}
                                 </span>
                               </div>
-                            ))}
+                              <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] text-muted-foreground">
+                                <span className={getRssiSignalClass(node.status, node.rssi)}>
+                                  {node.rssi} dBm
+                                </span>
+                                <span>SNR {node.snr} dB</span>
+                                <span>SF{node.loraConfig?.spreading_factor || 7}</span>
+                              </div>
+                            </button>
+
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-xs"
+                              aria-label={`Inspeccionar ${node.name}`}
+                              title="Ver en Inspector"
+                              onClick={() => handleSelectNodeFromList(node, true)}
+                            >
+                              <ChevronRight />
+                            </Button>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                        );
+                      })
+                    )}
+                  </div>
+                </TabsContent>
 
-              {/* Live Incoming Packet Stream Card */}
-              <Card className="border shadow-sm flex-1 flex flex-col overflow-hidden">
-                <CardHeader className="p-3 px-4 border-b flex flex-row items-center justify-between shrink-0">
-                  <CardTitle className="text-xs font-bold flex items-center gap-1.5 text-foreground">
-                    <Terminal className="h-3.5 w-3.5 text-emerald-500" />
-                    <span>Registro de Paquetes en Vivo</span>
-                  </CardTitle>
-                  <span className="text-[10px] font-mono text-muted-foreground">
-                    {livePackets.length} tramas
-                  </span>
-                </CardHeader>
-
-                <CardContent className="p-2 flex-1 overflow-y-auto space-y-1.5">
+                {/* Tab 3: Live Incoming Packet Stream */}
+                <TabsContent
+                  value="frames"
+                  className="flex flex-1 flex-col gap-2 overflow-y-auto p-4 data-[hidden]:hidden"
+                >
                   {livePackets.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-center p-4 text-[11px] text-muted-foreground">
-                      <Activity className="h-5 w-5 mb-1 text-muted-foreground/50 animate-pulse" />
-                      <span>Esperando tramas LoRa entrantes...</span>
+                    <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-xs text-muted-foreground">
+                      <Activity className="size-5 text-muted-foreground/50 animate-pulse" />
+                      <span>Esperando tramas LoRa entrantes en tiempo real...</span>
                     </div>
                   ) : (
                     livePackets.map((pkt) => (
                       <div
                         key={pkt.id}
-                        className="p-2 rounded bg-muted/40 border text-[10px] font-mono space-y-1 hover:bg-muted/70 transition-colors"
+                        className="flex flex-col gap-1.5 rounded-lg border bg-muted/30 p-2.5 font-mono text-[11px]"
                       >
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-foreground truncate max-w-[140px]">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="truncate font-bold text-foreground">
                             {pkt.sensorName}
                           </span>
-                          <span className="text-muted-foreground text-[9px]">
+                          <span className="shrink-0 text-[10px] text-muted-foreground">
                             {format(pkt.receivedAt, 'HH:mm:ss')}
                           </span>
                         </div>
-                        <div className="flex items-center gap-3 text-muted-foreground">
-                          {pkt.rssi && <span>RSSI: {pkt.rssi} dBm</span>}
-                          {pkt.snr && <span>SNR: {pkt.snr} dB</span>}
+                        <div className="flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
+                          {pkt.rssi !== undefined && (
+                            <Badge variant="outline" className="font-mono text-[10px]">
+                              RSSI {pkt.rssi} dBm
+                            </Badge>
+                          )}
+                          {pkt.snr !== undefined && (
+                            <Badge variant="outline" className="font-mono text-[10px]">
+                              SNR {pkt.snr} dB
+                            </Badge>
+                          )}
                         </div>
+                        <code className="block truncate rounded bg-background/80 px-2 py-1 text-[10px] text-muted-foreground">
+                          {JSON.stringify(pkt.payload)}
+                        </code>
                       </div>
                     ))
                   )}
-                </CardContent>
-              </Card>
-            </div>
+                </TabsContent>
+              </Tabs>
+            </Card>
           </div>
         </div>
       </main>
