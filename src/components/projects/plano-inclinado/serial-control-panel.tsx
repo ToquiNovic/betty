@@ -21,6 +21,12 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { toast } from '@/lib/toast';
+import {
+  computeInclinedPlanePhysics,
+  evaluateEasing,
+  EASING_TYPES,
+  type EasingType,
+} from '@/lib/plano-inclinado-telemetry';
 
 // Nordic UART Service (NUS) standard BLE UUIDs (ESP32 BotutoBleUart)
 const NUS_SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
@@ -33,6 +39,10 @@ const ANGLE_PRESETS = [0, 30, 60, 90, 120, 150] as const;
 function clampServoAngle(angle: number): number {
   if (!Number.isFinite(angle)) return 0;
   return Math.max(0, Math.min(MAX_SERVO_ANGLE, Math.round(angle)));
+}
+
+function getNowMs(): number {
+  return Date.now();
 }
 
 interface SerialPortLike {
@@ -95,27 +105,50 @@ export interface TelemetryPacketData {
 export interface SerialControlPanelProps {
   currentServoAngle: number;
   currentPlankAngle: number;
+  targetServoAngle?: number;
   maxPlankAngle: number;
   duration: number;
+  easingType?: EasingType;
+  autoStop?: boolean;
+  dynamicTime?: boolean;
   onAngleChange: (angle: number) => void;
+  onEasingChange?: (easing: EasingType) => void;
+  onMaxPlankAngleChange?: (angle: number) => void;
+  onAutoStopToggle?: () => void;
+  onDynamicTimeToggle?: () => void;
+  onDurationChange?: (duration: number) => void;
   onResetToZero?: () => void;
   onTelemetryPacket: (data: TelemetryPacketData) => void;
   onConnectionChange?: (connected: boolean, type?: 'bluetooth' | 'usb') => void;
   sensorId?: string;
 }
 
+const EASING_SHORT_LABELS: Record<EasingType, string> = {
+  CUBIC: 'Cúbica',
+  SMOOTHERSTEP: 'Smoother',
+  SINE: 'Seno',
+  QUAD: 'Cuad.',
+  LINEAR: 'Lineal',
+};
+
 export function SerialControlPanel({
   currentServoAngle,
   currentPlankAngle,
+  targetServoAngle,
   maxPlankAngle,
   duration,
+  easingType = 'CUBIC',
   onAngleChange,
+  onEasingChange,
   onResetToZero,
   onTelemetryPacket,
   onConnectionChange,
   sensorId = 'e290f30a-201e-482c-ac7e-a9d02583068d',
 }: SerialControlPanelProps) {
   const [sliderVal, setSliderVal] = useState<number>(45);
+  const [internalEasing, setInternalEasing] = useState<EasingType>(easingType);
+  const activeEasing = onEasingChange ? easingType : internalEasing;
+  const effectiveTargetServoAngle = targetServoAngle ?? sliderVal;
 
   // Selección de canal y estado de conexión
   const [preferredMethod, setPreferredMethod] = useState<'bluetooth' | 'usb'>('bluetooth');
@@ -142,6 +175,21 @@ export function SerialControlPanel({
   const [isBettySyncActive, setIsBettySyncActive] = useState<boolean>(false);
   const [, setBettyPacketsCount] = useState<number>(0);
   const lastBettyPostTimeRef = useRef<number>(0);
+
+  // Ref sincronizada para evitar closures obsoletos en listeners BLE/USB
+  const syncMetaRef = useRef({
+    easingType: activeEasing,
+    targetServoAngle: effectiveTargetServoAngle,
+    isBettySyncActive,
+  });
+
+  useEffect(() => {
+    syncMetaRef.current = {
+      easingType: activeEasing,
+      targetServoAngle: effectiveTargetServoAngle,
+      isBettySyncActive,
+    };
+  }, [activeEasing, effectiveTargetServoAngle, isBettySyncActive]);
 
   // ESP32 NVS Config state
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState<boolean>(false);
@@ -210,7 +258,7 @@ export function SerialControlPanel({
           angularVelocity,
         });
 
-        if (isBettySyncActive) {
+        if (syncMetaRef.current.isBettySyncActive) {
           pushTelemetryToBetty(plank, s1, s2, sensor, angularVelocity || 0, slip);
         }
       }
@@ -237,7 +285,7 @@ export function SerialControlPanel({
           angularVelocity: angularVel,
         });
 
-        if (isBettySyncActive) {
+        if (syncMetaRef.current.isBettySyncActive) {
           pushTelemetryToBetty(plank, s1, s2, sensor, angularVel, slip);
         }
       } catch (e) {
@@ -261,17 +309,29 @@ export function SerialControlPanel({
     s2: number,
     sensor: boolean,
     angVel: number,
-    slip: number
+    slip: number,
+    overrides?: {
+      easingType?: EasingType;
+      targetAngle?: number;
+      controlMode?: 'physical' | 'virtual' | 'auto';
+      force?: boolean;
+    }
   ) => {
-    const now = Date.now();
-    if (now - lastBettyPostTimeRef.current < 150) return;
+    const now = getNowMs();
+    if (!overrides?.force && now - lastBettyPostTimeRef.current < 150) return;
     lastBettyPostTimeRef.current = now;
 
-    const rad = (plank * Math.PI) / 180;
-    const mu_s = slip > 0 ? Math.tan((slip * Math.PI) / 180) : 0;
+    const physics = computeInclinedPlanePhysics(plank, slip);
+    const resolvedEasing = overrides?.easingType ?? syncMetaRef.current.easingType;
+    const resolvedTarget = overrides?.targetAngle ?? syncMetaRef.current.targetServoAngle;
+    const webhookBase = (
+      process.env.NEXT_PUBLIC_API_URL || 'https://betty-api.laboratorio3d.online/api'
+    ).replace(/\/+$/, '');
 
-    const payload = {
+    const payload: Record<string, unknown> = {
       origin_type: 'sensor',
+      easing_type: resolvedEasing,
+      target_angle: Number(resolvedTarget.toFixed(2)),
       plank_angle: Number(plank.toFixed(2)),
       servo1: Math.round(s1),
       servo2: Math.round(s2),
@@ -279,13 +339,17 @@ export function SerialControlPanel({
       sensor_digital: sensor ? 1 : 0,
       angular_velocity: Number(angVel.toFixed(1)),
       slip_angle: Number(slip.toFixed(2)),
-      mu_s: Number(mu_s.toFixed(4)),
-      normal_force_ratio: Number(Math.cos(rad).toFixed(3)),
-      parallel_force_ratio: Number(Math.sin(rad).toFixed(3)),
+      mu_s: Number(physics.criticalMuS.toFixed(4)),
+      normal_force_ratio: Number(physics.normalRatio.toFixed(3)),
+      parallel_force_ratio: Number(physics.parallelRatio.toFixed(3)),
     };
 
+    if (overrides?.controlMode) {
+      payload.control_mode = overrides.controlMode;
+    }
+
     try {
-      const res = await fetch('https://betty-api.laboratorio3d.online/api/mqtt/webhook', {
+      const res = await fetch(`${webhookBase}/mqtt/webhook`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -372,19 +436,39 @@ export function SerialControlPanel({
     }
   };
 
-  // Motor de simulación local cinemática (curva cúbica fija, máximo 150°)
+  // Selección de curva cinemática de easing y sincronización inmediata si Betty Sync está activo
+  const handleEasingSelect = (nextEasing: EasingType) => {
+    if (onEasingChange) {
+      onEasingChange(nextEasing);
+    } else {
+      setInternalEasing(nextEasing);
+    }
+    if (syncMetaRef.current.isBettySyncActive) {
+      void pushTelemetryToBetty(
+        currentPlankAngle,
+        currentServoAngle,
+        180 - currentServoAngle,
+        true,
+        0,
+        0,
+        { easingType: nextEasing, force: true }
+      );
+    }
+  };
+
+  // Motor de simulación local cinemática según la curva de easing activa (máximo 150°)
   const simulateLocalMovement = (destServo: number) => {
     if (simTimerRef.current) clearInterval(simTimerRef.current);
     const clampedDest = clampServoAngle(destServo);
     const startServo = currentServoAngle;
-    const startTime = Date.now();
+    const startTime = getNowMs();
     const dur = duration || 2500;
     onAngleChange(clampedDest);
 
     simTimerRef.current = setInterval(() => {
-      const elapsed = Date.now() - startTime;
+      const elapsed = getNowMs() - startTime;
       const t = Math.min(1.0, elapsed / dur);
-      const k = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      const k = evaluateEasing(syncMetaRef.current.easingType, t);
 
       const curServo = startServo + (clampedDest - startServo) * k;
       const curPlank = (curServo / 180.0) * maxPlankAngle;
@@ -412,11 +496,11 @@ export function SerialControlPanel({
     const simCriticalPlank = 18.5;
     const startServo = currentServoAngle;
     const targetServo = 90.0;
-    const startTime = Date.now();
+    const startTime = getNowMs();
     const dur = 20000;
 
     simTimerRef.current = setInterval(() => {
-      const elapsed = Date.now() - startTime;
+      const elapsed = getNowMs() - startTime;
       const t = Math.min(1.0, elapsed / dur);
 
       const curServo = startServo + (targetServo - startServo) * t;
@@ -1003,6 +1087,35 @@ export function SerialControlPanel({
                         title={deg === 0 ? '0° Reposo' : deg === 150 ? '150° Máximo' : `${deg}°`}
                       >
                         {deg}°
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 2.5 Selector de Curva de Easing */}
+                <div className="space-y-2 p-3 rounded-xl border border-border/70 bg-background/50">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-foreground">Curva Cinemática (Easing):</span>
+                    <span className="font-mono text-[11px] text-purple-400 font-semibold">
+                      {activeEasing}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {EASING_TYPES.map((curve) => (
+                      <Button
+                        key={curve}
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEasingSelect(curve)}
+                        className={`h-7 px-1 text-[10px] font-mono transition-all ${
+                          activeEasing === curve
+                            ? 'border-purple-500/70 bg-purple-500/20 text-purple-300 font-bold shadow-xs'
+                            : 'border-border/70 hover:border-purple-500/40 text-muted-foreground hover:text-foreground'
+                        }`}
+                        title={curve}
+                      >
+                        {EASING_SHORT_LABELS[curve]}
                       </Button>
                     ))}
                   </div>
