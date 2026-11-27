@@ -10,36 +10,36 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuItem,
+  SidebarMenuBadge,
   SidebarMenuButton,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarGroupContent,
+  SidebarMenuItem,
   SidebarRail,
 } from '@/components/ui/sidebar';
 import { UserNav } from './user-nav';
 import { BotutoLogo } from '@/components/common/botuto-logo';
+import { cn } from '@/lib/utils';
 import {
   Activity,
-  LayoutDashboard,
-  Radio,
-  LineChart,
-  Users,
-  ShieldAlert,
-  Settings,
-  Globe,
-  FileCode,
-  ExternalLink,
-  Database,
-  Zap,
   Box,
+  Compass,
+  ExternalLink,
+  FileCode,
+  Globe,
+  LayoutDashboard,
+  LineChart,
+  Radio,
+  Settings,
+  ShieldAlert,
+  Users,
 } from 'lucide-react';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const t = useTranslations('nav');
-  const common = useTranslations('common');
   const pathname = usePathname();
   const { user } = useAuthStore();
   const { sensors } = useSensors();
@@ -59,62 +59,53 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: '/overview',
       icon: LayoutDashboard,
       isActive: pathname === '/overview',
-      badge: null,
     },
     {
       title: t('sensors'),
       url: '/sensors',
       icon: Radio,
       isActive: pathname.startsWith('/sensors'),
-      badge: sensors.length > 0 ? `${activeSensorsCount}/${sensors.length}` : null,
-      badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
+      countBadge: sensors.length > 0 ? `${activeSensorsCount}/${sensors.length}` : null,
     },
     {
       title: t('dashboards'),
       url: '/dashboards',
       icon: LineChart,
       isActive: pathname.startsWith('/dashboards'),
-      badge: null,
     },
     {
       title: t('teams'),
       url: '/teams',
       icon: Users,
       isActive: pathname.startsWith('/teams'),
-      badge: null,
     },
     {
       title: 'Proyectos',
       url: '/projects',
       icon: Box,
       isActive: pathname.startsWith('/projects'),
-      badge: 'IoT DIY',
-      badgeColor: 'bg-primary/10 text-primary border-primary/30',
     },
     {
       title: t('digitalTwin'),
       url: '/digital-twin',
       icon: Activity,
       isActive: pathname.startsWith('/digital-twin'),
-      badge: 'En Vivo',
-      badgeColor: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30',
+      isLiveIndicator: true,
     },
   ];
 
   const adminNav = [
     {
-      title: 'Administración Global',
+      title: 'Panel Admin',
       url: '/admin',
       icon: ShieldAlert,
       isActive: pathname === '/admin',
-      badge: 'Usuarios & Sensores',
     },
     {
       title: 'Gestión Proyectos',
       url: '/admin/projects',
       icon: Box,
       isActive: pathname.startsWith('/admin/projects'),
-      badge: 'Admin',
     },
   ];
 
@@ -131,51 +122,89 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: Settings,
       isActive: pathname.startsWith('/settings'),
     },
+    {
+      title: 'Docs Desarrolladores',
+      url: '/docs',
+      icon: FileCode,
+      isActive: pathname.startsWith('/docs'),
+    },
   ];
 
+  const navItemClass = (isActive: boolean, hasBadge = false) =>
+    cn(
+      'relative h-9 rounded-lg px-2.5 text-[13px] font-medium transition-colors',
+      hasBadge && 'pr-12',
+      isActive
+        ? 'bg-sidebar-accent text-foreground font-semibold before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-0.5 before:rounded-full before:bg-primary'
+        : 'text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground'
+    );
+
   return (
-    <Sidebar collapsible="icon" className="border-r border-border/80" {...props}>
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border" {...props}>
       {/* Brand Header */}
-      <SidebarHeader className="border-b border-border/60 p-3">
+      <SidebarHeader className="border-b border-sidebar-border/80 px-3 py-2.5">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" render={<Link href="/overview" />} className="hover:bg-transparent">
-              <BotutoLogo size="sm" showBadge subtitle="Digital Twins & Realtime" collapseOnSidebar priority />
+            <SidebarMenuButton
+              size="lg"
+              render={<Link href="/overview" />}
+              className="hover:bg-transparent"
+            >
+              <BotutoLogo
+                size="sm"
+                showBadge
+                subtitle="Digital Twins & Realtime"
+                collapseOnSidebar
+                priority
+              />
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent className="px-2 py-3 space-y-4">
+      <SidebarContent className="flex flex-col gap-3 px-2 py-3">
         {/* Main Navigation Group */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] font-bold tracking-wider text-muted-foreground/70 uppercase px-2 mb-1">
+        <SidebarGroup className="p-1">
+          <SidebarGroupLabel className="px-2 text-[10px] font-semibold tracking-wider text-muted-foreground/75 uppercase">
             Plataforma
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
+            <SidebarMenu className="flex flex-col gap-0.5">
               {mainNav.map((item) => (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton
                     render={<Link href={item.url} />}
                     isActive={item.isActive}
                     tooltip={item.title}
-                    className={`h-9 rounded-lg px-2.5 transition-all text-xs font-medium ${
-                      item.isActive
-                        ? 'bg-primary/10 text-primary font-semibold shadow-xs'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
-                    }`}
-                  >
-                    <item.icon className={`h-4 w-4 shrink-0 ${item.isActive ? 'text-primary' : 'text-muted-foreground'}`} />
-                    <span className="truncate">{item.title}</span>
-                    {item.badge && (
-                      <span
-                        className={`ml-auto text-[10px] font-mono font-semibold px-1.5 py-0.2 rounded-full border ${item.badgeColor}`}
-                      >
-                        {item.badge}
-                      </span>
+                    className={navItemClass(
+                      item.isActive,
+                      Boolean(item.countBadge || item.isLiveIndicator)
                     )}
+                  >
+                    <item.icon
+                      className={cn(
+                        'size-4 shrink-0',
+                        item.isActive ? 'text-primary' : 'text-muted-foreground'
+                      )}
+                    />
+                    <span className="truncate">{item.title}</span>
                   </SidebarMenuButton>
+                  {item.countBadge && (
+                    <SidebarMenuBadge className="top-2 right-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-1.5 font-mono text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                      {item.countBadge}
+                    </SidebarMenuBadge>
+                  )}
+                  {item.isLiveIndicator && isConnected && (
+                    <SidebarMenuBadge
+                      className="top-2.5 right-2.5 min-w-0 p-0"
+                      aria-label="En vivo"
+                    >
+                      <span className="relative flex size-2">
+                        <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                        <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
+                      </span>
+                    </SidebarMenuBadge>
+                  )}
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
@@ -184,29 +213,27 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
         {/* Administration Group (Admin only) */}
         {isAdmin && (
-          <SidebarGroup>
-            <SidebarGroupLabel className="text-[10px] font-bold tracking-wider text-muted-foreground/70 uppercase px-2 mb-1">
+          <SidebarGroup className="p-1">
+            <SidebarGroupLabel className="px-2 text-[10px] font-semibold tracking-wider text-muted-foreground/75 uppercase">
               Sistema & Control
             </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="flex flex-col gap-0.5">
                 {adminNav.map((item) => (
                   <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton
                       render={<Link href={item.url} />}
                       isActive={item.isActive}
                       tooltip={item.title}
-                      className={`h-9 rounded-lg px-2.5 transition-all text-xs font-medium ${
-                        item.isActive
-                          ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold'
-                          : 'text-muted-foreground hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-500/10'
-                      }`}
+                      className={navItemClass(item.isActive)}
                     >
-                      <item.icon className="h-4 w-4 shrink-0 text-amber-500" />
+                      <item.icon
+                        className={cn(
+                          'size-4 shrink-0',
+                          item.isActive ? 'text-primary' : 'text-muted-foreground'
+                        )}
+                      />
                       <span className="truncate">{item.title}</span>
-                      <span className="ml-auto text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                        {item.badge}
-                      </span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
@@ -216,25 +243,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         )}
 
         {/* Secondary & Links Group */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] font-bold tracking-wider text-muted-foreground/70 uppercase px-2 mb-1">
+        <SidebarGroup className="p-1">
+          <SidebarGroupLabel className="px-2 text-[10px] font-semibold tracking-wider text-muted-foreground/75 uppercase">
             General
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
+            <SidebarMenu className="flex flex-col gap-0.5">
               {secondaryNav.map((item) => (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton
                     render={<Link href={item.url} />}
                     isActive={item.isActive}
                     tooltip={item.title}
-                    className={`h-9 rounded-lg px-2.5 transition-all text-xs font-medium ${
-                      item.isActive
-                        ? 'bg-primary/10 text-primary font-semibold'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
-                    }`}
+                    className={navItemClass(item.isActive)}
                   >
-                    <item.icon className={`h-4 w-4 shrink-0 ${item.isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+                    <item.icon
+                      className={cn(
+                        'size-4 shrink-0',
+                        item.isActive ? 'text-primary' : 'text-muted-foreground'
+                      )}
+                    />
                     <span className="truncate">{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -250,91 +278,51 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     />
                   }
                   tooltip="Campus Virtual 3D (UA3D Grid)"
-                  className="h-9 rounded-lg px-2.5 transition-all text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                  className={navItemClass(false, true)}
                 >
-                  <Globe className="h-4 w-4 shrink-0 text-emerald-500" />
+                  <Compass className="size-4 shrink-0 text-muted-foreground" />
                   <span className="truncate">Campus Virtual 3D</span>
-                  <ExternalLink className="ml-auto h-3 w-3 text-muted-foreground/50" />
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  render={
-                    <Link href="/docs" />
-                  }
-                  tooltip="Documentación para Desarrolladores"
-                  className="h-9 rounded-lg px-2.5 transition-all text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                >
-                  <FileCode className="h-4 w-4 shrink-0 text-primary/80" />
-                  <span className="truncate">Docs Desarrolladores</span>
-                  <ExternalLink className="ml-auto h-3 w-3 text-muted-foreground/50" />
+                  <ExternalLink className="ml-auto size-3.5 shrink-0 text-muted-foreground/60" />
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Live System Health Mini-Card (Collapsible Hidden) */}
-        {user?.role === 'admin' ? (
-          <div className="mt-auto pt-2 group-data-[collapsible=icon]:hidden">
-            <div className="p-3 rounded-xl border border-border/70 bg-card/60 backdrop-blur-xs space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground">
-                  <span className="relative flex h-2 w-2">
-                    {isConnected && (
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                    )}
-                    <span
-                      className={`relative inline-flex rounded-full h-2 w-2 ${
-                        isConnected ? 'bg-emerald-500' : 'bg-rose-500'
-                      }`}
-                    />
-                  </span>
-                  <span>EMQX Broker</span>
-                </div>
-                <span className="text-[10px] font-mono text-muted-foreground font-medium">1883</span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-1.5 pt-1 border-t border-border/40 text-[10px] font-mono text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <Database className="h-2.5 w-2.5 text-primary" />
-                  <span>Timescale</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Zap className="h-2.5 w-2.5 text-cyan-500" />
-                  <span>Dragonfly</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="mt-auto pt-2 group-data-[collapsible=icon]:hidden">
-            <div className="p-2.5 rounded-xl border border-border/60 bg-muted/30 text-xs flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="relative flex h-2 w-2">
+        {/* Realtime Connection Status */}
+        <div className="mt-auto px-1 pt-2 group-data-[collapsible=icon]:hidden">
+          <div className="flex flex-col gap-1.5 rounded-xl border border-sidebar-border bg-sidebar-accent/40 px-3 py-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-xs font-medium text-foreground">
+                <span className="relative flex size-2 shrink-0">
                   {isConnected && (
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                   )}
                   <span
-                    className={`relative inline-flex rounded-full h-2 w-2 ${
+                    className={cn(
+                      'relative inline-flex size-2 rounded-full',
                       isConnected ? 'bg-emerald-500' : 'bg-amber-500'
-                    }`}
+                    )}
                   />
                 </span>
-                <span className="text-[11px] font-medium text-foreground">
-                  {isConnected ? 'Red de Telemetría' : 'Reconectando...'}
+                <span className="truncate">
+                  {isConnected ? 'Telemetría en vivo' : 'Reconectando...'}
                 </span>
               </div>
-              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20">
-                EN VIVO
+              <span className="font-mono text-[10px] text-muted-foreground">
+                {isConnected ? 'WS' : 'OFF'}
               </span>
             </div>
+            {isAdmin && (
+              <p className="truncate font-mono text-[10px] text-muted-foreground">
+                EMQX · TimescaleDB · Dragonfly
+              </p>
+            )}
           </div>
-        )}
+        </div>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-border/60 p-2">
+      <SidebarFooter className="border-t border-sidebar-border/80 p-2">
         <UserNav />
       </SidebarFooter>
       <SidebarRail />
